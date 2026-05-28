@@ -21,15 +21,19 @@ class Resolver:
     ) -> InvoiceLine:
         mapping = self.db.get_mapping(product.type_label)
         sage_code = mapping.sage_code if mapping else ""
-        sage_label = mapping.sage_label if mapping else product.type_label
+        retained_price = unit_price_ht if unit_price_ht is not None else product.unit_price_ht
+        price_confirmed = unit_price_ht is None or product.unit_price_ht is None or unit_price_ht == product.unit_price_ht
         line = InvoiceLine(
             ref=product.ref,
             sage_code=sage_code,
-            description=f"{sage_label} {product.ref}".strip(),
+            description=product.ref,
             quantity_pieces=quantity_pieces,
             package_count=package_count,
             package_size=product.package_size,
-            unit_price_ht=unit_price_ht if unit_price_ht is not None else product.unit_price_ht,
+            unit_price_ht=retained_price,
+            catalog_unit_price_ht=product.unit_price_ht,
+            order_unit_price_ht=unit_price_ht,
+            price_confirmed=price_confirmed,
             product_id=product.id,
             type_label=product.type_label,
             source=source,
@@ -46,15 +50,37 @@ class Resolver:
     ) -> InvoiceLine:
         product = self.db.get_product_by_ref(ref)
         if not product:
-            line = InvoiceLine(ref=ref.strip().upper(), quantity_pieces=quantity_pieces, unit_price_ht=unit_price_ht, source=source)
+            line = InvoiceLine(ref=ref.strip().upper(), quantity_pieces=quantity_pieces, unit_price_ht=unit_price_ht, order_unit_price_ht=unit_price_ht, source=source)
             line.validate()
             return line
         return self.line_from_product(product, quantity_pieces, unit_price_ht, source=source)
 
     def line_from_order_row(self, row: OrderRow) -> InvoiceLine:
-        return self.line_from_ref(
-            ref=row.ref,
-            quantity_pieces=row.quantity,
+        product = self.db.get_product_by_ref(row.ref)
+        quantity_pieces = row.quantity_pieces
+        package_size = row.package_size
+        if product and product.package_size:
+            package_size = product.package_size
+        if quantity_pieces is None and row.package_count > 0 and package_size:
+            quantity_pieces = row.package_count * package_size
+        if quantity_pieces is None:
+            quantity_pieces = row.package_count
+        if not product:
+            line = InvoiceLine(
+                ref=row.ref,
+                quantity_pieces=quantity_pieces,
+                package_count=row.package_count or None,
+                package_size=package_size,
+                unit_price_ht=row.unit_price_ht,
+                order_unit_price_ht=row.unit_price_ht,
+                source="microstore_excel",
+            )
+            line.validate()
+            return line
+        return self.line_from_product(
+            product,
+            quantity_pieces=quantity_pieces,
             unit_price_ht=row.unit_price_ht,
+            package_count=row.package_count or None,
             source="microstore_excel",
         )

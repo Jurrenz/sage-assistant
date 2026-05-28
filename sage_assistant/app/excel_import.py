@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -32,14 +33,6 @@ PRODUCT_HEADER_ALIASES = {
         "type article",
         "categorie article",
     },
-    "name": {
-        "nom",
-        "nom produit",
-        "description",
-        "libelle",
-        "designation",
-        "product name",
-    },
     "unit_price_ht": {
         "prix",
         "prix ht",
@@ -60,13 +53,30 @@ PRODUCT_HEADER_ALIASES = {
 }
 
 ORDER_HEADER_ALIASES = {
-    "ref": PRODUCT_HEADER_ALIASES["ref"],
-    "quantity": {
+    "ref": PRODUCT_HEADER_ALIASES["ref"]
+    | {
+        "n de produits",
+        "no de produits",
+        "numero de produits",
+        "n produits",
+        "produit",
+    },
+    "package_count": {
         "quantite",
         "qte",
         "qty",
         "quantity",
         "nombre",
+    },
+    "package_size": PRODUCT_HEADER_ALIASES["package_size"],
+    "quantity_pieces": {
+        "nombre de pieces",
+        "nombre piece",
+        "quantite pieces",
+        "qte pieces",
+        "pieces",
+        "nombre de pieces quantite unites de colisage",
+        "nombre de pieces quantite unites de colisage",
     },
     "unit_price_ht": PRODUCT_HEADER_ALIASES["unit_price_ht"],
 }
@@ -75,7 +85,9 @@ ORDER_HEADER_ALIASES = {
 @dataclass(frozen=True)
 class OrderRow:
     ref: str
-    quantity: int
+    package_count: int
+    package_size: int | None = None
+    quantity_pieces: int | None = None
     unit_price_ht: Decimal | None = None
 
 
@@ -87,18 +99,17 @@ class ImportResult:
 
 def normalize_header(value: Any) -> str:
     text = str(value or "").strip().lower()
-    replacements = {
-        "é": "e",
-        "è": "e",
-        "ê": "e",
-        "à": "a",
-        "ç": "c",
-        "_": " ",
-        "-": " ",
-    }
-    for old, new in replacements.items():
-        text = text.replace(old, new)
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(char for char in text if not unicodedata.combining(char))
+    for old in ("_", "-", ".", "°", "(", ")", "*"):
+        text = text.replace(old, " ")
     return " ".join(text.split())
+
+
+def normalize_ref(value: Any) -> str:
+    text = str(value or "")
+    text = text.replace("\u00a0", " ").replace("\u200e", "").replace("\u200f", "")
+    return "".join(text.split()).upper()
 
 
 def parse_decimal(value: Any) -> Decimal | None:
@@ -122,17 +133,40 @@ def parse_int(value: Any) -> int | None:
 
 def _load_rows(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
     workbook = load_workbook(path, read_only=True, data_only=True)
-    sheet = workbook.active
-    raw_rows = list(sheet.iter_rows(values_only=True))
+    try:
+        sheet = workbook.active
+        raw_rows = list(sheet.iter_rows(values_only=True))
+    finally:
+        workbook.close()
     if not raw_rows:
         return [], []
-    headers = [normalize_header(cell) for cell in raw_rows[0]]
+
+    header_index = _detect_header_row(raw_rows)
+    headers = [normalize_header(cell) for cell in raw_rows[header_index]]
     rows: list[dict[str, Any]] = []
-    for raw in raw_rows[1:]:
+    for raw in raw_rows[header_index + 1 :]:
         if not any(cell not in (None, "") for cell in raw):
             continue
         rows.append({headers[index]: value for index, value in enumerate(raw) if index < len(headers)})
     return headers, rows
+
+
+def _detect_header_row(raw_rows: list[tuple[Any, ...]]) -> int:
+    alias_values: set[str] = set()
+    for names in PRODUCT_HEADER_ALIASES.values():
+        alias_values.update(normalize_header(name) for name in names)
+    for names in ORDER_HEADER_ALIASES.values():
+        alias_values.update(normalize_header(name) for name in names)
+
+    best_index = 0
+    best_score = -1
+    for index, row in enumerate(raw_rows[:10]):
+        headers = {normalize_header(cell) for cell in row if cell not in (None, "")}
+        score = len(headers & alias_values)
+        if score > best_score:
+            best_index = index
+            best_score = score
+    return best_index
 
 
 def _match_columns(headers: list[str], aliases: dict[str, set[str]]) -> dict[str, str]:
@@ -155,7 +189,7 @@ def import_products(path: Path) -> ImportResult:
 
     products: list[Product] = []
     for index, row in enumerate(rows, start=2):
-        ref = str(row.get(columns["ref"], "") or "").strip().upper()
+        ref = normalize_ref(row.get(columns["ref"], ""))
         if not ref:
             warnings.append(f"Ligne {index}: reference vide ignoree")
             continue
@@ -163,7 +197,7 @@ def import_products(path: Path) -> ImportResult:
             id=None,
             ref=ref,
             type_label=str(row.get(columns.get("type_label", ""), "") or "").strip(),
-            name=str(row.get(columns.get("name", ""), "") or "").strip(),
+            name="",
             unit_price_ht=parse_decimal(row.get(columns.get("unit_price_ht", ""))),
             package_size=parse_int(row.get(columns.get("package_size", ""))),
         )
@@ -177,23 +211,32 @@ def import_order(path: Path) -> ImportResult:
     warnings: list[str] = []
     if "ref" not in columns:
         raise ValueError("Colonne reference introuvable dans l'export commande.")
-    if "quantity" not in columns:
+    if "package_count" not in columns and "quantity_pieces" not in columns:
         raise ValueError("Colonne quantite introuvable dans l'export commande.")
 
     order_rows: list[OrderRow] = []
     for index, row in enumerate(rows, start=2):
-        ref = str(row.get(columns["ref"], "") or "").strip().upper()
-        quantity = parse_int(row.get(columns["quantity"]))
+        ref = normalize_ref(row.get(columns["ref"], ""))
+        package_count = parse_int(row.get(columns.get("package_count", ""))) or 0
+        package_size = parse_int(row.get(columns.get("package_size", "")))
+        quantity_pieces = parse_int(row.get(columns.get("quantity_pieces", "")))
         if not ref:
             warnings.append(f"Ligne {index}: reference vide ignoree")
             continue
-        if not quantity or quantity <= 0:
+        if package_count <= 0 and (not quantity_pieces or quantity_pieces <= 0):
             warnings.append(f"Ligne {index}: quantite invalide pour {ref}")
             continue
+        if quantity_pieces and package_count and package_size and quantity_pieces != package_count * package_size:
+            warnings.append(
+                f"Ligne {index}: controle quantite different pour {ref} "
+                f"({package_count} x {package_size} != {quantity_pieces})"
+            )
         order_rows.append(
             OrderRow(
                 ref=ref,
-                quantity=quantity,
+                package_count=package_count,
+                package_size=package_size,
+                quantity_pieces=quantity_pieces,
                 unit_price_ht=parse_decimal(row.get(columns.get("unit_price_ht", ""))),
             )
         )

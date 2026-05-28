@@ -34,6 +34,9 @@ class InvoiceLine:
     package_count: int | None = None
     package_size: int | None = None
     unit_price_ht: Decimal | None = None
+    catalog_unit_price_ht: Decimal | None = None
+    order_unit_price_ht: Decimal | None = None
+    price_confirmed: bool = True
     product_id: int | None = None
     type_label: str = ""
     validation_status: str = "pending"
@@ -52,6 +55,8 @@ class InvoiceLine:
             errors.append("quantite invalide")
         if self.unit_price_ht is None:
             errors.append("prix absent")
+        if not self.price_confirmed:
+            errors.append("ecart prix a confirmer")
         self.validation_status = "ok" if not errors else "blocked"
         self.validation_message = "; ".join(errors)
 

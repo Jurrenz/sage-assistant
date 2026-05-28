@@ -108,9 +108,20 @@ class MainWindow(QMainWindow):
         self.product_info = QLabel("Aucun produit selectionne.")
         layout.addWidget(self.product_info)
 
-        self.lines_table = QTableWidget(0, 8)
+        self.lines_table = QTableWidget(0, 10)
         self.lines_table.setHorizontalHeaderLabels(
-            ["Ref", "Code Sage", "Description", "Type", "Colisage", "Qte pieces", "P.U. HT", "Statut"]
+            [
+                "Reference",
+                "Categorie",
+                "Code Sage",
+                "Paquets",
+                "Colisage",
+                "Qte pieces",
+                "Prix BDD",
+                "Prix commande",
+                "Prix retenu",
+                "Statut",
+            ]
         )
         self.lines_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.lines_table.itemChanged.connect(self._on_line_item_changed)
@@ -134,9 +145,9 @@ class MainWindow(QMainWindow):
         self.status_label = QLabel("")
         layout.addWidget(self.status_label)
 
-        import_products_button = QPushButton("Importer export produits Microstore")
+        import_products_button = QPushButton("Importer BDD articles Microstore")
         import_products_button.clicked.connect(self._import_products)
-        import_order_button = QPushButton("Importer commande Microstore")
+        import_order_button = QPushButton("Importer fichier commande")
         import_order_button.clicked.connect(self._import_order)
         layout.addWidget(import_products_button)
         layout.addWidget(import_order_button)
@@ -268,17 +279,19 @@ class MainWindow(QMainWindow):
         for row, line in enumerate(self.lines):
             values = [
                 line.ref,
-                line.sage_code,
-                line.description,
                 line.type_label,
+                line.sage_code,
+                str(line.package_count or ""),
                 str(line.package_size or ""),
                 str(line.quantity_pieces),
+                str(line.catalog_unit_price_ht or ""),
+                str(line.order_unit_price_ht or ""),
                 str(line.unit_price_ht or ""),
                 line.validation_status if line.validation_status == "ok" else line.validation_message,
             ]
             for col, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                if col in {0, 3, 4, 7}:
+                if col in {0, 1, 3, 4, 6, 7, 9}:
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 self.lines_table.setItem(row, col, item)
         self.lines_table.blockSignals(False)
@@ -289,11 +302,11 @@ class MainWindow(QMainWindow):
             return
         line = self.lines[row]
         try:
-            line.sage_code = self.lines_table.item(row, 1).text().strip().upper()
-            line.description = self.lines_table.item(row, 2).text().strip()
+            line.sage_code = self.lines_table.item(row, 2).text().strip().upper()
             line.quantity_pieces = int(self.lines_table.item(row, 5).text().strip())
-            price_text = self.lines_table.item(row, 6).text().strip().replace(",", ".")
+            price_text = self.lines_table.item(row, 8).text().strip().replace(",", ".")
             line.unit_price_ht = Decimal(price_text) if price_text else None
+            line.price_confirmed = True
         except Exception as exc:
             line.validation_status = "blocked"
             line.validation_message = f"valeur invalide: {exc}"
@@ -345,7 +358,7 @@ class MainWindow(QMainWindow):
             return
         self._refresh_status()
         self._refresh_missing_types()
-        QMessageBox.information(self, APP_NAME, f"{count} produits importes.\n" + "\n".join(result.warnings[:10]))
+        QMessageBox.information(self, APP_NAME, f"{count} references importees.\n" + "\n".join(result.warnings[:10]))
 
     def _import_order(self) -> None:
         path = self._pick_excel_file("Choisir commande Microstore")
