@@ -55,6 +55,7 @@ class AppSettings:
     auto_close_with_sage: bool = True
     autohotkey_path: str = "AutoHotkey64.exe"
     sage_executable_path: str = ""
+    order_folder_path: str = ""
     injection_line_limit: int = 1
     sage_profile: SageProfile = field(default_factory=SageProfile)
 

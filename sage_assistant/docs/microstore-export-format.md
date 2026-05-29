@@ -40,3 +40,17 @@ Regle appliquee :
 - quantite Sage = `quantity * unit`
 - `Unit price` = P.U. HT retenu
 - `Total` est ignore, car il peut valoir `0.0` dans les fichiers reels.
+
+## Dossier commandes automatique
+
+Sur le mini PC Windows, renseigner dans l'onglet `Imports` le dossier ou Microstore depose les commandes acceptees.
+
+L'assistant :
+
+- scanne les fichiers `.xls`, `.xlsx`, `.xlsm` ;
+- ignore les fichiers temporaires Excel commencant par `~$` ;
+- garde uniquement les fichiers dont le nom est un numero de commande, par exemple `1001627.xls` ;
+- trie les commandes par date de modification ;
+- permet d'importer la derniere commande detectee sans ouvrir le selecteur de fichier.
+
+L'import reste volontairement declenche par l'utilisateur pour eviter d'ajouter une mauvaise commande a une facture Sage ouverte.

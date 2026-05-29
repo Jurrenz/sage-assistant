@@ -32,6 +32,7 @@ from .db import Database
 from .excel_import import import_order, import_products
 from .injection import launch_autohotkey, write_injection_queue
 from .models import InvoiceLine, SageMapping
+from .order_folder import list_order_files, latest_order_file
 from .resolver import Resolver
 from .settings import APP_NAME, AppSettings, is_windows, load_settings, save_settings
 
@@ -44,6 +45,7 @@ class MainWindow(QMainWindow):
         self.settings = load_settings()
         self.lines: list[InvoiceLine] = []
         self.current_matches = []
+        self.detected_order_files = []
 
         self.setWindowTitle(APP_NAME)
         self.resize(980, 640)
@@ -57,6 +59,10 @@ class MainWindow(QMainWindow):
         self.sage_watch_timer = QTimer(self)
         self.sage_watch_timer.timeout.connect(self._watch_sage_process)
         self.sage_watch_timer.start(3000)
+
+        self.order_folder_timer = QTimer(self)
+        self.order_folder_timer.timeout.connect(self._refresh_order_folder)
+        self.order_folder_timer.start(5000)
 
     def closeEvent(self, event) -> None:  # type: ignore[override]
         save_settings(self.settings)
@@ -151,6 +157,31 @@ class MainWindow(QMainWindow):
         import_order_button.clicked.connect(self._import_order)
         layout.addWidget(import_products_button)
         layout.addWidget(import_order_button)
+
+        folder_row = QHBoxLayout()
+        self.order_folder_input = QLineEdit(self.settings.order_folder_path)
+        self.order_folder_input.setPlaceholderText("Dossier commandes Microstore...")
+        browse_order_folder = QPushButton("Parcourir")
+        browse_order_folder.clicked.connect(self._choose_order_folder)
+        folder_row.addWidget(QLabel("Dossier commandes"))
+        folder_row.addWidget(self.order_folder_input, 1)
+        folder_row.addWidget(browse_order_folder)
+        layout.addLayout(folder_row)
+
+        detected_row = QHBoxLayout()
+        self.order_file_combo = QComboBox()
+        refresh_orders = QPushButton("Rafraichir")
+        refresh_orders.clicked.connect(self._refresh_order_folder)
+        import_latest = QPushButton("Importer derniere commande")
+        import_latest.clicked.connect(self._import_latest_order_from_folder)
+        import_selected = QPushButton("Importer selection")
+        import_selected.clicked.connect(self._import_selected_order_from_folder)
+        detected_row.addWidget(self.order_file_combo, 1)
+        detected_row.addWidget(refresh_orders)
+        detected_row.addWidget(import_latest)
+        detected_row.addWidget(import_selected)
+        layout.addLayout(detected_row)
+
         layout.addStretch(1)
         return page
 
@@ -380,6 +411,9 @@ class MainWindow(QMainWindow):
         path = self._pick_excel_file("Choisir commande Microstore")
         if not path:
             return
+        self._import_order_path(path)
+
+    def _import_order_path(self, path: Path) -> None:
         try:
             result = import_order(path)
             new_lines = [self.resolver.line_from_order_row(row) for row in result.rows]  # type: ignore[arg-type]
@@ -390,6 +424,43 @@ class MainWindow(QMainWindow):
             return
         self._refresh_lines()
         QMessageBox.information(self, APP_NAME, f"{len(new_lines)} lignes ajoutees.\n" + "\n".join(result.warnings[:10]))
+
+    def _choose_order_folder(self) -> None:
+        folder = QFileDialog.getExistingDirectory(self, "Choisir dossier commandes Microstore", self.order_folder_input.text())
+        if not folder:
+            return
+        self.order_folder_input.setText(folder)
+        self.settings.order_folder_path = folder
+        save_settings(self.settings)
+        self._refresh_order_folder()
+
+    def _refresh_order_folder(self) -> None:
+        if not hasattr(self, "order_file_combo"):
+            return
+        folder = self.order_folder_input.text().strip()
+        self.settings.order_folder_path = folder
+        self.detected_order_files = list_order_files(folder) if folder else []
+        self.order_file_combo.blockSignals(True)
+        self.order_file_combo.clear()
+        for order_file in self.detected_order_files[:50]:
+            self.order_file_combo.addItem(order_file.display_name, str(order_file.path))
+        self.order_file_combo.blockSignals(False)
+
+    def _import_latest_order_from_folder(self) -> None:
+        folder = self.order_folder_input.text().strip()
+        path = latest_order_file(folder) if folder else None
+        if not path:
+            QMessageBox.information(self, APP_NAME, "Aucune commande trouvee dans le dossier configure.")
+            return
+        self._import_order_path(path)
+
+    def _import_selected_order_from_folder(self) -> None:
+        index = self.order_file_combo.currentIndex()
+        if index < 0:
+            QMessageBox.information(self, APP_NAME, "Aucune commande selectionnee.")
+            return
+        path = Path(self.order_file_combo.itemData(index))
+        self._import_order_path(path)
 
     def _pick_excel_file(self, title: str) -> Path | None:
         filename, _ = QFileDialog.getOpenFileName(self, title, "", "Excel (*.xlsx *.xlsm *.xls)")
@@ -420,6 +491,7 @@ class MainWindow(QMainWindow):
     def _save_app_settings(self) -> None:
         self.settings.autohotkey_path = self.ahk_path.text().strip() or "AutoHotkey64.exe"
         self.settings.sage_executable_path = self.sage_path.text().strip()
+        self.settings.order_folder_path = self.order_folder_input.text().strip()
         self.settings.sage_profile.window_title_contains = self.window_title.text().strip() or "Sage"
         self.settings.sage_profile.delay_ms = self.delay_ms.value()
         self.settings.injection_line_limit = self.line_limit.value()

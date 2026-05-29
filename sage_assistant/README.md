@@ -35,11 +35,13 @@ pytest
 
 1. Importer l'export produits Microstore.
 2. Completer les mappings type Microstore -> code Sage/libelle.
-3. Ajouter des lignes par recherche reference ou importer une commande Excel.
-4. Verifier les lignes.
-5. Cliquer `Preparer injection Sage`.
-6. Pour un premier test Sage, garder `Limite lignes test = 1` et `Mode pas-a-pas AHK`.
-7. Sur Windows, lancer AutoHotkey v2 avec `automation/sage_injector.ahk` ou laisser l'app le lancer si le chemin AHK est configure.
+3. Dans `Imports`, configurer le dossier ou Microstore depose automatiquement les commandes.
+4. Cliquer `Importer derniere commande` ou choisir une commande detectee.
+5. Ajouter aussi des lignes par recherche reference si besoin.
+6. Verifier les lignes.
+7. Cliquer `Preparer injection Sage`.
+8. Pour un premier test Sage, garder `Limite lignes test = 1` et `Mode pas-a-pas AHK`.
+9. Sur Windows, lancer AutoHotkey v2 avec `automation/sage_injector.ahk` ou laisser l'app le lancer si le chemin AHK est configure.
 
 ## Important
 
