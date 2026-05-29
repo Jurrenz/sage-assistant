@@ -35,13 +35,15 @@ pytest
 
 1. Importer l'export produits Microstore.
 2. Completer les mappings type Microstore -> code Sage/libelle.
-3. Dans `Imports`, configurer le dossier ou Microstore depose automatiquement les commandes.
-4. Choisir une commande dans le tableau : client, ville, date, lignes, pieces et total sont affiches.
-5. Ajouter aussi des lignes par recherche reference si besoin.
-6. Verifier les lignes.
-7. Cliquer `Preparer injection Sage`.
-8. Pour un premier test Sage, garder `Limite lignes test = 1` et `Mode pas-a-pas AHK`.
-9. Sur Windows, lancer AutoHotkey v2 avec `automation/sage_injector.ahk` ou laisser l'app le lancer si le chemin AHK est configure.
+3. Dans `Imports`, configurer le dossier `MS_IMPORT` Google Drive pour detecter la derniere BDD produits.
+4. Cliquer `Mettre a jour BDD` quand une nouvelle BDD Microstore est detectee.
+5. Configurer le dossier ou Microstore depose automatiquement les commandes.
+6. Choisir une commande dans le tableau : client, ville, date, lignes, pieces et total sont affiches.
+7. Ajouter aussi des lignes par recherche reference si besoin.
+8. Verifier les lignes.
+9. Cliquer `Preparer injection Sage`.
+10. Pour un premier test Sage, garder `Limite lignes test = 1` et `Mode pas-a-pas AHK`.
+11. Sur Windows, lancer AutoHotkey v2 avec `automation/sage_injector.ahk` ou laisser l'app le lancer si le chemin AHK est configure.
 
 ## Important
 

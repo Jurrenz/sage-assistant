@@ -56,3 +56,29 @@ L'assistant :
 - permet d'importer une commande selectionnee sans ouvrir le selecteur de fichier.
 
 L'import reste volontairement declenche par l'utilisateur pour eviter d'ajouter une mauvaise commande a une facture Sage ouverte.
+
+## Dossier BDD Microstore Google Drive
+
+Pointer `Dossier BDD Microstore` vers le dossier actif :
+
+```text
+SZFashion/MS_IMPORT
+```
+
+Structure attendue :
+
+```text
+MS_IMPORT/
+  2026-05-04/
+    Modele d'article-....xlsx
+  2026-05-29/
+    Modele d'article-....xlsx
+```
+
+L'assistant :
+
+- scanne recursivement les sous-dossiers dates ;
+- cherche les fichiers `.xlsx` ou `.xlsm` dont le nom contient `Modele` et `article` ;
+- ignore les fichiers temporaires et `MS_IMPORT_DISABLED` ;
+- affiche le dernier export detecte avec date et nombre de references ;
+- importe la BDD uniquement quand l'utilisateur clique `Mettre a jour BDD`.

@@ -34,6 +34,7 @@ from .excel_import import import_order, import_products
 from .injection import launch_autohotkey, write_injection_queue
 from .models import InvoiceLine, SageMapping
 from .order_folder import list_order_files, latest_order_file
+from .product_folder import latest_product_export
 from .resolver import Resolver
 from .settings import APP_NAME, AppSettings, is_windows, load_settings, save_settings
 
@@ -47,6 +48,7 @@ class MainWindow(QMainWindow):
         self.lines: list[InvoiceLine] = []
         self.current_matches = []
         self.detected_order_files = []
+        self.detected_product_export = None
 
         self.setWindowTitle(APP_NAME)
         self.resize(1220, 760)
@@ -56,6 +58,7 @@ class MainWindow(QMainWindow):
         self._refresh_status()
         self._refresh_mappings()
         self._refresh_missing_types()
+        self._refresh_product_folder()
         self._refresh_order_folder()
 
         self.sage_watch_timer = QTimer(self)
@@ -65,6 +68,10 @@ class MainWindow(QMainWindow):
         self.order_folder_timer = QTimer(self)
         self.order_folder_timer.timeout.connect(self._refresh_order_folder)
         self.order_folder_timer.start(5000)
+
+        self.product_folder_timer = QTimer(self)
+        self.product_folder_timer.timeout.connect(self._refresh_product_folder)
+        self.product_folder_timer.start(30000)
 
     def closeEvent(self, event) -> None:  # type: ignore[override]
         save_settings(self.settings)
@@ -152,6 +159,27 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(page)
         self.status_label = QLabel("")
         layout.addWidget(self.status_label)
+
+        product_folder_row = QHBoxLayout()
+        self.product_folder_input = QLineEdit(self.settings.product_folder_path)
+        self.product_folder_input.setPlaceholderText("Dossier MS_IMPORT Google Drive...")
+        browse_product_folder = QPushButton("Parcourir")
+        browse_product_folder.clicked.connect(self._choose_product_folder)
+        product_folder_row.addWidget(QLabel("Dossier BDD Microstore"))
+        product_folder_row.addWidget(self.product_folder_input, 1)
+        product_folder_row.addWidget(browse_product_folder)
+        layout.addLayout(product_folder_row)
+
+        product_actions = QHBoxLayout()
+        self.product_export_status = QLabel("Aucune BDD Microstore detectee.")
+        refresh_products = QPushButton("Detecter BDD")
+        refresh_products.clicked.connect(self._refresh_product_folder)
+        import_detected_products = QPushButton("Mettre a jour BDD")
+        import_detected_products.clicked.connect(self._import_detected_product_export)
+        product_actions.addWidget(self.product_export_status, 1)
+        product_actions.addWidget(refresh_products)
+        product_actions.addWidget(import_detected_products)
+        layout.addLayout(product_actions)
 
         folder_row = QHBoxLayout()
         self.order_folder_input = QLineEdit(self.settings.order_folder_path)
@@ -422,14 +450,20 @@ class MainWindow(QMainWindow):
         path = self._pick_excel_file("Choisir export produits Microstore")
         if not path:
             return
+        self._import_products_path(path)
+
+    def _import_products_path(self, path: Path) -> None:
         try:
             result = import_products(path)
             count = self.db.upsert_products(result.rows)  # type: ignore[arg-type]
         except Exception as exc:
             QMessageBox.critical(self, APP_NAME, str(exc))
             return
+        self.settings.last_product_file_path = str(path)
+        save_settings(self.settings)
         self._refresh_status()
         self._refresh_missing_types()
+        self._refresh_product_folder()
         QMessageBox.information(self, APP_NAME, f"{count} references importees.\n" + "\n".join(result.warnings[:10]))
 
     def _import_order(self) -> None:
@@ -458,6 +492,48 @@ class MainWindow(QMainWindow):
         self.settings.order_folder_path = folder
         save_settings(self.settings)
         self._refresh_order_folder()
+
+    def _choose_product_folder(self) -> None:
+        folder = QFileDialog.getExistingDirectory(self, "Choisir dossier MS_IMPORT", self.product_folder_input.text())
+        if not folder:
+            return
+        self.product_folder_input.setText(folder)
+        self.settings.product_folder_path = folder
+        save_settings(self.settings)
+        self._refresh_product_folder()
+
+    def _refresh_product_folder(self) -> None:
+        if not hasattr(self, "product_export_status"):
+            return
+        folder = self.product_folder_input.text().strip()
+        self.settings.product_folder_path = folder
+        self.detected_product_export = latest_product_export(folder) if folder else None
+        if not self.detected_product_export:
+            self.product_export_status.setText("Aucune BDD Microstore detectee.")
+            return
+        export = self.detected_product_export
+        imported_marker = ""
+        if self.settings.last_product_file_path and Path(self.settings.last_product_file_path) == export.path:
+            imported_marker = " deja importee"
+        elif self.settings.last_product_file_path:
+            imported_marker = " nouvelle BDD disponible"
+        status = (
+            f"{export.path.name} - {export.modified_at_label} - "
+            f"{export.product_count} refs"
+            f"{' - ' + str(export.warning_count) + ' warnings' if export.warning_count else ''}"
+            f"{' - erreur: ' + export.error if export.error else ''}"
+            f"{imported_marker}"
+        )
+        self.product_export_status.setText(status)
+
+    def _import_detected_product_export(self) -> None:
+        if not self.detected_product_export:
+            QMessageBox.information(self, APP_NAME, "Aucune BDD Microstore detectee.")
+            return
+        if self.detected_product_export.error:
+            QMessageBox.warning(self, APP_NAME, f"BDD detectee invalide: {self.detected_product_export.error}")
+            return
+        self._import_products_path(self.detected_product_export.path)
 
     def _refresh_order_folder(self) -> None:
         if not hasattr(self, "order_table"):
@@ -533,6 +609,7 @@ class MainWindow(QMainWindow):
     def _save_app_settings(self) -> None:
         self.settings.autohotkey_path = self.ahk_path.text().strip() or "AutoHotkey64.exe"
         self.settings.sage_executable_path = self.sage_path.text().strip()
+        self.settings.product_folder_path = self.product_folder_input.text().strip()
         self.settings.order_folder_path = self.order_folder_input.text().strip()
         self.settings.sage_profile.window_title_contains = self.window_title.text().strip() or "Sage"
         self.settings.sage_profile.delay_ms = self.delay_ms.value()
