@@ -27,7 +27,6 @@ def test_import_products_and_resolve_line(tmp_path):
     result = import_products(path)
     db = Database(tmp_path / "app.sqlite")
     db.upsert_products(result.rows)
-    db.upsert_mapping(SageMapping("ROBES COURTES", "RO", "ROBE / TUNIC"))
 
     product = db.get_product_by_ref("FL530-1")
     assert product is not None
@@ -40,6 +39,25 @@ def test_import_products_and_resolve_line(tmp_path):
     assert line.sage_code == "RO"
     assert line.description == "FL530-1"
     assert line.quantity_pieces == 24
+    db.close()
+
+
+def test_default_sage_mappings_are_seeded_and_do_not_overwrite_user_edits(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+
+    mapping = db.get_mapping("CHEMISES / TUNIQUES")
+    assert mapping is not None
+    assert mapping.sage_code == "CH"
+    assert mapping.sage_label == "Chemise"
+
+    db.upsert_mapping(SageMapping("CROCHETS", "PU", "Pull / Gilet"))
+    inserted = db.seed_default_mappings()
+    edited_mapping = db.get_mapping("CROCHETS")
+
+    assert inserted == 0
+    assert edited_mapping is not None
+    assert edited_mapping.sage_code == "PU"
+    assert edited_mapping.sage_label == "Pull / Gilet"
     db.close()
 
 

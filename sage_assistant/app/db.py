@@ -7,6 +7,7 @@ from typing import Iterable
 
 from .models import Product, SageMapping, utc_now_iso
 from .settings import default_db_path
+from .default_mappings import DEFAULT_SAGE_MAPPINGS
 
 
 SCHEMA = """
@@ -59,6 +60,7 @@ class Database:
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
         self.conn.commit()
+        self.seed_default_mappings()
 
     def close(self) -> None:
         self.conn.close()
@@ -168,6 +170,20 @@ class Database:
                 ),
             )
         self.log("mapping_update", f"Mapping mis a jour: {mapping.microstore_type}")
+
+    def seed_default_mappings(self) -> int:
+        count = 0
+        with self.conn:
+            for mapping in DEFAULT_SAGE_MAPPINGS:
+                cursor = self.conn.execute(
+                    """
+                    INSERT OR IGNORE INTO sage_type_mappings(microstore_type, sage_code, sage_label, is_active)
+                    VALUES (?, ?, ?, 1)
+                    """,
+                    (mapping.microstore_type, mapping.sage_code, mapping.sage_label),
+                )
+                count += cursor.rowcount
+        return count
 
     def latest_product_import(self) -> str | None:
         row = self.conn.execute("SELECT MAX(last_imported_at) AS latest FROM products").fetchone()
