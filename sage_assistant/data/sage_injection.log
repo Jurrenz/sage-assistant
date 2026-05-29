@@ -1,0 +1,39 @@
+﻿2026-05-29 13:32:24 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 13:32:50 | WAIT line=1 ref=LA55-1
+2026-05-29 13:33:17 | SEND line=1 ref=LA55-1
+2026-05-29 13:33:18 | OK line=1 ref=LA55-1
+2026-05-29 13:33:18 | DONE lines=1
+2026-05-29 13:33:33 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 13:33:38 | WAIT line=1 ref=LA55-1
+2026-05-29 13:33:42 | SEND line=1 ref=LA55-1
+2026-05-29 13:33:42 | OK line=1 ref=LA55-1
+2026-05-29 13:33:42 | DONE lines=1
+2026-05-29 13:33:49 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 13:33:50 | WAIT line=1 ref=LA55-1
+2026-05-29 13:33:52 | SEND line=1 ref=LA55-1
+2026-05-29 13:33:53 | OK line=1 ref=LA55-1
+2026-05-29 13:33:53 | DONE lines=1
+2026-05-29 15:25:10 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 15:25:13 | WAIT line=1 ref=LA55-1
+2026-05-29 15:25:23 | SEND line=1 ref=LA55-1
+2026-05-29 15:25:24 | OK line=1 ref=LA55-1
+2026-05-29 15:25:24 | DONE lines=1
+2026-05-29 15:25:27 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 15:25:29 | WAIT line=1 ref=LA55-1
+2026-05-29 15:25:32 | SEND line=1 ref=LA55-1
+2026-05-29 15:25:33 | OK line=1 ref=LA55-1
+2026-05-29 15:25:33 | DONE lines=1
+2026-05-29 15:25:37 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 15:25:38 | WAIT line=1 ref=LA55-1
+2026-05-29 15:25:46 | SEND line=1 ref=LA55-1
+2026-05-29 15:25:46 | OK line=1 ref=LA55-1
+2026-05-29 15:25:46 | DONE lines=1
+2026-05-29 15:43:58 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 15:43:59 | WAIT line=1 ref=LA55-1
+2026-05-29 15:44:18 | SEND line=1 ref=LA55-1
+2026-05-29 15:44:19 | OK line=1 ref=LA55-1
+2026-05-29 15:44:19 | DONE lines=1
+2026-05-29 16:15:09 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 16:15:11 | WAIT line=1 ref=LA55-1
+2026-05-29 16:15:21 | SEND line=1 ref=LA55-1
+2026-05-29 16:15:21 | ERROR missing calibrated positions line=1 ref=LA55-1
