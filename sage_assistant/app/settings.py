@@ -27,6 +27,10 @@ def default_queue_path() -> Path:
     return data_dir() / "sage_queue.json"
 
 
+def default_ahk_log_path() -> Path:
+    return data_dir() / "sage_injection.log"
+
+
 def default_settings_path() -> Path:
     return data_dir() / "settings.json"
 
@@ -40,6 +44,9 @@ class SageProfile:
     after_description_tabs: int = 1
     after_quantity_tabs: int = 1
     validate_key: str = "Enter"
+    focus_guard: bool = True
+    step_mode: bool = True
+    log_path: str = ""
 
 
 @dataclass
@@ -48,6 +55,7 @@ class AppSettings:
     auto_close_with_sage: bool = True
     autohotkey_path: str = "AutoHotkey64.exe"
     sage_executable_path: str = ""
+    injection_line_limit: int = 1
     sage_profile: SageProfile = field(default_factory=SageProfile)
 
 
@@ -57,6 +65,8 @@ def load_settings(path: Path | None = None) -> AppSettings:
         return AppSettings()
     raw = json.loads(settings_path.read_text(encoding="utf-8"))
     profile = SageProfile(**raw.get("sage_profile", {}))
+    if not profile.log_path:
+        profile.log_path = str(default_ahk_log_path())
     raw["sage_profile"] = profile
     return AppSettings(**raw)
 

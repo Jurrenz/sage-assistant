@@ -9,6 +9,7 @@ Le MVP est une application desktop Python/PySide6 qui :
 - maintient les correspondances type Microstore -> code article Sage/libelle Sage ;
 - prépare des lignes de facture manuelles ou depuis un Excel commande ;
 - exporte une file JSON injectee dans Sage par AutoHotkey v2.
+- importe les commandes Microstore `.xls` generees apres acceptation.
 
 ## Demarrage developpement
 
@@ -37,7 +38,8 @@ pytest
 3. Ajouter des lignes par recherche reference ou importer une commande Excel.
 4. Verifier les lignes.
 5. Cliquer `Preparer injection Sage`.
-6. Sur Windows, lancer AutoHotkey v2 avec `automation/sage_injector.ahk` ou laisser l'app le lancer si le chemin AHK est configure.
+6. Pour un premier test Sage, garder `Limite lignes test = 1` et `Mode pas-a-pas AHK`.
+7. Sur Windows, lancer AutoHotkey v2 avec `automation/sage_injector.ahk` ou laisser l'app le lancer si le chemin AHK est configure.
 
 ## Important
 

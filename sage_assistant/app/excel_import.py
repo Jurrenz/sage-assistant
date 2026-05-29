@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from openpyxl import load_workbook
+import xlrd
 
 from .models import Product
 
@@ -81,6 +82,13 @@ ORDER_HEADER_ALIASES = {
     "unit_price_ht": PRODUCT_HEADER_ALIASES["unit_price_ht"],
 }
 
+MICROSTORE_XLS_ORDER_HEADERS = {
+    "product reference",
+    "quantity",
+    "unit",
+    "unit price",
+}
+
 
 @dataclass(frozen=True)
 class OrderRow:
@@ -132,12 +140,38 @@ def parse_int(value: Any) -> int | None:
 
 
 def _load_rows(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
+    if path.suffix.lower() == ".xls":
+        return _load_xls_rows(path)
+    return _load_xlsx_rows(path)
+
+
+def _load_xlsx_rows(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
     workbook = load_workbook(path, read_only=True, data_only=True)
     try:
         sheet = workbook.active
         raw_rows = list(sheet.iter_rows(values_only=True))
     finally:
         workbook.close()
+    if not raw_rows:
+        return [], []
+
+    header_index = _detect_header_row(raw_rows)
+    headers = [normalize_header(cell) for cell in raw_rows[header_index]]
+    rows: list[dict[str, Any]] = []
+    for raw in raw_rows[header_index + 1 :]:
+        if not any(cell not in (None, "") for cell in raw):
+            continue
+        rows.append({headers[index]: value for index, value in enumerate(raw) if index < len(headers)})
+    return headers, rows
+
+
+def _load_xls_rows(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
+    workbook = xlrd.open_workbook(path)
+    sheet = workbook.sheet_by_index(0)
+    raw_rows: list[tuple[Any, ...]] = [
+        tuple(sheet.cell_value(row_index, col_index) for col_index in range(sheet.ncols))
+        for row_index in range(sheet.nrows)
+    ]
     if not raw_rows:
         return [], []
 
@@ -207,6 +241,9 @@ def import_products(path: Path) -> ImportResult:
 
 def import_order(path: Path) -> ImportResult:
     headers, rows = _load_rows(path)
+    if _is_microstore_order_xls(headers):
+        return _import_microstore_order_xls_rows(rows)
+
     columns = _match_columns(headers, ORDER_HEADER_ALIASES)
     warnings: list[str] = []
     if "ref" not in columns:
@@ -238,6 +275,39 @@ def import_order(path: Path) -> ImportResult:
                 package_size=package_size,
                 quantity_pieces=quantity_pieces,
                 unit_price_ht=parse_decimal(row.get(columns.get("unit_price_ht", ""))),
+            )
+        )
+    return ImportResult(rows=order_rows, warnings=warnings)
+
+
+def _is_microstore_order_xls(headers: list[str]) -> bool:
+    return MICROSTORE_XLS_ORDER_HEADERS.issubset(set(headers))
+
+
+def _import_microstore_order_xls_rows(rows: list[dict[str, Any]]) -> ImportResult:
+    warnings: list[str] = []
+    order_rows: list[OrderRow] = []
+    for index, row in enumerate(rows, start=1):
+        ref = normalize_ref(row.get("product reference", ""))
+        if not ref or ref == "TOTAL:":
+            continue
+
+        package_count = parse_int(row.get("quantity")) or 0
+        package_size = parse_int(row.get("unit"))
+        quantity_pieces = package_count * package_size if package_count > 0 and package_size else None
+        if package_count <= 0:
+            warnings.append(f"Ligne commande {index}: quantite invalide pour {ref}")
+            continue
+        if not package_size:
+            warnings.append(f"Ligne commande {index}: colisage absent pour {ref}")
+
+        order_rows.append(
+            OrderRow(
+                ref=ref,
+                package_count=package_count,
+                package_size=package_size,
+                quantity_pieces=quantity_pieces,
+                unit_price_ht=parse_decimal(row.get("unit price")),
             )
         )
     return ImportResult(rows=order_rows, warnings=warnings)

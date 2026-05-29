@@ -6,24 +6,30 @@ from dataclasses import asdict
 from pathlib import Path
 
 from .models import InvoiceLine, utc_now_iso
-from .settings import AppSettings, default_queue_path, project_root
+from .settings import AppSettings, default_ahk_log_path, default_queue_path, project_root
 
 
 def write_injection_queue(
     lines: list[InvoiceLine],
     settings: AppSettings,
     path: Path | None = None,
+    line_limit: int | None = None,
 ) -> Path:
-    blocked = [line for line in lines if line.validation_status != "ok"]
+    selected_lines = lines[:line_limit] if line_limit and line_limit > 0 else lines
+    blocked = [line for line in selected_lines if line.validation_status != "ok"]
     if blocked:
         refs = ", ".join(line.ref for line in blocked[:5])
         raise ValueError(f"Impossible d'injecter: lignes bloquees ({refs})")
     queue_path = path or default_queue_path()
     queue_path.parent.mkdir(parents=True, exist_ok=True)
+    if not settings.sage_profile.log_path:
+        settings.sage_profile.log_path = str(default_ahk_log_path())
     payload = {
         "created_at": utc_now_iso(),
         "profile": asdict(settings.sage_profile),
-        "lines": [line.as_injection_dict() for line in lines],
+        "source_line_count": len(lines),
+        "line_limit": line_limit or 0,
+        "lines": [line.as_injection_dict() for line in selected_lines],
     }
     queue_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
     return queue_path

@@ -1,13 +1,16 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
+SetTitleMatchMode(2)
 
 ; AutoHotkey v2 injector for Sage Assistant.
 ; Hotkeys:
 ;   Ctrl+Alt+P = pause/resume
 ;   Ctrl+Alt+S = stop immediately
+;   Ctrl+Alt+N = next line in step mode
 
 global StopRequested := false
 global Paused := false
+global NextRequested := false
 
 ^!p:: {
     global Paused
@@ -21,6 +24,13 @@ global Paused := false
     StopRequested := true
     ToolTip("Injection Sage stoppee")
     SetTimer(() => ToolTip(), -1200)
+}
+
+^!n:: {
+    global NextRequested
+    NextRequested := true
+    ToolTip("Ligne suivante")
+    SetTimer(() => ToolTip(), -700)
 }
 
 if A_Args.Length < 1 {
@@ -45,40 +55,64 @@ afterArticleTabs := profile.Has("after_article_tabs") ? Integer(profile["after_a
 afterDescriptionTabs := profile.Has("after_description_tabs") ? Integer(profile["after_description_tabs"]) : 1
 afterQuantityTabs := profile.Has("after_quantity_tabs") ? Integer(profile["after_quantity_tabs"]) : 1
 validateKey := profile.Has("validate_key") ? profile["validate_key"] : "Enter"
+focusGuard := profile.Has("focus_guard") ? ToBool(profile["focus_guard"]) : true
+stepMode := profile.Has("step_mode") ? ToBool(profile["step_mode"]) : true
+logPath := profile.Has("log_path") ? profile["log_path"] : A_ScriptDir "\sage_injection.log"
 
-MsgBox("Place le curseur dans Sage au debut de la ligne facture, puis clique OK.`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S", "Sage Assistant")
+LogLine(logPath, "START queue=" queuePath " lines=" lines.Length)
+
+MsgBox("Place le curseur dans Sage au debut de la ligne facture, puis clique OK.`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S`nLigne suivante: Ctrl+Alt+N", "Sage Assistant")
 
 if !WinExist(windowTitle) {
+    LogLine(logPath, "ERROR Sage window not found: " windowTitle)
     MsgBox("Fenetre Sage introuvable avec le titre contenant: " windowTitle)
     ExitApp(1)
 }
 
 WinActivate(windowTitle)
 WinWaitActive(windowTitle, , 5)
+if focusGuard && !WinActive(windowTitle) {
+    LogLine(logPath, "ERROR Sage window not active after activation")
+    MsgBox("Sage n'est pas actif. Injection annulee.")
+    ExitApp(1)
+}
 
-for _, line in lines {
+for index, line in lines {
+    if stepMode {
+        WaitNextLine(index, line["ref"], logPath)
+    }
     WaitIfPaused()
     if StopRequested {
+        LogLine(logPath, "STOP before line " index " ref=" line["ref"])
         ExitApp(2)
     }
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+    LogLine(logPath, "SEND line=" index " ref=" line["ref"])
+
     SendText(line["article_code"])
     Sleep(delayMs)
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
     SendTabs(afterArticleTabs, delayMs)
 
     SendText(line["description"])
     Sleep(delayMs)
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
     SendTabs(afterDescriptionTabs, delayMs)
 
     SendText(String(line["quantity"]))
     Sleep(delayMs)
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
     SendTabs(afterQuantityTabs, delayMs)
 
     SendText(line["unit_price_ht"])
     Sleep(delayMs)
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
     Send("{" validateKey "}")
     Sleep(delayMs)
+    LogLine(logPath, "OK line=" index " ref=" line["ref"])
 }
 
+LogLine(logPath, "DONE lines=" lines.Length)
 ToolTip("Injection Sage terminee")
 SetTimer(() => ToolTip(), -1500)
 ExitApp(0)
@@ -95,6 +129,45 @@ WaitIfPaused() {
     while Paused && !StopRequested {
         Sleep(100)
     }
+}
+
+WaitNextLine(index, ref, logPath) {
+    global NextRequested, StopRequested
+    NextRequested := false
+    ToolTip("Pret ligne " index " / " ref ". Ctrl+Alt+N pour envoyer.")
+    LogLine(logPath, "WAIT line=" index " ref=" ref)
+    while !NextRequested && !StopRequested {
+        Sleep(100)
+    }
+    ToolTip()
+}
+
+EnsureSageActive(windowTitle, focusGuard, logPath, index, ref) {
+    if !focusGuard {
+        return
+    }
+    if !WinActive(windowTitle) {
+        LogLine(logPath, "ERROR focus lost line=" index " ref=" ref)
+        MsgBox("Sage n'est plus actif. Injection stoppee a la ligne " index " (" ref ").")
+        ExitApp(3)
+    }
+}
+
+LogLine(logPath, message) {
+    SplitPath(logPath, , &dir)
+    if dir && !DirExist(dir) {
+        DirCreate(dir)
+    }
+    stamp := FormatTime(, "yyyy-MM-dd HH:mm:ss")
+    FileAppend(stamp " | " message "`n", logPath, "UTF-8")
+}
+
+ToBool(value) {
+    if IsNumber(value) {
+        return value != 0
+    }
+    text := StrLower(String(value))
+    return text = "true" || text = "1" || text = "yes" || text = "oui"
 }
 
 ; Minimal JSON parser for AHK v2 based on JXON public-domain style.

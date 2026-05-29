@@ -29,5 +29,15 @@ Les nombres de tabulations et le delai clavier sont configurables dans l'onglet 
 
 - Pause/reprise : `Ctrl+Alt+P`
 - Stop immediat : `Ctrl+Alt+S`
+- Ligne suivante en mode pas-a-pas : `Ctrl+Alt+N`
 
 Toujours tester une nouvelle configuration sur une facture brouillon.
+
+## Premier test conseille
+
+1. Regler `Limite lignes test` a `1`.
+2. Garder `Mode pas-a-pas AHK` active.
+3. Injecter une facture brouillon.
+4. Verifier visuellement article, description/reference, quantite et P.U. HT.
+5. Passer a `2` lignes seulement apres validation.
+6. Passer a `Toutes` uniquement quand les deux premiers essais sont corrects.

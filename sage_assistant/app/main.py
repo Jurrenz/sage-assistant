@@ -186,12 +186,20 @@ class MainWindow(QMainWindow):
         self.delay_ms = QSpinBox()
         self.delay_ms.setRange(10, 2000)
         self.delay_ms.setValue(self.settings.sage_profile.delay_ms)
+        self.line_limit = QSpinBox()
+        self.line_limit.setRange(0, 999)
+        self.line_limit.setValue(self.settings.injection_line_limit)
+        self.line_limit.setSpecialValueText("Toutes")
+        self.step_mode = QCheckBox("Mode pas-a-pas AHK")
+        self.step_mode.setChecked(self.settings.sage_profile.step_mode)
         self.auto_close = QCheckBox("Fermer l'assistant quand Sage se ferme")
         self.auto_close.setChecked(self.settings.auto_close_with_sage)
         settings_form.addRow("AutoHotkey.exe", self.ahk_path)
         settings_form.addRow("Sage.exe", self.sage_path)
         settings_form.addRow("Titre fenetre Sage contient", self.window_title)
         settings_form.addRow("Delai touches (ms)", self.delay_ms)
+        settings_form.addRow("Limite lignes test", self.line_limit)
+        settings_form.addRow("", self.step_mode)
         settings_form.addRow("", self.auto_close)
         layout.addLayout(settings_form)
 
@@ -327,14 +335,22 @@ class MainWindow(QMainWindow):
             return
         for line in self.lines:
             line.validate()
-        blocked = [line for line in self.lines if line.validation_status != "ok"]
+        line_limit = self.settings.injection_line_limit
+        selected_lines = self.lines[:line_limit] if line_limit > 0 else self.lines
+        blocked = [line for line in selected_lines if line.validation_status != "ok"]
         if blocked:
             self._refresh_lines()
-            QMessageBox.warning(self, APP_NAME, "Certaines lignes sont bloquees. Corrige-les avant injection.")
+            QMessageBox.warning(self, APP_NAME, "Certaines lignes selectionnees sont bloquees. Corrige-les avant injection.")
             return
         try:
-            path = write_injection_queue(self.lines, self.settings)
-            self.db.log("injection_prepare", f"{len(self.lines)} lignes preparees: {path}")
+            path = write_injection_queue(
+                self.lines,
+                self.settings,
+                line_limit=self.settings.injection_line_limit,
+            )
+            prepared_count = self.settings.injection_line_limit or len(self.lines)
+            prepared_count = min(prepared_count, len(self.lines))
+            self.db.log("injection_prepare", f"{prepared_count}/{len(self.lines)} lignes preparees: {path}")
         except Exception as exc:
             QMessageBox.critical(self, APP_NAME, str(exc))
             return
@@ -376,7 +392,7 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, APP_NAME, f"{len(new_lines)} lignes ajoutees.\n" + "\n".join(result.warnings[:10]))
 
     def _pick_excel_file(self, title: str) -> Path | None:
-        filename, _ = QFileDialog.getOpenFileName(self, title, "", "Excel (*.xlsx *.xlsm)")
+        filename, _ = QFileDialog.getOpenFileName(self, title, "", "Excel (*.xlsx *.xlsm *.xls)")
         return Path(filename) if filename else None
 
     def _save_mapping(self) -> None:
@@ -406,6 +422,8 @@ class MainWindow(QMainWindow):
         self.settings.sage_executable_path = self.sage_path.text().strip()
         self.settings.sage_profile.window_title_contains = self.window_title.text().strip() or "Sage"
         self.settings.sage_profile.delay_ms = self.delay_ms.value()
+        self.settings.injection_line_limit = self.line_limit.value()
+        self.settings.sage_profile.step_mode = self.step_mode.isChecked()
         self.settings.auto_close_with_sage = self.auto_close.isChecked()
         save_settings(self.settings)
         QMessageBox.information(self, APP_NAME, "Reglages sauvegardes.")

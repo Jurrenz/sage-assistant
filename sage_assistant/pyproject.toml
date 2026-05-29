@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "openpyxl>=3.1.2",
     "pyside6>=6.7.0",
+    "xlrd>=2.0.1",
 ]
 
 [project.optional-dependencies]
