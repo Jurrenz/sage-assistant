@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
 
 from .db import Database
 from .excel_import import import_order, import_products
-from .injection import launch_autohotkey, write_injection_queue
+from .injection import launch_ahk_tool, launch_autohotkey, write_injection_queue
 from .models import InvoiceLine, SageMapping
 from .order_folder import list_order_files, latest_order_file
 from .product_folder import latest_product_export
@@ -266,6 +266,9 @@ class MainWindow(QMainWindow):
         settings_form = QFormLayout()
         self.ahk_path = QLineEdit(self.settings.autohotkey_path)
         self.sage_path = QLineEdit(self.settings.sage_executable_path)
+        self.injection_mode = QComboBox()
+        self.injection_mode.addItems(["keyboard_only", "calibrated_clicks", "control_based"])
+        self.injection_mode.setCurrentText(self.settings.sage_profile.injection_mode)
         self.window_title = QLineEdit(self.settings.sage_profile.window_title_contains)
         self.delay_ms = QSpinBox()
         self.delay_ms.setRange(10, 2000)
@@ -280,12 +283,25 @@ class MainWindow(QMainWindow):
         self.auto_close.setChecked(self.settings.auto_close_with_sage)
         settings_form.addRow("AutoHotkey.exe", self.ahk_path)
         settings_form.addRow("Sage.exe", self.sage_path)
+        settings_form.addRow("Mode injection", self.injection_mode)
         settings_form.addRow("Titre fenetre Sage contient", self.window_title)
         settings_form.addRow("Delai touches (ms)", self.delay_ms)
         settings_form.addRow("Limite lignes test", self.line_limit)
         settings_form.addRow("", self.step_mode)
         settings_form.addRow("", self.auto_close)
         layout.addLayout(settings_form)
+
+        calibration_actions = QHBoxLayout()
+        diagnostic_button = QPushButton("Diagnostic Sage")
+        diagnostic_button.clicked.connect(self._run_sage_diagnostics)
+        calibrate_new_line = QPushButton("Enregistrer position nouvelle ligne")
+        calibrate_new_line.clicked.connect(lambda: self._run_sage_calibration("new_line"))
+        calibrate_article_cell = QPushButton("Enregistrer position colonne article")
+        calibrate_article_cell.clicked.connect(lambda: self._run_sage_calibration("article_cell"))
+        calibration_actions.addWidget(diagnostic_button)
+        calibration_actions.addWidget(calibrate_new_line)
+        calibration_actions.addWidget(calibrate_article_cell)
+        layout.addLayout(calibration_actions)
 
         save_settings_button = QPushButton("Sauver reglages")
         save_settings_button.clicked.connect(self._save_app_settings)
@@ -417,6 +433,7 @@ class MainWindow(QMainWindow):
         if not self.lines:
             QMessageBox.information(self, APP_NAME, "Aucune ligne a injecter.")
             return
+        self._save_app_settings_silent()
         for line in self.lines:
             line.validate()
         line_limit = self.settings.injection_line_limit
@@ -607,10 +624,12 @@ class MainWindow(QMainWindow):
         self.mapping_label.setText(self.mapping_table.item(row, 2).text())
 
     def _save_app_settings(self) -> None:
+        self._preserve_calibration_from_disk()
         self.settings.autohotkey_path = self.ahk_path.text().strip() or "AutoHotkey64.exe"
         self.settings.sage_executable_path = self.sage_path.text().strip()
         self.settings.product_folder_path = self.product_folder_input.text().strip()
         self.settings.order_folder_path = self.order_folder_input.text().strip()
+        self.settings.sage_profile.injection_mode = self.injection_mode.currentText()
         self.settings.sage_profile.window_title_contains = self.window_title.text().strip() or "Sage"
         self.settings.sage_profile.delay_ms = self.delay_ms.value()
         self.settings.injection_line_limit = self.line_limit.value()
@@ -618,6 +637,53 @@ class MainWindow(QMainWindow):
         self.settings.auto_close_with_sage = self.auto_close.isChecked()
         save_settings(self.settings)
         QMessageBox.information(self, APP_NAME, "Reglages sauvegardes.")
+
+    def _save_app_settings_silent(self) -> None:
+        self._preserve_calibration_from_disk()
+        self.settings.autohotkey_path = self.ahk_path.text().strip() or "AutoHotkey64.exe"
+        self.settings.sage_executable_path = self.sage_path.text().strip()
+        self.settings.product_folder_path = self.product_folder_input.text().strip()
+        self.settings.order_folder_path = self.order_folder_input.text().strip()
+        self.settings.sage_profile.injection_mode = self.injection_mode.currentText()
+        self.settings.sage_profile.window_title_contains = self.window_title.text().strip() or "Sage"
+        self.settings.sage_profile.delay_ms = self.delay_ms.value()
+        self.settings.injection_line_limit = self.line_limit.value()
+        self.settings.sage_profile.step_mode = self.step_mode.isChecked()
+        self.settings.auto_close_with_sage = self.auto_close.isChecked()
+        save_settings(self.settings)
+
+    def _preserve_calibration_from_disk(self) -> None:
+        disk_settings = load_settings()
+        disk_profile = disk_settings.sage_profile
+        profile = self.settings.sage_profile
+        profile.new_line_x = disk_profile.new_line_x
+        profile.new_line_y = disk_profile.new_line_y
+        profile.article_cell_x = disk_profile.article_cell_x
+        profile.article_cell_y = disk_profile.article_cell_y
+        profile.line_start_x = disk_profile.line_start_x
+        profile.line_start_y = disk_profile.line_start_y
+        profile.log_path = disk_profile.log_path
+        profile.diagnostics_path = disk_profile.diagnostics_path
+
+    def _run_sage_diagnostics(self) -> None:
+        self._save_app_settings_silent()
+        if not is_windows():
+            QMessageBox.information(self, APP_NAME, "Diagnostic Sage disponible sur Windows avec AutoHotkey.")
+            return
+        try:
+            launch_ahk_tool(self.settings, "sage_diagnostics.ahk")
+        except Exception as exc:
+            QMessageBox.warning(self, APP_NAME, f"Impossible de lancer le diagnostic: {exc}")
+
+    def _run_sage_calibration(self, position_name: str) -> None:
+        self._save_app_settings_silent()
+        if not is_windows():
+            QMessageBox.information(self, APP_NAME, "Calibration Sage disponible sur Windows avec AutoHotkey.")
+            return
+        try:
+            launch_ahk_tool(self.settings, "sage_calibrate_position.ahk", position_name)
+        except Exception as exc:
+            QMessageBox.warning(self, APP_NAME, f"Impossible de lancer la calibration: {exc}")
 
     def _watch_sage_process(self) -> None:
         if not is_windows() or not self.settings.auto_close_with_sage:

@@ -50,6 +50,7 @@ profile := queue["profile"]
 lines := queue["lines"]
 
 windowTitle := profile.Has("window_title_contains") ? profile["window_title_contains"] : "Sage"
+injectionMode := profile.Has("injection_mode") ? profile["injection_mode"] : "keyboard_only"
 delayMs := profile.Has("delay_ms") ? Integer(profile["delay_ms"]) : 80
 afterArticleTabs := profile.Has("after_article_tabs") ? Integer(profile["after_article_tabs"]) : 1
 afterDescriptionTabs := profile.Has("after_description_tabs") ? Integer(profile["after_description_tabs"]) : 1
@@ -58,10 +59,14 @@ validateKey := profile.Has("validate_key") ? profile["validate_key"] : "Enter"
 focusGuard := profile.Has("focus_guard") ? ToBool(profile["focus_guard"]) : true
 stepMode := profile.Has("step_mode") ? ToBool(profile["step_mode"]) : true
 logPath := profile.Has("log_path") ? profile["log_path"] : A_ScriptDir "\sage_injection.log"
+newLineX := profile.Has("new_line_x") ? Integer(profile["new_line_x"]) : 0
+newLineY := profile.Has("new_line_y") ? Integer(profile["new_line_y"]) : 0
+articleCellX := profile.Has("article_cell_x") ? Integer(profile["article_cell_x"]) : 0
+articleCellY := profile.Has("article_cell_y") ? Integer(profile["article_cell_y"]) : 0
 
 LogLine(logPath, "START queue=" queuePath " lines=" lines.Length)
 
-MsgBox("Place le curseur dans Sage au debut de la ligne facture, puis clique OK.`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S`nLigne suivante: Ctrl+Alt+N", "Sage Assistant")
+MsgBox("Prepare Sage sur une facture brouillon, puis clique OK.`nMode: " injectionMode "`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S`nLigne suivante: Ctrl+Alt+N", "Sage Assistant")
 
 if !WinExist(windowTitle) {
     LogLine(logPath, "ERROR Sage window not found: " windowTitle)
@@ -89,6 +94,12 @@ for index, line in lines {
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
     LogLine(logPath, "SEND line=" index " ref=" line["ref"])
 
+    if (injectionMode = "calibrated_clicks") {
+        PrepareCalibratedLine(windowTitle, newLineX, newLineY, articleCellX, articleCellY, delayMs, focusGuard, logPath, index, line["ref"])
+    } else if (injectionMode = "control_based") {
+        LogLine(logPath, "INFO control_based not implemented, using keyboard_only line=" index " ref=" line["ref"])
+    }
+
     SendText(line["article_code"])
     Sleep(delayMs)
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
@@ -110,6 +121,21 @@ for index, line in lines {
     Send("{" validateKey "}")
     Sleep(delayMs)
     LogLine(logPath, "OK line=" index " ref=" line["ref"])
+}
+
+PrepareCalibratedLine(windowTitle, newLineX, newLineY, articleCellX, articleCellY, delayMs, focusGuard, logPath, index, ref) {
+    if !newLineX || !newLineY || !articleCellX || !articleCellY {
+        LogLine(logPath, "ERROR missing calibrated positions line=" index " ref=" ref)
+        MsgBox("Profil calibrated_clicks incomplet. Enregistre les positions nouvelle ligne et colonne article.")
+        ExitApp(4)
+    }
+    WinGetPos(&wx, &wy, &ww, &wh, windowTitle)
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, ref)
+    Click(wx + newLineX, wy + newLineY)
+    Sleep(delayMs)
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, ref)
+    Click(wx + articleCellX, wy + articleCellY)
+    Sleep(delayMs)
 }
 
 LogLine(logPath, "DONE lines=" lines.Length)
@@ -177,6 +203,7 @@ Jxon_Load(&src, args*) {
     linesText := JsonExtractArray(src, "lines")
 
     profile := Map()
+    profile["injection_mode"] := JsonGetString(profileText, "injection_mode", "keyboard_only")
     profile["window_title_contains"] := JsonGetString(profileText, "window_title_contains", "Sage")
     profile["start_position"] := JsonGetString(profileText, "start_position", "article_code")
     profile["delay_ms"] := JsonGetNumber(profileText, "delay_ms", 80)
@@ -187,6 +214,10 @@ Jxon_Load(&src, args*) {
     profile["focus_guard"] := JsonGetBool(profileText, "focus_guard", true)
     profile["step_mode"] := JsonGetBool(profileText, "step_mode", true)
     profile["log_path"] := JsonGetString(profileText, "log_path", A_ScriptDir "\sage_injection.log")
+    profile["new_line_x"] := JsonGetNumber(profileText, "new_line_x", 0)
+    profile["new_line_y"] := JsonGetNumber(profileText, "new_line_y", 0)
+    profile["article_cell_x"] := JsonGetNumber(profileText, "article_cell_x", 0)
+    profile["article_cell_y"] := JsonGetNumber(profileText, "article_cell_y", 0)
 
     lines := []
     pos := 1

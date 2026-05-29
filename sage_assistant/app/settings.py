@@ -31,12 +31,17 @@ def default_ahk_log_path() -> Path:
     return data_dir() / "sage_injection.log"
 
 
+def default_ahk_diagnostics_path() -> Path:
+    return data_dir() / "sage_window_diagnostics.txt"
+
+
 def default_settings_path() -> Path:
     return data_dir() / "settings.json"
 
 
 @dataclass
 class SageProfile:
+    injection_mode: str = "keyboard_only"
     window_title_contains: str = "Sage"
     start_position: str = "article_code"
     delay_ms: int = 80
@@ -44,9 +49,16 @@ class SageProfile:
     after_description_tabs: int = 1
     after_quantity_tabs: int = 1
     validate_key: str = "Enter"
+    new_line_x: int = 0
+    new_line_y: int = 0
+    article_cell_x: int = 0
+    article_cell_y: int = 0
+    line_start_x: int = 0
+    line_start_y: int = 0
     focus_guard: bool = True
     step_mode: bool = True
     log_path: str = ""
+    diagnostics_path: str = ""
 
 
 @dataclass
@@ -65,11 +77,16 @@ class AppSettings:
 def load_settings(path: Path | None = None) -> AppSettings:
     settings_path = path or default_settings_path()
     if not settings_path.exists():
-        return AppSettings()
+        settings = AppSettings()
+        settings.sage_profile.log_path = str(default_ahk_log_path())
+        settings.sage_profile.diagnostics_path = str(default_ahk_diagnostics_path())
+        return settings
     raw = json.loads(settings_path.read_text(encoding="utf-8"))
     profile = SageProfile(**raw.get("sage_profile", {}))
     if not profile.log_path:
         profile.log_path = str(default_ahk_log_path())
+    if not profile.diagnostics_path:
+        profile.diagnostics_path = str(default_ahk_diagnostics_path())
     raw["sage_profile"] = profile
     return AppSettings(**raw)
 

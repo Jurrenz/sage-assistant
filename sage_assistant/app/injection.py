@@ -6,7 +6,13 @@ from dataclasses import asdict
 from pathlib import Path
 
 from .models import InvoiceLine, utc_now_iso
-from .settings import AppSettings, default_ahk_log_path, default_queue_path, project_root
+from .settings import (
+    AppSettings,
+    default_ahk_diagnostics_path,
+    default_ahk_log_path,
+    default_queue_path,
+    project_root,
+)
 
 
 def write_injection_queue(
@@ -24,6 +30,8 @@ def write_injection_queue(
     queue_path.parent.mkdir(parents=True, exist_ok=True)
     if not settings.sage_profile.log_path:
         settings.sage_profile.log_path = str(default_ahk_log_path())
+    if not settings.sage_profile.diagnostics_path:
+        settings.sage_profile.diagnostics_path = str(default_ahk_diagnostics_path())
     payload = {
         "created_at": utc_now_iso(),
         "profile": asdict(settings.sage_profile),
@@ -39,5 +47,13 @@ def launch_autohotkey(settings: AppSettings, queue_path: Path) -> subprocess.Pop
     script = project_root() / "automation" / "sage_injector.ahk"
     return subprocess.Popen(
         [settings.autohotkey_path, str(script), str(queue_path)],
+        text=True,
+    )
+
+
+def launch_ahk_tool(settings: AppSettings, script_name: str, *args: str) -> subprocess.Popen[str]:
+    script = project_root() / "automation" / script_name
+    return subprocess.Popen(
+        [settings.autohotkey_path, str(script), str(project_root() / "data" / "settings.json"), *args],
         text=True,
     )

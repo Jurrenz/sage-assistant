@@ -51,6 +51,8 @@ def test_write_injection_queue_can_limit_lines(tmp_path):
     assert len(payload["lines"]) == 1
     assert payload["profile"]["step_mode"] is True
     assert payload["profile"]["focus_guard"] is True
+    assert payload["profile"]["injection_mode"] == "keyboard_only"
+    assert "diagnostics_path" in payload["profile"]
 
 
 def test_write_injection_queue_limit_ignores_blocked_lines_outside_selection(tmp_path):
