@@ -174,7 +174,6 @@ ToBool(value) {
 Jxon_Load(&src, args*) {
     key := "", is_key := false
     stack := [tree := []]
-    is_arr := { (tree): 1 }
     next := '"{[01234567890-tfn'
     pos := 0
     while ((ch := SubStr(src, ++pos, 1)) != "") {
@@ -190,7 +189,7 @@ Jxon_Load(&src, args*) {
         if (ch = "{") {
             val := Map()
             if IsObject(obj) {
-                if is_arr.Has(obj)
+                if IsJsonArray(obj)
                     obj.Push(val)
                 else
                     obj[key] := val
@@ -200,18 +199,18 @@ Jxon_Load(&src, args*) {
         } else if (ch = "[") {
             val := []
             if IsObject(obj) {
-                if is_arr.Has(obj)
+                if IsJsonArray(obj)
                     obj.Push(val)
                 else
                     obj[key] := val
             }
-            stack.Push(val), is_arr[val] := 1
+            stack.Push(val)
             next := '"{[0123456789-tfn]'
         } else if (ch = "}") || (ch = "]") {
             stack.Pop()
             next := stack.Length > 1 ? ",]}" : ""
         } else if (ch = ",") {
-            next := is_arr.Has(obj) ? '"{[0123456789-tfn' : '"'
+            next := IsJsonArray(obj) ? '"{[0123456789-tfn' : '"'
         } else if (ch = ":") {
             is_key := false
             next := '"{[0123456789-tfn'
@@ -233,7 +232,7 @@ Jxon_Load(&src, args*) {
                     val := InStr(valText, ".") ? Float(valText) : Integer(valText)
             }
             if IsObject(obj) {
-                if is_arr.Has(obj) {
+                if IsJsonArray(obj) {
                     obj.Push(val)
                     next := ",]"
                 } else if !is_key {
@@ -245,6 +244,10 @@ Jxon_Load(&src, args*) {
         }
     }
     return tree[1]
+}
+
+IsJsonArray(value) {
+    return Type(value) = "Array"
 }
 
 Jxon_ParseString(src, &pos) {
