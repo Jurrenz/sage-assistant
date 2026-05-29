@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
+from decimal import Decimal
 
-from app.order_folder import latest_order_file, list_order_files
+from openpyxl import Workbook
+
+from app.order_folder import latest_order_file, list_order_files, summarize_order_file
 
 
 def test_list_order_files_sorts_by_modified_time(tmp_path):
@@ -31,3 +33,52 @@ def test_list_order_files_sorts_by_modified_time(tmp_path):
 def test_list_order_files_returns_empty_for_missing_folder(tmp_path):
     assert list_order_files(tmp_path / "missing") == []
     assert latest_order_file(tmp_path / "missing") is None
+
+
+def test_summarize_order_file_reads_customer_and_totals(tmp_path):
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(
+        [
+            "order_sn",
+            "date",
+            "customer_company",
+            "customer_name",
+            "customer_zip",
+            "customer_city",
+            "customer_phone",
+            "customer_mail",
+            "customer_company_id",
+            "shipping_method",
+        ]
+    )
+    sheet.append(
+        [
+            "1001627",
+            "29-05-2026 10:17:43",
+            "sas ROMIE",
+            "romie Caelle boutique",
+            "34200",
+            "Sete",
+            "0650616033",
+            "client@example.com",
+            "FR16849532759",
+            "EASY EXPRESS",
+        ]
+    )
+    sheet.append(["product_reference", "Barcode", "feature", "quantity", "unit", "Unit price", "Total"])
+    sheet.append(["CM55-9", "2024640002238", "MIX", 2, 12, 6.5, 0])
+    sheet.append(["FL307-2", "2024640001364", "MIX", 1, 12, 4.5, 0])
+    path = tmp_path / "1001627.xlsx"
+    workbook.save(path)
+
+    summary = summarize_order_file(path)
+
+    assert summary.order_number == "1001627"
+    assert summary.customer_name == "romie Caelle boutique"
+    assert summary.customer_city == "Sete"
+    assert summary.customer_phone == "0650616033"
+    assert summary.line_count == 2
+    assert summary.package_count == 3
+    assert summary.piece_count == 36
+    assert summary.total_amount == Decimal("210.0")

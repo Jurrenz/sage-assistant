@@ -8,6 +8,7 @@ from pathlib import Path
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QApplication,
     QCheckBox,
     QComboBox,
@@ -55,6 +56,7 @@ class MainWindow(QMainWindow):
         self._refresh_status()
         self._refresh_mappings()
         self._refresh_missing_types()
+        self._refresh_order_folder()
 
         self.sage_watch_timer = QTimer(self)
         self.sage_watch_timer.timeout.connect(self._watch_sage_process)
@@ -168,15 +170,35 @@ class MainWindow(QMainWindow):
         folder_row.addWidget(browse_order_folder)
         layout.addLayout(folder_row)
 
+        self.order_table = QTableWidget(0, 10)
+        self.order_table.setHorizontalHeaderLabels(
+            [
+                "Commande",
+                "Client",
+                "Ville",
+                "Date commande",
+                "Acceptation/fichier",
+                "Lignes",
+                "Paquets",
+                "Pieces",
+                "Total",
+                "Tel / email",
+            ]
+        )
+        self.order_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.order_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.order_table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.order_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        layout.addWidget(self.order_table)
+
         detected_row = QHBoxLayout()
-        self.order_file_combo = QComboBox()
         refresh_orders = QPushButton("Rafraichir")
         refresh_orders.clicked.connect(self._refresh_order_folder)
         import_latest = QPushButton("Importer derniere commande")
         import_latest.clicked.connect(self._import_latest_order_from_folder)
         import_selected = QPushButton("Importer selection")
         import_selected.clicked.connect(self._import_selected_order_from_folder)
-        detected_row.addWidget(self.order_file_combo, 1)
+        detected_row.addStretch(1)
         detected_row.addWidget(refresh_orders)
         detected_row.addWidget(import_latest)
         detected_row.addWidget(import_selected)
@@ -435,16 +457,34 @@ class MainWindow(QMainWindow):
         self._refresh_order_folder()
 
     def _refresh_order_folder(self) -> None:
-        if not hasattr(self, "order_file_combo"):
+        if not hasattr(self, "order_table"):
             return
         folder = self.order_folder_input.text().strip()
         self.settings.order_folder_path = folder
         self.detected_order_files = list_order_files(folder) if folder else []
-        self.order_file_combo.blockSignals(True)
-        self.order_file_combo.clear()
-        for order_file in self.detected_order_files[:50]:
-            self.order_file_combo.addItem(order_file.display_name, str(order_file.path))
-        self.order_file_combo.blockSignals(False)
+        self.order_table.setRowCount(len(self.detected_order_files[:100]))
+        for row, order_file in enumerate(self.detected_order_files[:100]):
+            customer = order_file.customer_name or order_file.customer_company
+            contact = " / ".join(
+                part for part in (order_file.customer_phone, order_file.customer_email) if part
+            )
+            values = [
+                order_file.order_number or order_file.path.stem,
+                customer,
+                " ".join(part for part in (order_file.customer_zip, order_file.customer_city) if part),
+                order_file.order_date,
+                order_file.modified_at_label,
+                str(order_file.line_count) if not order_file.error else "Erreur",
+                str(order_file.package_count) if not order_file.error else "",
+                str(order_file.piece_count) if not order_file.error else "",
+                str(order_file.total_amount or "") if not order_file.error else "",
+                contact or order_file.error,
+            ]
+            for col, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                item.setData(Qt.UserRole, str(order_file.path))
+                self.order_table.setItem(row, col, item)
+        self.order_table.resizeRowsToContents()
 
     def _import_latest_order_from_folder(self) -> None:
         folder = self.order_folder_input.text().strip()
@@ -455,11 +495,12 @@ class MainWindow(QMainWindow):
         self._import_order_path(path)
 
     def _import_selected_order_from_folder(self) -> None:
-        index = self.order_file_combo.currentIndex()
-        if index < 0:
+        rows = sorted({item.row() for item in self.order_table.selectedItems()})
+        if not rows:
             QMessageBox.information(self, APP_NAME, "Aucune commande selectionnee.")
             return
-        path = Path(self.order_file_combo.itemData(index))
+        path_value = self.order_table.item(rows[0], 0).data(Qt.UserRole)
+        path = Path(path_value)
         self._import_order_path(path)
 
     def _pick_excel_file(self, title: str) -> Path | None:

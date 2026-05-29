@@ -50,7 +50,9 @@ L'assistant :
 - scanne les fichiers `.xls`, `.xlsx`, `.xlsm` ;
 - ignore les fichiers temporaires Excel commencant par `~$` ;
 - garde uniquement les fichiers dont le nom est un numero de commande, par exemple `1001627.xls` ;
-- trie les commandes par date de modification ;
-- permet d'importer la derniere commande detectee sans ouvrir le selecteur de fichier.
+- lit les infos client disponibles dans le fichier : numero, client, ville, telephone, email, TVA, transport ;
+- calcule les totaux operationnels : lignes, paquets, pieces, montant ;
+- affiche les commandes dans un tableau trie par date de modification ;
+- permet d'importer une commande selectionnee sans ouvrir le selecteur de fichier.
 
 L'import reste volontairement declenche par l'utilisateur pour eviter d'ajouter une mauvaise commande a une facture Sage ouverte.

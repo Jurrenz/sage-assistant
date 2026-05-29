@@ -191,6 +191,7 @@ def _detect_header_row(raw_rows: list[tuple[Any, ...]]) -> int:
         alias_values.update(normalize_header(name) for name in names)
     for names in ORDER_HEADER_ALIASES.values():
         alias_values.update(normalize_header(name) for name in names)
+    alias_values.update(MICROSTORE_XLS_ORDER_HEADERS)
 
     best_index = 0
     best_score = -1

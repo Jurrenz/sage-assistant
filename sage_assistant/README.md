@@ -36,7 +36,7 @@ pytest
 1. Importer l'export produits Microstore.
 2. Completer les mappings type Microstore -> code Sage/libelle.
 3. Dans `Imports`, configurer le dossier ou Microstore depose automatiquement les commandes.
-4. Cliquer `Importer derniere commande` ou choisir une commande detectee.
+4. Choisir une commande dans le tableau : client, ville, date, lignes, pieces et total sont affiches.
 5. Ajouter aussi des lignes par recherche reference si besoin.
 6. Verifier les lignes.
 7. Cliquer `Preparer injection Sage`.
