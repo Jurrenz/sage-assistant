@@ -82,3 +82,4 @@ def test_summarize_order_file_reads_customer_and_totals(tmp_path):
     assert summary.package_count == 3
     assert summary.piece_count == 36
     assert summary.total_amount == Decimal("210.0")
+    assert summary.total_amount_label == "210.00 €"

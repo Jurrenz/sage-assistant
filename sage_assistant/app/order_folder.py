@@ -38,12 +38,18 @@ class OrderFile:
     @property
     def display_name(self) -> str:
         customer = self.customer_name or self.customer_company or "Client inconnu"
-        amount = f"{self.total_amount} EUR" if self.total_amount is not None else "total inconnu"
+        amount = self.total_amount_label or "total inconnu"
         return f"{self.order_number or self.path.stem} - {customer} - {amount}"
 
     @property
     def modified_at_label(self) -> str:
         return datetime.fromtimestamp(self.modified_at).strftime("%d/%m/%Y %H:%M")
+
+    @property
+    def total_amount_label(self) -> str:
+        if self.total_amount is None:
+            return ""
+        return f"{self.total_amount:.2f} €"
 
 
 def list_order_files(folder: str | Path) -> list[OrderFile]:

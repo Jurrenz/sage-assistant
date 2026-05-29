@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
         self.detected_order_files = []
 
         self.setWindowTitle(APP_NAME)
-        self.resize(980, 640)
+        self.resize(1220, 760)
         self._build_menu()
         self._build_ui()
         self._apply_window_flags()
@@ -153,13 +153,6 @@ class MainWindow(QMainWindow):
         self.status_label = QLabel("")
         layout.addWidget(self.status_label)
 
-        import_products_button = QPushButton("Importer BDD articles Microstore")
-        import_products_button.clicked.connect(self._import_products)
-        import_order_button = QPushButton("Importer fichier commande")
-        import_order_button.clicked.connect(self._import_order)
-        layout.addWidget(import_products_button)
-        layout.addWidget(import_order_button)
-
         folder_row = QHBoxLayout()
         self.order_folder_input = QLineEdit(self.settings.order_folder_path)
         self.order_folder_input.setPlaceholderText("Dossier commandes Microstore...")
@@ -170,7 +163,7 @@ class MainWindow(QMainWindow):
         folder_row.addWidget(browse_order_folder)
         layout.addLayout(folder_row)
 
-        self.order_table = QTableWidget(0, 10)
+        self.order_table = QTableWidget(0, 11)
         self.order_table.setHorizontalHeaderLabels(
             [
                 "Commande",
@@ -182,29 +175,39 @@ class MainWindow(QMainWindow):
                 "Paquets",
                 "Pieces",
                 "Total",
-                "Tel / email",
+                "Tel",
+                "Email",
             ]
         )
         self.order_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.order_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.order_table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeToContents)
+        self.order_table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeToContents)
+        self.order_table.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeToContents)
+        self.order_table.horizontalHeader().setSectionResizeMode(8, QHeaderView.ResizeToContents)
         self.order_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.order_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.order_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        layout.addWidget(self.order_table)
+        layout.addWidget(self.order_table, 1)
 
         detected_row = QHBoxLayout()
+        import_products_button = QPushButton("Importer BDD articles")
+        import_products_button.clicked.connect(self._import_products)
+        import_order_button = QPushButton("Importer fichier...")
+        import_order_button.clicked.connect(self._import_order)
         refresh_orders = QPushButton("Rafraichir")
         refresh_orders.clicked.connect(self._refresh_order_folder)
         import_latest = QPushButton("Importer derniere commande")
         import_latest.clicked.connect(self._import_latest_order_from_folder)
         import_selected = QPushButton("Importer selection")
         import_selected.clicked.connect(self._import_selected_order_from_folder)
+        detected_row.addWidget(import_products_button)
+        detected_row.addWidget(import_order_button)
         detected_row.addStretch(1)
         detected_row.addWidget(refresh_orders)
         detected_row.addWidget(import_latest)
         detected_row.addWidget(import_selected)
         layout.addLayout(detected_row)
-
-        layout.addStretch(1)
         return page
 
     def _build_settings_tab(self) -> QWidget:
@@ -465,9 +468,6 @@ class MainWindow(QMainWindow):
         self.order_table.setRowCount(len(self.detected_order_files[:100]))
         for row, order_file in enumerate(self.detected_order_files[:100]):
             customer = order_file.customer_name or order_file.customer_company
-            contact = " / ".join(
-                part for part in (order_file.customer_phone, order_file.customer_email) if part
-            )
             values = [
                 order_file.order_number or order_file.path.stem,
                 customer,
@@ -477,8 +477,9 @@ class MainWindow(QMainWindow):
                 str(order_file.line_count) if not order_file.error else "Erreur",
                 str(order_file.package_count) if not order_file.error else "",
                 str(order_file.piece_count) if not order_file.error else "",
-                str(order_file.total_amount or "") if not order_file.error else "",
-                contact or order_file.error,
+                order_file.total_amount_label if not order_file.error else "",
+                order_file.customer_phone if not order_file.error else order_file.error,
+                order_file.customer_email if not order_file.error else "",
             ]
             for col, value in enumerate(values):
                 item = QTableWidgetItem(value)
