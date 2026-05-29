@@ -8,6 +8,7 @@ from pathlib import Path
 from .models import InvoiceLine, utc_now_iso
 from .settings import (
     AppSettings,
+    REAL_SAGE_ONE_LINE_MODE,
     default_ahk_diagnostics_path,
     default_ahk_log_path,
     default_queue_path,
@@ -22,6 +23,9 @@ def write_injection_queue(
     line_limit: int | None = None,
 ) -> Path:
     selected_lines = lines[:line_limit] if line_limit and line_limit > 0 else lines
+    if settings.sage_profile.injection_mode == REAL_SAGE_ONE_LINE_MODE:
+        if len(selected_lines) != 1:
+            raise ValueError("Le mode Sage reel impose exactement 1 ligne a injecter.")
     blocked = [line for line in selected_lines if line.validation_status != "ok"]
     if blocked:
         refs = ", ".join(line.ref for line in blocked[:5])

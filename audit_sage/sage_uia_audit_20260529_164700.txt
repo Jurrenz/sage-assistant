@@ -1,0 +1,94 @@
+﻿Generated: 2026-05-29T16:47:00.8912156+02:00
+Root: Name='Sage 50 : S.Z FASHION' Class='CamMainFrame' ControlType='ControlType.Window' Handle=198076
+- Name='Sage 50 : S.Z FASHION' Class='CamMainFrame' Type='ControlType.Window' AutoId='' Native=0x305BC Bounds=962,4,961,1031 Patterns=
+  - Name='' Class='CamCustomCaption' Type='ControlType.Pane' AutoId='' Native=0x300C4 Bounds=964,5,958,32 Patterns=
+  - Name='' Class='{{ribbon}}' Type='ControlType.Pane' AutoId='99' Native=0x205D2 Bounds=963,69,959,134 Patterns=
+  - Name='' Class='MDIClient' Type='ControlType.Pane' AutoId='101' Native=0x7055E Bounds=963,203,959,796 Patterns=
+    - Name='Facture - FA2861' Class='CamDialog' Type='ControlType.Window' AutoId='103' Native=0x100CF4 Bounds=955,172,975,835 Patterns=
+      - Name='CBD PFS' Class='CamEdit' Type='ControlType.Pane' AutoId='43' Native=0x17086A Bounds=1090,311,148,25 Patterns=
+      - Name='Mode paiement :' Class='Static' Type='ControlType.Pane' AutoId='' Native=0x13068C Bounds=978,312,108,23 Patterns=
+      - Name='Date échéance :' Class='Static' Type='ControlType.Pane' AutoId='21' Native=0x1505A6 Bounds=983,340,103,23 Patterns=
+      - Name='29/05/2026' Class='CamEdit' Type='ControlType.Pane' AutoId='44' Native=0x270804 Bounds=1090,339,148,25 Patterns=
+      - Name='Sous-total' Class='CamPopup' Type='ControlType.Pane' AutoId='1150' Native=0x4C0902 Bounds=1504,449,98,23 Patterns=
+      - Name='Transmise' Class='Button' Type='ControlType.Pane' AutoId='4050' Native=0x230A90 Bounds=1834,276,79,23 Patterns=
+      - Name='Compta.' Class='Button' Type='ControlType.Pane' AutoId='4030' Native=0x200B14 Bounds=1839,249,74,23 Patterns=
+      - Name='Validée' Class='Button' Type='ControlType.Pane' AutoId='4020' Native=0x1E0AA4 Bounds=1844,221,69,23 Patterns=
+      - Name='Outils...' Class='CamPopup' Type='ControlType.Pane' AutoId='1120' Native=0xC0780 Bounds=1804,449,93,23 Patterns=
+      - Name='Dupliquer' Class='CamPopup' Type='ControlType.Pane' AutoId='1140' Native=0x2A0B24 Bounds=1298,449,98,23 Patterns=
+      - Name='Insérer' Class='CamPopup' Type='ControlType.Pane' AutoId='1010' Native=0x1F0A58 Bounds=1091,449,98,23 Patterns=
+      - Name='Supprimer' Class='CamPopup' Type='ControlType.Pane' AutoId='1100' Native=0xC0CA0 Bounds=1194,449,98,23 Patterns=
+      - Name='Ajouter' Class='CamPopup' Type='ControlType.Pane' AutoId='1110' Native=0x100C40 Bounds=988,449,98,23 Patterns=
+      - Name='Commentaire' Class='CamPopup' Type='ControlType.Pane' AutoId='1090' Native=0xD0D24 Bounds=1401,449,98,23 Patterns=
+      - Name='92,80' Class='CamEdit' Type='ControlType.Pane' AutoId='1060' Native=0xD075E Bounds=1264,952,98,25 Patterns=
+      - Name='Total TVA :' Class='Static' Type='ControlType.Pane' AutoId='1070' Native=0x300972 Bounds=1192,954,69,23 Patterns=
+      - Name='447,00' Class='CamEdit' Type='ControlType.Pane' AutoId='1080' Native=0xD075A Bounds=1050,952,113,25 Patterns=
+      - Name='Total HT :' Class='Static' Type='ControlType.Pane' AutoId='1050' Native=0x1F0892 Bounds=988,954,59,23 Patterns=
+      - Name='556,80' Class='CamEdit' Type='ControlType.Pane' AutoId='1040' Native=0x150698 Bounds=1659,952,109,25 Patterns=
+      - Name='Total TTC :' Class='Static' Type='ControlType.Pane' AutoId='1030' Native=0xD0762 Bounds=1587,954,69,23 Patterns=
+      - Name='' Class='CamGrid' Type='ControlType.Pane' AutoId='1020' Native=0xD0734 Bounds=988,477,910,473 Patterns=
+        - Name='' Class='ScrollBar' Type='ControlType.Pane' AutoId='100' Native=0xD0736 Bounds=1039,932,841,17 Patterns=
+        - Name='' Class='ScrollBar' Type='ControlType.Pane' AutoId='101' Native=0xD074E Bounds=1880,552,17,380 Patterns=
+        - Name='' Class='CamGridToolBar' Type='ControlType.Pane' AutoId='107' Native=0xD0752 Bounds=997,478,898,33 Patterns=
+      - Name='' Class='CamEdit' Type='ControlType.Pane' AutoId='4024' Native=0xD0742 Bounds=1046,380,868,25 Patterns=
+      - Name='Remarque :' Class='Static' Type='ControlType.Pane' AutoId='' Native=0xD0750 Bounds=973,381,69,23 Patterns=
+      - Name='' Class='CamEdit' Type='ControlType.Pane' AutoId='4023' Native=0xD074A Bounds=1356,311,548,25 Patterns=
+      - Name='Référence :' Class='Static' Type='ControlType.Pane' AutoId='' Native=0xD0744 Bounds=1283,312,69,23 Patterns=
+      - Name='ROMIE' Class='CamEdit' Type='ControlType.Pane' AutoId='20' Native=0xD0732 Bounds=1356,266,455,25 Patterns=
+      - Name='Nom :' Class='Static' Type='ControlType.Pane' AutoId='' Native=0x150700 Bounds=1317,267,34,23 Patterns=
+      - Name='119' Class='CamEdit' Type='ControlType.Pane' AutoId='19' Native=0xD077C Bounds=1356,238,155,25 Patterns=
+      - Name='Client :' Class='Static' Type='ControlType.Pane' AutoId='' Native=0xD0740 Bounds=1312,239,39,23 Patterns=
+      - Name='29/05/2026' Class='CamEdit' Type='ControlType.Pane' AutoId='41' Native=0xD0738 Bounds=1090,266,148,25 Patterns=
+      - Name='Date :' Class='Static' Type='ControlType.Pane' AutoId='' Native=0xD073C Bounds=1047,267,39,23 Patterns=
+      - Name='FA2861' Class='CamEdit' Type='ControlType.Pane' AutoId='18' Native=0xD073E Bounds=1090,238,148,25 Patterns=
+      - Name='Numéro :' Class='Static' Type='ControlType.Pane' AutoId='' Native=0x2106CE Bounds=1032,239,54,23 Patterns=
+      - Name='Informations client' Class='CamPane' Type='ControlType.Pane' AutoId='30' Native=0x120890 Bounds=1253,212,566,84 Patterns=
+      - Name='Informations pièce' Class='CamPane' Type='ControlType.Pane' AutoId='' Native=0x130896 Bounds=973,212,276,84 Patterns=
+      - Name='' Class='SysTabControl32' Type='ControlType.Pane' AutoId='100' Native=0xD0D7C Bounds=973,413,940,576 Patterns=
+      - Name='' Class='CamPane' Type='ControlType.Pane' AutoId='5240' Native=0x140CA6 Bounds=1253,303,659,68 Patterns=
+      - Name='' Class='CamPane' Type='ControlType.Pane' AutoId='5260' Native=0x180D4C Bounds=973,303,276,68 Patterns=
+    - Name='Liste des factures clients' Class='CamDialog' Type='ControlType.Window' AutoId='102' Native=0x1608A2 Bounds=955,172,975,835 Patterns=
+      - Name='Le client :' Class='Button' Type='ControlType.Pane' AutoId='8200' Native=0x1200F2 Bounds=1091,221,79,23 Patterns=
+      - Name='Tous les clients' Class='Button' Type='ControlType.Pane' AutoId='8190' Native=0x1501B8 Bounds=968,221,118,23 Patterns=
+      - Name='' Class='CamPane' Type='ControlType.Pane' AutoId='' Native=0x18079C Bounds=968,280,944,5 Patterns=
+      - Name='' Class='CamEdit' Type='ControlType.Pane' AutoId='8170' Native=0xF0DB2 Bounds=1415,221,496,25 Patterns=
+      - Name='Critères :' Class='Static' Type='ControlType.Pane' AutoId='' Native=0x2D0566 Bounds=1356,249,54,23 Patterns=
+      - Name='Toutes les factures' Class='CamPopup' Type='ControlType.Pane' AutoId='7250' Native=0x1B0554 Bounds=1420,249,398,23 Patterns=
+      - Name='' Class='CamPopup' Type='ControlType.Pane' AutoId='8114' Native=0x130962 Bounds=1378,221,31,23 Patterns=
+      - Name='' Class='CamPopup' Type='ControlType.Pane' AutoId='8112' Native=0x13099A Bounds=1346,221,31,23 Patterns=
+      - Name='Période du :' Class='Static' Type='ControlType.Pane' AutoId='' Native=0x1807E2 Bounds=968,249,74,23 Patterns=
+      - Name='au' Class='Static' Type='ControlType.Pane' AutoId='' Native=0x1A088C Bounds=1189,249,20,23 Patterns=
+      - Name='29/05/2026' Class='CamEdit' Type='ControlType.Pane' AutoId='1051' Native=0x180450 Bounds=1213,248,125,25 Patterns=
+      - Name='01/01/2021' Class='CamEdit' Type='ControlType.Pane' AutoId='1050' Native=0x1207D6 Bounds=1045,248,140,25 Patterns=
+      - Name='' Class='CamGrid' Type='ControlType.Pane' AutoId='7050' Native=0x18079A Bounds=968,290,949,703 Patterns=
+        - Name='' Class='ScrollBar' Type='ControlType.Pane' AutoId='100' Native=0x1507C6 Bounds=1019,975,880,17 Patterns=
+        - Name='' Class='ScrollBar' Type='ControlType.Pane' AutoId='101' Native=0x1107DA Bounds=1899,325,17,650 Patterns=
+        - Name='' Class='CamGridCond' Type='ControlType.Pane' AutoId='106' Native=0x1107DE Bounds=969,291,947,34 Patterns=
+          - Name='' Class='CamGridToolBar' Type='ControlType.Pane' AutoId='102' Native=0x1407D2 Bounds=969,291,430,33 Patterns=
+      - Name='' Class='CamEdit' Type='ControlType.Pane' AutoId='260' Native=0x2C09D0 Bounds=1173,220,164,25 Patterns=
+      - Name='' Class='CamPane' Type='ControlType.Pane' AutoId='40' Native=0x13092C Bounds=968,212,944,5 Patterns=
+    - Name='Liste des clients' Class='CamDialog' Type='ControlType.Window' AutoId='101' Native=0x140856 Bounds=955,172,975,835 Patterns=
+      - Name='' Class='CamGrid' Type='ControlType.Pane' AutoId='10' Native=0x30DDE Bounds=973,212,944,779 Patterns=
+        - Name='' Class='ScrollBar' Type='ControlType.Pane' AutoId='100' Native=0x30DCA Bounds=1094,973,805,17 Patterns=
+        - Name='' Class='ScrollBar' Type='ControlType.Pane' AutoId='101' Native=0x30E06 Bounds=1899,247,17,726 Patterns=
+        - Name='' Class='CamGridCond' Type='ControlType.Pane' AutoId='106' Native=0x30E08 Bounds=974,213,942,34 Patterns=
+          - Name='' Class='CamGridToolBar' Type='ControlType.Pane' AutoId='102' Native=0x110B8C Bounds=974,213,430,33 Patterns=
+    - Name='Mon Intuiciel' Class='CamDialog' Type='ControlType.Window' AutoId='100' Native=0x100432 Bounds=963,203,959,796 Patterns=
+      - Name='' Class='{{brded}}' Type='ControlType.Pane' AutoId='10' Native=0x40402 Bounds=963,203,959,796 Patterns=
+        - Name='' Class='HostUIWnd' Type='ControlType.Pane' AutoId='1' Native=0x20466 Bounds=963,243,959,758 Patterns=
+          - Name='camMyDesk.html' Class='Chrome_WidgetWin_1' Type='ControlType.Pane' AutoId='' Native=0x204A4 Bounds=963,243,959,758 Patterns=
+            - Name='' Class='Intermediate D3D Window' Type='ControlType.Pane' AutoId='' Native=0x2046E Bounds=963,243,959,758 Patterns=
+            - Name='camMyDesk.html - contenu Web' Class='BrowserRootView' Type='ControlType.Pane' AutoId='' Native=0x0 Bounds=963,243,959,758 Patterns=
+              - Name='' Class='NonClientView' Type='ControlType.Pane' AutoId='' Native=0x0 Bounds=963,243,959,758 Patterns=
+                - Name='' Class='EmbeddedBrowserTabRootView' Type='ControlType.Pane' AutoId='' Native=0x0 Bounds=,,, Patterns=
+                - Name='' Class='EmbeddedBrowserFrameView' Type='ControlType.Pane' AutoId='' Native=0x0 Bounds=963,243,959,758 Patterns=
+                - Name='' Class='TopContainerOverlayView' Type='ControlType.Pane' AutoId='' Native=0x0 Bounds=963,243,959,758 Patterns=
+        - Name='' Class='HostUIWnd' Type='ControlType.Pane' AutoId='2' Native=0x2049C Bounds=963,203,959,40 Patterns=
+          - Name='camNavigation' Class='Chrome_WidgetWin_1' Type='ControlType.Pane' AutoId='' Native=0x2049A Bounds=963,203,959,40 Patterns=
+            - Name='' Class='Intermediate D3D Window' Type='ControlType.Pane' AutoId='' Native=0x204CC Bounds=963,203,1919,40 Patterns=
+            - Name='camNavigation - contenu Web' Class='BrowserRootView' Type='ControlType.Pane' AutoId='' Native=0x0 Bounds=963,203,959,40 Patterns=
+              - Name='' Class='NonClientView' Type='ControlType.Pane' AutoId='' Native=0x0 Bounds=963,203,959,40 Patterns=
+                - Name='' Class='EmbeddedBrowserTabRootView' Type='ControlType.Pane' AutoId='' Native=0x0 Bounds=,,, Patterns=
+                - Name='' Class='EmbeddedBrowserFrameView' Type='ControlType.Pane' AutoId='' Native=0x0 Bounds=963,203,959,40 Patterns=
+                - Name='' Class='TopContainerOverlayView' Type='ControlType.Pane' AutoId='' Native=0x0 Bounds=963,203,959,40 Patterns=
+      - Name='' Class='camgrip' Type='ControlType.Pane' AutoId='32766' Native=0x270456 Bounds=1905,982,17,17 Patterns=
+  - Name='' Class='CamStatusBar' Type='ControlType.Pane' AutoId='96' Native=0x7009A Bounds=963,999,960,35 Patterns=

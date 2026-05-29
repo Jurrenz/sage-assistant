@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from app.injection import write_injection_queue
 from app.models import InvoiceLine
-from app.settings import AppSettings
+from app.settings import REAL_SAGE_ONE_LINE_MODE, AppSettings
 
 
 def test_write_injection_queue(tmp_path):
@@ -81,3 +81,52 @@ def test_write_injection_queue_limit_ignores_blocked_lines_outside_selection(tmp
 
     assert len(payload["lines"]) == 1
     assert payload["lines"][0]["ref"] == "CM55-9"
+
+
+def test_real_sage_one_line_mode_forces_exactly_one_selected_line(tmp_path):
+    lines = []
+    for index in range(2):
+        line = InvoiceLine(
+            ref=f"LA55-{index}",
+            sage_code="RO",
+            description=f"LA55-{index}",
+            quantity_pieces=10,
+            unit_price_ht=Decimal("6.50"),
+            product_id=index + 1,
+        )
+        line.validate()
+        lines.append(line)
+
+    settings = AppSettings()
+    settings.sage_profile.injection_mode = REAL_SAGE_ONE_LINE_MODE
+
+    queue_path = write_injection_queue(lines, settings, tmp_path / "queue.json", line_limit=1)
+    payload = json.loads(queue_path.read_text(encoding="utf-8"))
+
+    assert payload["profile"]["injection_mode"] == REAL_SAGE_ONE_LINE_MODE
+    assert len(payload["lines"]) == 1
+
+
+def test_real_sage_one_line_mode_rejects_multiple_selected_lines(tmp_path):
+    lines = []
+    for index in range(2):
+        line = InvoiceLine(
+            ref=f"LA55-{index}",
+            sage_code="RO",
+            description=f"LA55-{index}",
+            quantity_pieces=10,
+            unit_price_ht=Decimal("6.50"),
+            product_id=index + 1,
+        )
+        line.validate()
+        lines.append(line)
+
+    settings = AppSettings()
+    settings.sage_profile.injection_mode = REAL_SAGE_ONE_LINE_MODE
+
+    try:
+        write_injection_queue(lines, settings, tmp_path / "queue.json", line_limit=0)
+    except ValueError as exc:
+        assert "exactement 1 ligne" in str(exc)
+    else:
+        raise AssertionError("real_sage_one_line should reject multiple selected lines")

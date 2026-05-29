@@ -1,0 +1,512 @@
+﻿Generated: 2026-05-29T16:45:08.4808439+02:00
+Process: WGC.exe / Ciel Gestion Commerciale
+
+TOP WINDOWS FOR WGC
+
+Hex        Pid Visible Class                                         Title                                       Rect         
+---        --- ------- -----                                         -----                                       ----         
+0x300C4  11212    True CamCustomCaption                                                                          x= y= w=0 h=0
+0x305BC  11212    True CamMainFrame                                  Sage 50 : S.Z FASHION                       x= y= w=0 h=0
+0x40098  11212    True Internet Explorer_Hidden                                                                  x= y= w=0 h=0
+0x10838  11212   False cam_wait_progress                                                                         x= y= w=0 h=0
+0x210ACC 11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0xD09B8  11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0x1A098E 11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0x160870 11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0x1C086C 11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0x150B92 11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0x1B0822 11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0xC0BEE  11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0x500E4  11212   False .NET-BroadcastEventWindow.4.0.0.0.297b065.0   .NET-BroadcastEventWindow.4.0.0.0.297b065.0 x= y= w=0 h=0
+0x2042E  11212   False IME                                           Default IME                                 x= y= w=0 h=0
+0x104D0  11212   False MSCTFIME UI                                   MSCTFIME UI                                 x= y= w=0 h=0
+0x1083A  11212   False IME                                           Default IME                                 x= y= w=0 h=0
+0x403F8  11212   False IME                                           Default IME                                 x= y= w=0 h=0
+0x600E2  11212   False IME                                           Default IME                                 x= y= w=0 h=0
+0x30384  11212   False GDI+ Hook Window Class                        GDI+ Window (WGC.exe)                       x= y= w=0 h=0
+0x30400  11212   False OleDdeWndClass                                DDE Server Window                           x= y= w=0 h=0
+0x6060C  11212   False WindowsForms10.Window.0.app.0.297b065_r50_ad1                                             x= y= w=0 h=0
+0x205D0  11212   False WindowsForms10.Window.8.app.0.297b065_r50_ad1 Sage.PENDO.AppMirror                        x= y= w=0 h=0
+0x4056A  11212   False VSyncHelper-0B4D8480-3c32828d32                                                           x= y= w=0 h=0
+0x1A03FC 11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0x305A8  11212   False CamTooltip                                                                                x= y= w=0 h=0
+0x110884 11212   False CamTooltip                                                                                x= y= w=0 h=0
+0x303A6  11212   False CamFireWnd                                                                                x= y= w=0 h=0
+0x240B20 11212   False CamTooltip                                                                                x= y= w=0 h=0
+0x60DA8  11212   False CamFireWnd                                                                                x= y= w=0 h=0
+0x190C30 11212   False CamReBarToolWnd                                                                           x= y= w=0 h=0
+0x18085E 11212   False CamPopList                                                                                x= y= w=0 h=0
+0xD0D12  11212   False CamTooltip                                                                                x= y= w=0 h=0
+0x20434  11212   False CamModalShadow                                                                            x= y= w=0 h=0
+0x401D4  11212   False CamTooltip                                                                                x= y= w=0 h=0
+0x3040A  11212   False CamTooltip                                                                                x= y= w=0 h=0
+0xD0CA8  11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0xE0CF6  11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0xC0CD8  11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0x1A0788 11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0x8D0906 11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0x300AC  11212   False CamTooltip                                                                                x= y= w=0 h=0
+0x5015C  11212   False CamTooltip                                                                                x= y= w=0 h=0
+0x130BA6 11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0xB0D88  11212   False ComboLBox                                                                                 x= y= w=0 h=0
+0x270A2C 11212   False ComboLBox                                                                                 x= y= w=0 h=0
+
+
+
+
+MAIN: 0x305BC title='Sage 50 : S.Z FASHION' class=CamMainFrame rect=x= y= w=0 h=0
+
+CHILD WINDOWS OF MAIN
+
+  N Hex      Visible Class                       Title                                   Rect         
+  - ---      ------- -----                       -----                                   ----         
+  1 0x205C8    False {{CamExplorerBar}}                                                  x= y= w=0 h=0
+  2 0xB053A    False ScrollBar                                                           x= y= w=0 h=0
+  3 0x205D2     True {{ribbon}}                                                          x= y= w=0 h=0
+  4 0x7055E     True MDIClient                                                           x= y= w=0 h=0
+  5 0x100CF4    True CamDialog                   Facture - FA2861                        x= y= w=0 h=0
+  6 0x3A08E8   False CamEdit                                                             x= y= w=0 h=0
+  7 0x140A24   False CamEdit                                                             x= y= w=0 h=0
+  8 0xC0B1A    False CamEdit                                                             x= y= w=0 h=0
+  9 0x180B22   False ComboBox                                                            x= y= w=0 h=0
+ 10 0x2006AA   False Static                      Adresse :                               x= y= w=0 h=0
+ 11 0x1A07EC   False CamEdit                                                             x= y= w=0 h=0
+ 12 0x150A72   False CamEdit                                                             x= y= w=0 h=0
+ 13 0x1C06EE   False CamEdit                                                             x= y= w=0 h=0
+ 14 0x806E2    False Static                      Société :                               x= y= w=0 h=0
+ 15 0x1D0A4A   False Static                      Pays :                                  x= y= w=0 h=0
+ 16 0xA0CE2    False Static                      CP / Ville :                            x= y= w=0 h=0
+ 17 0x160954   False Static                      Crédit disponible :                     x= y= w=0 h=0
+ 18 0xB0D8E    False ComboBox                                                            x= y= w=0 h=0
+ 19 0xB0D8C    False Static                      Forme juridique :                       x= y= w=0 h=0
+ 20 0xC0D04    False Static                      Tarif :                                 x= y= w=0 h=0
+ 21 0xC0D08    False CamEdit                                                             x= y= w=0 h=0
+ 22 0xB0D84    False Button                      Assujetti à TPF                         x= y= w=0 h=0
+ 23 0xB0D86    False Static                      SIRET :                                 x= y= w=0 h=0
+ 24 0xB0D82    False Static                      Nom contact :                           x= y= w=0 h=0
+ 25 0xB0D8A    False ComboBox                                                            x= y= w=0 h=0
+ 26 0x140646   False ComboBox                                                            x= y= w=0 h=0
+ 27 0xD0CAC    False CamEdit                                                             x= y= w=0 h=0
+ 28 0xB0D2C    False CamPane                                                             x= y= w=0 h=0
+ 29 0xC0CDE    False Button                      Livraison                               x= y= w=0 h=0
+ 30 0xB0D74    False Button                      Facturation                             x= y= w=0 h=0
+ 31 0xB0D30    False CamEdit                                                             x= y= w=0 h=0
+ 32 0xB0D76    False CamEdit                                                             x= y= w=0 h=0
+ 33 0xD0CBC    False CamEdit                                                             x= y= w=0 h=0
+ 34 0xC0CEE    False ComboBox                                                            x= y= w=0 h=0
+ 35 0xC0CEC    False Static                      Adresse :                               x= y= w=0 h=0
+ 36 0xC0CBA    False CamEdit                                                             x= y= w=0 h=0
+ 37 0xB0D4E    False CamEdit                                                             x= y= w=0 h=0
+ 38 0xB0D62    False CamEdit                                                             x= y= w=0 h=0
+ 39 0xB0D60    False Static                      Société :                               x= y= w=0 h=0
+ 40 0xB0D68    False Static                      Pays :                                  x= y= w=0 h=0
+ 41 0xB0D4A    False Static                      CP / Ville :                            x= y= w=0 h=0
+ 42 0xB0D56    False CamPane                     Adresse                                 x= y= w=0 h=0
+ 43 0xB0D52    False ComboBox                                                            x= y= w=0 h=0
+ 44 0x130DDC   False Static                      Motif exonération :                     x= y= w=0 h=0
+ 45 0x160426   False ComboBox                                                            x= y= w=0 h=0
+ 46 0x1B0572   False Static                      Catégorie TVA :                         x= y= w=0 h=0
+ 47 0x1507A2   False CamEdit                                                             x= y= w=0 h=0
+ 48 0x1607A4   False CamEdit                                                             x= y= w=0 h=0
+ 49 0x150798   False Static                      Statut :                                x= y= w=0 h=0
+ 50 0x1407AA   False ComboBox                                                            x= y= w=0 h=0
+ 51 0x110682   False Static                      Identifiant :                           x= y= w=0 h=0
+ 52 0x120642   False Static                      Nom du service :                        x= y= w=0 h=0
+ 53 0x2408EE   False CamEdit                                                             x= y= w=0 h=0
+ 54 0x2208F4   False Static                      Code service :                          x= y= w=0 h=0
+ 55 0x3906E6   False CamEdit                                                             x= y= w=0 h=0
+ 56 0x31091E   False ComboBox                                                            x= y= w=0 h=0
+ 57 0x1901F2   False Static                      Raison sociale :                        x= y= w=0 h=0
+ 58 0x160862   False CamEdit                                                             x= y= w=0 h=0
+ 59 0x18089C   False CamEdit                                                             x= y= w=0 h=0
+ 60 0x1D0438   False Static                      Type d'identifiant :                    x= y= w=0 h=0
+ 61 0x1A056E   False Static                      Nom pays :                              x= y= w=0 h=0
+ 62 0x17083E   False CamPane                     Valideur                                x= y= w=0 h=0
+ 63 0x3A0914   False CamPane                     Destinataire                            x= y= w=0 h=0
+ 64 0x15058C   False Static                      N° engagement :                         x= y= w=0 h=0
+ 65 0x1807F2   False CamEdit                                                             x= y= w=0 h=0
+ 66 0x1408AA   False Static                      Pièce d'origine :                       x= y= w=0 h=0
+ 67 0x1207B8   False CamEdit                                                             x= y= w=0 h=0
+ 68 0x18087C   False Static                      N° marché :                             x= y= w=0 h=0
+ 69 0x1807F6   False CamEdit                                                             x= y= w=0 h=0
+ 70 0x180812   False CamPane                     Référence de la facture                 x= y= w=0 h=0
+ 71 0x190B4E   False ComboBox                                                            x= y= w=0 h=0
+ 72 0x150B2C   False Static                      Cadre de facturation :                  x= y= w=0 h=0
+ 73 0x1C0B1E   False Static                      Date de validité :                      x= y= w=0 h=0
+ 74 0x1A0800   False Button                      Paiement en ligne                       x= y= w=0 h=0
+ 75 0x17086A    True CamEdit                                                             x= y= w=0 h=0
+ 76 0x13068C    True Static                      Mode paiement :                         x= y= w=0 h=0
+ 77 0x1505A6    True Static                      Date échéance :                         x= y= w=0 h=0
+ 78 0x270804    True CamEdit                                                             x= y= w=0 h=0
+ 79 0x1A087E   False ComboBox                                                            x= y= w=0 h=0
+ 80 0x1A086E   False Static                      Mode TVA :                              x= y= w=0 h=0
+ 81 0x13063A   False CamPane                     Pane                                    x= y= w=0 h=0
+ 82 0x1A092E   False CamEdit                                                             x= y= w=0 h=0
+ 83 0xC0392    False CamEdit                                                             x= y= w=0 h=0
+ 84 0x18095E   False CamEdit                                                             x= y= w=0 h=0
+ 85 0x1A0560   False Static                      Affaire :                               x= y= w=0 h=0
+ 86 0x4C0902    True CamPopup                    Sous-tota&l                             x= y= w=0 h=0
+ 87 0x150660   False CamPopup                                                            x= y= w=0 h=0
+ 88 0x15065E   False CamPopup                                                            x= y= w=0 h=0
+ 89 0x140658   False CamEdit                                                             x= y= w=0 h=0
+ 90 0x1108C4   False Static                      TTC :                                   x= y= w=0 h=0
+ 91 0x540880   False CamPane                     Eco-participation                       x= y= w=0 h=0
+ 92 0x240A76   False ComboBox                                                            x= y= w=0 h=0
+ 93 0x3506C6   False Static                      Statut :                                x= y= w=0 h=0
+ 94 0x1E0C0A   False CamPane                                                             x= y= w=0 h=0
+ 95 0x1D0832   False ComboBox                                                            x= y= w=0 h=0
+ 96 0x1E0B62   False CamEdit                                                             x= y= w=0 h=0
+ 97 0x1F0AD8   False Static                      TVA sur port :                          x= y= w=0 h=0
+ 98 0x120B7E   False Static                      Réglé :                                 x= y= w=0 h=0
+ 99 0x140B86   False Static                      Utilisé :                               x= y= w=0 h=0
+100 0xF0C38    False Static                      N° TVA intracom :                       x= y= w=0 h=0
+101 0x170A98   False CamGrid                     Liste des rubriques utilisateurs        x= y= w=0 h=0
+102 0x1E0AD6   False ScrollBar                                                           x= y= w=0 h=0
+103 0x1A09E4   False ScrollBar                                                           x= y= w=0 h=0
+104 0xC0C76    False CamGridCond                                                         x= y= w=0 h=0
+105 0xC0C64    False CamEdit                                                             x= y= w=0 h=0
+106 0xA0C7A    False CamGridToolBar                                                      x= y= w=0 h=0
+107 0xE0B6C    False CamGridToolBar                                                      x= y= w=0 h=0
+108 0xB0C54    False CamGridViews                                                        x= y= w=0 h=0
+109 0x290A9A   False Button                      Accusé de réception                     x= y= w=0 h=0
+110 0xA0C7C    False Button                      Transférée                              x= y= w=0 h=0
+111 0x230A90    True Button                      Transmise                               x= y= w=0 h=0
+112 0x1D0B52   False Button                      Soldée                                  x= y= w=0 h=0
+113 0x200B14    True Button                      Compta.                                 x= y= w=0 h=0
+114 0x1E0AA4    True Button                      Validée                                 x= y= w=0 h=0
+115 0xB0C84    False CamEdit                                                             x= y= w=0 h=0
+116 0xB0C82    False Static                      Montant reliquat HT:                    x= y= w=0 h=0
+117 0x190A9C   False CamEdit                                                             x= y= w=0 h=0
+118 0x2109E2   False Static                      Réf. cde :                              x= y= w=0 h=0
+119 0x1807E0   False CamEdit                                                             x= y= w=0 h=0
+120 0x1C08A4   False Static                      Date livraison :                        x= y= w=0 h=0
+121 0x130564   False CamEdit                                                             x= y= w=0 h=0
+122 0x1405B6   False Static                      Mode paiement :                         x= y= w=0 h=0
+123 0x100B84   False Button                      Ne pas réintégrer les articles en stock x= y= w=0 h=0
+124 0xC0780     True CamPopup                    O&utils...                              x= y= w=0 h=0
+125 0x1904E6   False Static                      Facture non validée.                    x= y= w=0 h=0
+126 0xC075C    False Static                      Echéances :                             x= y= w=0 h=0
+127 0xC0764    False CamEdit                                                             x= y= w=0 h=0
+128 0xC077E    False CamEdit                                                             x= y= w=0 h=0
+129 0xC0774    False Static                      Acompte :                               x= y= w=0 h=0
+130 0xC0766    False CamEdit                                                             x= y= w=0 h=0
+131 0xC0772    False Static                      Total TTC :                             x= y= w=0 h=0
+132 0xC0778    False CamEdit                                                             x= y= w=0 h=0
+133 0xC0768    False Static                      Ecart :                                 x= y= w=0 h=0
+134 0xC076A    False Static                      Total TPF :                             x= y= w=0 h=0
+135 0xC0758    False CamEdit                                                             x= y= w=0 h=0
+136 0x100C3E   False Button                      Facturer en TTC                         x= y= w=0 h=0
+137 0xC0C92    False Button                      Multi-échéances                         x= y= w=0 h=0
+138 0xC0D28    False CamEdit                                                             x= y= w=0 h=0
+139 0x2A0B24    True CamPopup                    &Dupliquer                              x= y= w=0 h=0
+140 0x1F0A58    True CamPopup                    &Insérer                                x= y= w=0 h=0
+141 0xC0CA0     True CamPopup                    &Supprimer                              x= y= w=0 h=0
+142 0x100C40    True CamPopup                    &Ajouter                                x= y= w=0 h=0
+143 0xD0D24     True CamPopup                    &Commentaire                            x= y= w=0 h=0
+144 0x2D094A   False CamEdit                                                             x= y= w=0 h=0
+145 0xD0760    False CamEdit                                                             x= y= w=0 h=0
+146 0xD0756    False Static                      Acompte :                               x= y= w=0 h=0
+147 0xD075E     True CamEdit                                                             x= y= w=0 h=0
+148 0x300972    True Static                      Total TVA :                             x= y= w=0 h=0
+149 0xD075A     True CamEdit                                                             x= y= w=0 h=0
+150 0x1F0892    True Static                      Total HT :                              x= y= w=0 h=0
+151 0x150698    True CamEdit                                                             x= y= w=0 h=0
+152 0xD0762     True Static                      Total TTC :                             x= y= w=0 h=0
+153 0xD0734     True CamGrid                                                             x= y= w=0 h=0
+154 0xD0736     True ScrollBar                                                           x= y= w=0 h=0
+155 0xD074E     True ScrollBar                                                           x= y= w=0 h=0
+156 0xD074C    False CamGridCond                                                         x= y= w=0 h=0
+157 0xD0748    False CamEdit                                                             x= y= w=0 h=0
+158 0xD0746    False CamGridToolBar                                                      x= y= w=0 h=0
+159 0xD0752     True CamGridToolBar                                                      x= y= w=0 h=0
+160 0xD0754    False CamGridViews                                                        x= y= w=0 h=0
+161 0xD077A    False Static                      Représentant :                          x= y= w=0 h=0
+162 0xD073A    False CamEdit                                                             x= y= w=0 h=0
+163 0xD0742     True CamEdit                                                             x= y= w=0 h=0
+164 0xD0750     True Static                      Remarque :                              x= y= w=0 h=0
+165 0xD074A     True CamEdit                                                             x= y= w=0 h=0
+166 0xD0744     True Static                      Référence :                             x= y= w=0 h=0
+167 0xD0732     True CamEdit                                                             x= y= w=0 h=0
+168 0x150700    True Static                      Nom :                                   x= y= w=0 h=0
+169 0xD077C     True CamEdit                                                             x= y= w=0 h=0
+170 0xD0740     True Static                      Client :                                x= y= w=0 h=0
+171 0xD0738     True CamEdit                                                             x= y= w=0 h=0
+172 0xD073C     True Static                      Date :                                  x= y= w=0 h=0
+173 0xD073E     True CamEdit                                                             x= y= w=0 h=0
+174 0x2106CE    True Static                      Numéro :                                x= y= w=0 h=0
+175 0x120890    True CamPane                     Informations client                     x= y= w=0 h=0
+176 0x130896    True CamPane                     Informations pièce                      x= y= w=0 h=0
+177 0xD0680    False CamEdit                                                             x= y= w=0 h=0
+178 0xF06C0    False Static                      Total Quantité :                        x= y= w=0 h=0
+179 0xE0664    False CamEdit                                                             x= y= w=0 h=0
+180 0xD0776    False Static                      Total Nb Colis :                        x= y= w=0 h=0
+181 0x1406F0   False CamEdit                                                             x= y= w=0 h=0
+182 0x19094C   False Static                      Total Poids Net :                       x= y= w=0 h=0
+183 0x12089E   False CamEdit                                                             x= y= w=0 h=0
+184 0x1006BA   False Static                      Total Poids Brut :                      x= y= w=0 h=0
+185 0xF08FA    False CamEdit                                                             x= y= w=0 h=0
+186 0x140988   False Static                      Total HT + Port :                       x= y= w=0 h=0
+187 0x1306FE   False CamEdit                                                             x= y= w=0 h=0
+188 0xC0CCC    False Static                      Port non soumis :                       x= y= w=0 h=0
+189 0x16085A   False CamEdit                                                             x= y= w=0 h=0
+190 0x2F0A78   False Static                      Port Soumis :                           x= y= w=0 h=0
+191 0x200BC4   False CamPane                                                             x= y= w=0 h=0
+192 0x1207BC   False CamEdit                                                             x= y= w=0 h=0
+193 0x130B80   False Static                      Solde Dû :                              x= y= w=0 h=0
+194 0x1409F2   False CamEdit                                                             x= y= w=0 h=0
+195 0xC0D16    False Static                      Total TPF :                             x= y= w=0 h=0
+196 0xC0CCA    False CamEdit                                                             x= y= w=0 h=0
+197 0xC0CDA    False Static                      Total TVA :                             x= y= w=0 h=0
+198 0xC0CC4    False CamEdit                                                             x= y= w=0 h=0
+199 0xC0D10    False Static                      Brut HT :                               x= y= w=0 h=0
+200 0xC0D14    False CamEdit                                                             x= y= w=0 h=0
+201 0xE0D96    False Static                      Total HT :                              x= y= w=0 h=0
+202 0xF0CB6    False CamEdit                                                             x= y= w=0 h=0
+203 0x110CFE   False Static                      Total TTC :                             x= y= w=0 h=0
+204 0xE0D94    False CamEdit                                                             x= y= w=0 h=0
+205 0x1A09F4   False Static                      Montant :                               x= y= w=0 h=0
+206 0x100CC6   False CamEdit                                                             x= y= w=0 h=0
+207 0xE0CC8    False Static                      Taux :                                  x= y= w=0 h=0
+208 0x1A0C5A   False CamEdit                                                             x= y= w=0 h=0
+209 0x1C07FE   False Static                      Montant :                               x= y= w=0 h=0
+210 0x1E0B5A   False CamEdit                                                             x= y= w=0 h=0
+211 0x1A0C20   False Static                      Taux :                                  x= y= w=0 h=0
+212 0x200B28   False CamPopup                    &Générer échéances                      x= y= w=0 h=0
+213 0x1C0810   False CamPopup                    &Régler                                 x= y= w=0 h=0
+214 0xE0CD2    False CamPopup                    &Supprimer                              x= y= w=0 h=0
+215 0x1B080A   False CamPopup                    &Ajouter                                x= y= w=0 h=0
+216 0x1407AC   False CamGrid                                                             x= y= w=0 h=0
+217 0x2E0A12   False ScrollBar                                                           x= y= w=0 h=0
+218 0x1B081A   False ScrollBar                                                           x= y= w=0 h=0
+219 0xE0CDC    False CamGridCond                                                         x= y= w=0 h=0
+220 0xE0CB2    False CamEdit                                                             x= y= w=0 h=0
+221 0x100D0A   False CamGridToolBar                                                      x= y= w=0 h=0
+222 0xE0CB8    False CamGridToolBar                                                      x= y= w=0 h=0
+223 0x1407AE   False CamGridViews                                                        x= y= w=0 h=0
+224 0xD0CBE    False CamRichEdit                                                         x= y= w=0 h=0
+225 0x110A94   False ScrollBar                                                           x= y= w=0 h=0
+226 0xF0D92    False ScrollBar                                                           x= y= w=0 h=0
+227 0xD0CA2    False CamPane                                                             x= y= w=0 h=0
+228 0xE0CCE    False CamPane                     Remise globale                          x= y= w=0 h=0
+229 0xD0CD6    False CamPane                     Escompte                                x= y= w=0 h=0
+230 0xD0CC2    False CamPane                     TVA                                     x= y= w=0 h=0
+231 0xD0D7C     True SysTabControl32                                                     x= y= w=0 h=0
+232 0xD0CD0    False CamPane                                                             x= y= w=0 h=0
+233 0xF0D18    False CamPane                                                             x= y= w=0 h=0
+234 0x140CA6    True CamPane                                                             x= y= w=0 h=0
+235 0x180D4C    True CamPane                                                             x= y= w=0 h=0
+236 0x120B2A   False camgrip                                                             x= y= w=0 h=0
+237 0x1608A2    True CamDialog                   Liste des factures clients              x= y= w=0 h=0
+238 0x1A0540   False HostUIWnd                                                           x= y= w=0 h=0
+239 0x1306FA   False Chrome_WidgetWin_0                                                  x= y= w=0 h=0
+240 0xD08F8    False Chrome_WidgetWin_1          Sage Business Docs                      x= y= w=0 h=0
+241 0xE05CC    False Chrome_RenderWidgetHostHWND Chrome Legacy Window                    x= y= w=0 h=0
+242 0xF0948    False Intermediate D3D Window                                             x= y= w=0 h=0
+243 0x130128   False CamPopup                                                            x= y= w=0 h=0
+244 0x1005A2   False CamEdit                                                             x= y= w=0 h=0
+245 0x11055C   False CamEdit                                                             x= y= w=0 h=0
+246 0x1A09C6   False CamPopup                                                            x= y= w=0 h=0
+247 0x120926   False CamPopup                                                            x= y= w=0 h=0
+248 0x1409A2   False CamPopup                                                            x= y= w=0 h=0
+249 0x1209B6   False CamPopup                                                            x= y= w=0 h=0
+250 0x1F093E   False CamView                                                             x= y= w=0 h=0
+251 0x15099C   False ScrollBar                                                           x= y= w=0 h=0
+252 0x120994   False ScrollBar                                                           x= y= w=0 h=0
+253 0x150944   False {{zoomslider}}                                                      x= y= w=0 h=0
+254 0x1005AA   False CamPopup                    Toutes les factures d'acompte           x= y= w=0 h=0
+255 0x1A018C   False CamGrid                                                             x= y= w=0 h=0
+256 0x1205BA   False ScrollBar                                                           x= y= w=0 h=0
+257 0x1507D4   False ScrollBar                                                           x= y= w=0 h=0
+258 0x1000C2   False CamGridCond                                                         x= y= w=0 h=0
+259 0x14081C   False CamEdit                                                             x= y= w=0 h=0
+260 0x140826   False CamGridToolBar                                                      x= y= w=0 h=0
+261 0x100592   False CamGridViews                                                        x= y= w=0 h=0
+262 0x1200F2    True Button                      Le &client :                            x= y= w=0 h=0
+263 0x1501B8    True Button                      To&us les clients                       x= y= w=0 h=0
+264 0x18079C    True CamPane                                                             x= y= w=0 h=0
+265 0xF0DB2     True CamEdit                                                             x= y= w=0 h=0
+266 0x2D0566    True Static                      Critères :                              x= y= w=0 h=0
+267 0x150420   False CamPopup                    Tous les avoirs                         x= y= w=0 h=0
+268 0x1B0554    True CamPopup                    Toutes les factures                     x= y= w=0 h=0
+269 0x2007E4   False CamPopup                                                            x= y= w=0 h=0
+270 0x150968   False CamPopup                                                            x= y= w=0 h=0
+271 0x140976   False CamPopup                    Tous les devis                          x= y= w=0 h=0
+272 0x130962    True CamPopup                                                            x= y= w=0 h=0
+273 0x13099A    True CamPopup                                                            x= y= w=0 h=0
+274 0x1A079E   False CamPopup                    Toutes les pièces                       x= y= w=0 h=0
+275 0x1807E2    True Static                      Période du :                            x= y= w=0 h=0
+276 0x1A088C    True Static                      au                                      x= y= w=0 h=0
+277 0x180450    True CamEdit                                                             x= y= w=0 h=0
+278 0x1207D6    True CamEdit                                                             x= y= w=0 h=0
+279 0x130834   False CamGrid                                                             x= y= w=0 h=0
+280 0x100842   False ScrollBar                                                           x= y= w=0 h=0
+281 0x1B0538   False ScrollBar                                                           x= y= w=0 h=0
+282 0x390912   False CamGridCond                                                         x= y= w=0 h=0
+283 0x11056C   False CamEdit                                                             x= y= w=0 h=0
+284 0x150670   False CamGridToolBar                                                      x= y= w=0 h=0
+285 0x1B02B0   False CamGridViews                                                        x= y= w=0 h=0
+286 0x1207C8   False CamGrid                                                             x= y= w=0 h=0
+287 0x150970   False ScrollBar                                                           x= y= w=0 h=0
+288 0x160C32   False ScrollBar                                                           x= y= w=0 h=0
+289 0xE08FE    False CamGridCond                                                         x= y= w=0 h=0
+290 0x15081E   False CamEdit                                                             x= y= w=0 h=0
+291 0x100840   False CamGridToolBar                                                      x= y= w=0 h=0
+292 0x13080C   False CamGridViews                                                        x= y= w=0 h=0
+293 0x18079A    True CamGrid                                                             x= y= w=0 h=0
+294 0x1507C6    True ScrollBar                                                           x= y= w=0 h=0
+295 0x1107DA    True ScrollBar                                                           x= y= w=0 h=0
+296 0x1107DE    True CamGridCond                                                         x= y= w=0 h=0
+297 0x17078C   False CamEdit                                                             x= y= w=0 h=0
+298 0x1407D2    True CamGridToolBar                                                      x= y= w=0 h=0
+299 0x1A0786   False CamGridViews                                                        x= y= w=0 h=0
+300 0xD09B2    False CamEdit                                                             x= y= w=0 h=0
+301 0xD09BA    False ComboBox                                                            x= y= w=0 h=0
+302 0x180952   False CamGrid                                                             x= y= w=0 h=0
+303 0x110932   False ScrollBar                                                           x= y= w=0 h=0
+304 0x13095A   False ScrollBar                                                           x= y= w=0 h=0
+305 0x1A07B6   False CamGridCond                                                         x= y= w=0 h=0
+306 0x12092A   False CamEdit                                                             x= y= w=0 h=0
+307 0xF0950    False CamGridToolBar                                                      x= y= w=0 h=0
+308 0xF01D6    False CamGridViews                                                        x= y= w=0 h=0
+309 0x1009AA   False CamGrid                                                             x= y= w=0 h=0
+310 0x1C09AE   False ScrollBar                                                           x= y= w=0 h=0
+311 0x120922   False ScrollBar                                                           x= y= w=0 h=0
+312 0x210946   False CamGridCond                                                         x= y= w=0 h=0
+313 0x2208FC   False CamEdit                                                             x= y= w=0 h=0
+314 0x2D099E   False CamGridToolBar                                                      x= y= w=0 h=0
+315 0x100938   False CamGridViews                                                        x= y= w=0 h=0
+316 0x230942   False CamGrid                                                             x= y= w=0 h=0
+317 0x1D0956   False ScrollBar                                                           x= y= w=0 h=0
+318 0x1B09A6   False ScrollBar                                                           x= y= w=0 h=0
+319 0x1F0794   False CamGridCond                                                         x= y= w=0 h=0
+320 0x1205A4   False CamEdit                                                             x= y= w=0 h=0
+321 0xD068E    False CamGridToolBar                                                      x= y= w=0 h=0
+322 0x1507D0   False CamGridToolBar                                                      x= y= w=0 h=0
+323 0x120930   False CamGridViews                                                        x= y= w=0 h=0
+324 0x130928   False CamGrid                                                             x= y= w=0 h=0
+325 0x1F0900   False ScrollBar                                                           x= y= w=0 h=0
+326 0x3D0908   False ScrollBar                                                           x= y= w=0 h=0
+327 0x1206D6   False CamGridCond                                                         x= y= w=0 h=0
+328 0x1C097E   False CamEdit                                                             x= y= w=0 h=0
+329 0x150552   False CamGridToolBar                                                      x= y= w=0 h=0
+330 0x25091A   False CamGridToolBar                                                      x= y= w=0 h=0
+331 0x260918   False CamGridViews                                                        x= y= w=0 h=0
+332 0x2C08DE   False SysTabControl32                                                     x= y= w=0 h=0
+333 0x2C09D0    True CamEdit                                                             x= y= w=0 h=0
+334 0x13092C    True CamPane                                                             x= y= w=0 h=0
+335 0x1B08E0   False CamGrid                                                             x= y= w=0 h=0
+336 0x1203C6   False ScrollBar                                                           x= y= w=0 h=0
+337 0x120864   False ScrollBar                                                           x= y= w=0 h=0
+338 0x1105AC   False CamGridCond                                                         x= y= w=0 h=0
+339 0x3A0916   False CamEdit                                                             x= y= w=0 h=0
+340 0x150934   False CamGridToolBar                                                      x= y= w=0 h=0
+341 0x1709FE   False CamGridViews                                                        x= y= w=0 h=0
+342 0x1F0920   False CamVTabCtl                  Pièces                                  x= y= w=0 h=0
+343 0x1E09E0   False camgrip                                                             x= y= w=0 h=0
+344 0x140856    True CamDialog                   Liste des clients                       x= y= w=0 h=0
+345 0x90C3C    False HostUIWnd                                                           x= y= w=0 h=0
+346 0x60C6C    False Chrome_WidgetWin_0                                                  x= y= w=0 h=0
+347 0x60C6E    False Chrome_WidgetWin_1          Sage Business Docs                      x= y= w=0 h=0
+348 0x60C72    False Chrome_RenderWidgetHostHWND Chrome Legacy Window                    x= y= w=0 h=0
+349 0x60C5E    False Intermediate D3D Window                                             x= y= w=0 h=0
+350 0x150B1C   False CamPopup                                                            x= y= w=0 h=0
+351 0x60C68    False CamEdit                                                             x= y= w=0 h=0
+352 0x60C66    False CamEdit                                                             x= y= w=0 h=0
+353 0x170ACA   False CamPopup                                                            x= y= w=0 h=0
+354 0x60C58    False CamPopup                                                            x= y= w=0 h=0
+355 0x110B60   False CamPopup                                                            x= y= w=0 h=0
+356 0x140A44   False CamPopup                                                            x= y= w=0 h=0
+357 0x160AEC   False CamView                                                             x= y= w=0 h=0
+358 0xE0B4A    False ScrollBar                                                           x= y= w=0 h=0
+359 0xF0B94    False ScrollBar                                                           x= y= w=0 h=0
+360 0x120B5E   False {{zoomslider}}                                                      x= y= w=0 h=0
+361 0x2E07F8   False CamGrid                                                             x= y= w=0 h=0
+362 0x50C8A    False ScrollBar                                                           x= y= w=0 h=0
+363 0xF09A4    False ScrollBar                                                           x= y= w=0 h=0
+364 0x1C0B96   False CamGridCond                                                         x= y= w=0 h=0
+365 0x160B54   False CamEdit                                                             x= y= w=0 h=0
+366 0x130ACE   False CamGridToolBar                                                      x= y= w=0 h=0
+367 0x130AD0   False CamGridViews                                                        x= y= w=0 h=0
+368 0x3709D6   False CamPopup                    Toutes                                  x= y= w=0 h=0
+369 0x310A00   False Static                      Pièces :                                x= y= w=0 h=0
+370 0x2D0A32   False CamEdit                                                             x= y= w=0 h=0
+371 0x50C88    False Static                      au                                      x= y= w=0 h=0
+372 0x130A56   False CamEdit                                                             x= y= w=0 h=0
+373 0x130A7C   False Static                      Du :                                    x= y= w=0 h=0
+374 0x1B09D8   False CamGrid                                                             x= y= w=0 h=0
+375 0x150A62   False ScrollBar                                                           x= y= w=0 h=0
+376 0x130C42   False ScrollBar                                                           x= y= w=0 h=0
+377 0xE0BAA    False CamGridCond                                                         x= y= w=0 h=0
+378 0x4F0A0C   False CamEdit                                                             x= y= w=0 h=0
+379 0xD0B9E    False CamGridToolBar                                                      x= y= w=0 h=0
+380 0x1E0A3A   False CamGridViews                                                        x= y= w=0 h=0
+381 0x40DE8    False CamGrid                                                             x= y= w=0 h=0
+382 0x40DEA    False ScrollBar                                                           x= y= w=0 h=0
+383 0x120808   False ScrollBar                                                           x= y= w=0 h=0
+384 0x40DEC    False CamGridCond                                                         x= y= w=0 h=0
+385 0x1D0AE8   False CamEdit                                                             x= y= w=0 h=0
+386 0x70C86    False CamGridToolBar                                                      x= y= w=0 h=0
+387 0x50C7E    False CamGridViews                                                        x= y= w=0 h=0
+388 0x30DDE     True CamGrid                                                             x= y= w=0 h=0
+389 0x30DCA     True ScrollBar                                                           x= y= w=0 h=0
+390 0x30E06     True ScrollBar                                                           x= y= w=0 h=0
+391 0x30E08     True CamGridCond                                                         x= y= w=0 h=0
+392 0x30E02    False CamEdit                                                             x= y= w=0 h=0
+393 0x110B8C    True CamGridToolBar                                                      x= y= w=0 h=0
+394 0x30E04    False CamGridViews                                                        x= y= w=0 h=0
+395 0x50C78    False CamEdit                                                             x= y= w=0 h=0
+396 0x160B5C   False ComboBox                                                            x= y= w=0 h=0
+397 0x40DE0    False camgrip                                                             x= y= w=0 h=0
+398 0x100432    True CamDialog                   Mon Intuiciel                           x= y= w=0 h=0
+399 0x40402     True {{brded}}                                                           x= y= w=0 h=0
+400 0x20466     True HostUIWnd                                                           x= y= w=0 h=0
+401 0x204A0     True Chrome_WidgetWin_0                                                  x= y= w=0 h=0
+402 0x204A4     True Chrome_WidgetWin_1          camMyDesk.html                          x= y= w=0 h=0
+403 0x204C8     True Chrome_RenderWidgetHostHWND Chrome Legacy Window                    x= y= w=0 h=0
+404 0x2046E     True Intermediate D3D Window                                             x= y= w=0 h=0
+405 0x2049C     True HostUIWnd                                                           x= y= w=0 h=0
+406 0x204C6     True Chrome_WidgetWin_0                                                  x= y= w=0 h=0
+407 0x2049A     True Chrome_WidgetWin_1          camNavigation                           x= y= w=0 h=0
+408 0x20468     True Chrome_RenderWidgetHostHWND Chrome Legacy Window                    x= y= w=0 h=0
+409 0x204CC     True Intermediate D3D Window                                             x= y= w=0 h=0
+410 0x270456    True camgrip                                                             x= y= w=0 h=0
+411 0x7009A     True CamStatusBar                                                        x= y= w=0 h=0
+
+
+
+
+CLASS COUNTS
+
+Count Name                       
+----- ----                       
+   97 CamEdit                    
+   81 Static                     
+   39 ScrollBar                  
+   33 CamPopup                   
+   21 CamPane                    
+   21 CamGridToolBar             
+   16 CamGrid                    
+   16 CamGridCond                
+   16 CamGridViews               
+   15 ComboBox                   
+   15 Button                     
+    4 Chrome_WidgetWin_0         
+    4 Chrome_WidgetWin_1         
+    4 HostUIWnd                  
+    4 camgrip                    
+    4 CamDialog                  
+    4 Intermediate D3D Window    
+    4 Chrome_RenderWidgetHostHWND
+    2 CamView                    
+    2 {{zoomslider}}             
+    2 SysTabControl32            
+    1 {{brded}}                  
+    1 CamVTabCtl                 
+    1 CamStatusBar               
+    1 MDIClient                  
+    1 {{ribbon}}                 
+    1 CamRichEdit                
+    1 {{CamExplorerBar}}         
+
+
+

@@ -1,0 +1,513 @@
+﻿Generated: 2026-05-29T16:45:57.2683959+02:00
+
+TOP WINDOWS FOR WGC
+
+Hex        Pid Visible Class                                         Title                                       Left  Top Width Height
+---        --- ------- -----                                         -----                                       ----  --- ----- ------
+0x300C4  11212    True CamCustomCaption                                                                           964    5   958     32
+0x305BC  11212    True CamMainFrame                                  Sage 50 : S.Z FASHION                        962    4   961   1031
+0x40098  11212    True Internet Explorer_Hidden                                                                     0    0     0      0
+0x10838  11212   False cam_wait_progress                                                                            0    0   136     39
+0x210ACC 11212   False ComboLBox                                                                                    0   22     0      0
+0xD09B8  11212   False ComboLBox                                                                                    0   22     0      0
+0x1A098E 11212   False ComboLBox                                                                                    0   25   194      0
+0x160870 11212   False ComboLBox                                                                                    0   25   293      0
+0x1C086C 11212   False ComboLBox                                                                                    0   25   445      0
+0x150B92 11212   False ComboLBox                                                                                 1077  637   162      0
+0x1B0822 11212   False ComboLBox                                                                                 1077  660    40      0
+0xC0BEE  11212   False ComboLBox                                                                                    0   25    66      0
+0x500E4  11212   False .NET-BroadcastEventWindow.4.0.0.0.297b065.0   .NET-BroadcastEventWindow.4.0.0.0.297b065.0    0    0     0      0
+0x2042E  11212   False IME                                           Default IME                                    0    0     0      0
+0x104D0  11212   False MSCTFIME UI                                   MSCTFIME UI                                    0    0     0      0
+0x1083A  11212   False IME                                           Default IME                                    0    0     0      0
+0x403F8  11212   False IME                                           Default IME                                    0    0     0      0
+0x600E2  11212   False IME                                           Default IME                                    0    0     0      0
+0x30384  11212   False GDI+ Hook Window Class                        GDI+ Window (WGC.exe)                          0    0     1      1
+0x30400  11212   False OleDdeWndClass                                DDE Server Window                              0    0     0      0
+0x6060C  11212   False WindowsForms10.Window.0.app.0.297b065_r50_ad1                                                0    0    16     16
+0x205D0  11212   False WindowsForms10.Window.8.app.0.297b065_r50_ad1 Sage.PENDO.AppMirror                           0 1004   160     28
+0x4056A  11212   False VSyncHelper-0B4D8480-3c32828d32                                                              0    0   136     39
+0x1A03FC 11212   False ComboLBox                                                                                    0   25   253      0
+0x305A8  11212   False CamTooltip                                                                                   0    0     0      0
+0x110884 11212   False CamTooltip                                                                                 480  316   284     85
+0x303A6  11212   False CamFireWnd                                                                                1559  948    24     24
+0x240B20 11212   False CamTooltip                                                                                 517  238   284     85
+0x60DA8  11212   False CamFireWnd                                                                                1337  359    24     24
+0x190C30 11212   False CamReBarToolWnd                                                                           1660 1011   500    387
+0x18085E 11212   False CamPopList                                                                                   0    0     0      0
+0xD0D12  11212   False CamTooltip                                                                                   0    0     0      0
+0x20434  11212   False CamModalShadow                                                                               0    0  1920   1033
+0x401D4  11212   False CamTooltip                                                                                1433  184   130     25
+0x3040A  11212   False CamTooltip                                                                                   0    0     0      0
+0xD0CA8  11212   False ComboLBox                                                                                    0   25   332      0
+0xE0CF6  11212   False ComboLBox                                                                                    0   25   298      0
+0xC0CD8  11212   False ComboLBox                                                                                    0   25   726      0
+0x1A0788 11212   False ComboLBox                                                                                    0   25   253      0
+0x8D0906 11212   False ComboLBox                                                                                    0   25   726      0
+0x300AC  11212   False CamTooltip                                                                                   0    0     0      0
+0x5015C  11212   False CamTooltip                                                                                   0    0     0      0
+0x130BA6 11212   False ComboLBox                                                                                    0   25   332      0
+0xB0D88  11212   False ComboLBox                                                                                    0   25   298      0
+0x270A2C 11212   False ComboLBox                                                                                    0   25   298      0
+
+
+
+
+MAIN: 0x305BC title='Sage 50 : S.Z FASHION' class=CamMainFrame rect=962,4,961,1031
+
+CHILD WINDOWS OF MAIN
+
+  N Hex      Visible Class                       Title                                   Left Top Width Height
+  - ---      ------- -----                       -----                                   ---- --- ----- ------
+  1 0x205C8    False {{CamExplorerBar}}                                                   963 203     0    796
+  2 0xB053A    False ScrollBar                                                            963 203     0      0
+  3 0x205D2     True {{ribbon}}                                                           963  69   959    134
+  4 0x7055E     True MDIClient                                                            963 203   959    796
+  5 0x100CF4    True CamDialog                   Facture - FA2861                         955 172   975    835
+  6 0x3A08E8   False CamEdit                                                             1065 585   332     25
+  7 0x140A24   False CamEdit                                                             1065 530   332     25
+  8 0xC0B1A    False CamEdit                                                             1065 612    81     25
+  9 0x180B22   False ComboBox                                                            1065 639   332     25
+ 10 0x2006AA   False Static                      Adresse :                               1007 531    54     23
+ 11 0x1A07EC   False CamEdit                                                             1065 558   332     25
+ 12 0x150A72   False CamEdit                                                             1065 503   332     25
+ 13 0x1C06EE   False CamEdit                                                             1149 612   248     25
+ 14 0x806E2    False Static                      Société :                               1007 504    54     23
+ 15 0x1D0A4A   False Static                      Pays :                                  1022 640    39     23
+ 16 0xA0CE2    False Static                      CP / Ville :                             997 613    64     23
+ 17 0x160954   False Static                      Crédit disponible :                     1430 613   103     23
+ 18 0xB0D8E    False ComboBox                                                            1537 530   298     25
+ 19 0xB0D8C    False Static                      Forme juridique :                       1435 477    98     23
+ 20 0xC0D04    False Static                      Tarif :                                 1499 531    34     23
+ 21 0xC0D08    False CamEdit                                                             1539 613   143     23
+ 22 0xB0D84    False Button                      Assujetti à TPF                         1539 586   113     23
+ 23 0xB0D86    False Static                      SIRET :                                 1470 559    64     23
+ 24 0xB0D82    False Static                      Nom contact :                           1450 504    84     23
+ 25 0xB0D8A    False ComboBox                                                            1537 475   298     25
+ 26 0x140646   False ComboBox                                                            1537 503   298     25
+ 27 0xD0CAC    False CamEdit                                                             1538 558   145     25
+ 28 0xB0D2C    False CamPane                                                             1421 463   423    214
+ 29 0xC0CDE    False Button                      Livraison                               1101 477    79     23
+ 30 0xB0D74    False Button                      Facturation                             1002 477    93     23
+ 31 0xB0D30    False CamEdit                                                             1065 585   332     25
+ 32 0xB0D76    False CamEdit                                                             1065 530   332     25
+ 33 0xD0CBC    False CamEdit                                                             1065 612    81     25
+ 34 0xC0CEE    False ComboBox                                                            1065 639   332     25
+ 35 0xC0CEC    False Static                      Adresse :                               1007 531    54     23
+ 36 0xC0CBA    False CamEdit                                                             1065 558   332     25
+ 37 0xB0D4E    False CamEdit                                                             1065 503   332     25
+ 38 0xB0D62    False CamEdit                                                             1149 612   248     25
+ 39 0xB0D60    False Static                      Société :                               1007 504    54     23
+ 40 0xB0D68    False Static                      Pays :                                  1022 640    39     23
+ 41 0xB0D4A    False Static                      CP / Ville :                             997 613    64     23
+ 42 0xB0D56    False CamPane                     Adresse                                  988 449   423    228
+ 43 0xB0D52    False ComboBox                                                            1109 762   726     25
+ 44 0x130DDC   False Static                      Motif exonération :                      997 763   108     23
+ 45 0x160426   False ComboBox                                                            1109 735   726     25
+ 46 0x1B0572   False Static                      Catégorie TVA :                         1012 736    93     23
+ 47 0x1507A2   False CamEdit                                                             1665 498   223     25
+ 48 0x1607A4   False CamEdit                                                             1665 444   233     25
+ 49 0x150798   False Static                      Statut :                                1617 445    44     23
+ 50 0x1407AA   False ComboBox                                                            1119 699   253     25
+ 51 0x110682   False Static                      Identifiant :                           1416 672    69     23
+ 52 0x120642   False Static                      Nom du service :                        1012 613   103     23
+ 53 0x2408EE   False CamEdit                                                             1119 585   769     25
+ 54 0x2208F4   False Static                      Code service :                          1022 586    93     23
+ 55 0x3906E6   False CamEdit                                                             1119 612   769     25
+ 56 0x31091E   False ComboBox                                                            1119 671   253     25
+ 57 0x1901F2   False Static                      Raison sociale :                        1381 700   103     23
+ 58 0x160862   False CamEdit                                                             1488 699   400     25
+ 59 0x18089C   False CamEdit                                                             1488 671   174     25
+ 60 0x1D0438   False Static                      Type d'identifiant :                     997 672   118     23
+ 61 0x1A056E   False Static                      Nom pays :                              1042 700    74     23
+ 62 0x17083E   False CamPane                     Valideur                                 988 645   910     87
+ 63 0x3A0914   False CamPane                     Destinataire                             988 559   910     87
+ 64 0x15058C   False Static                      N° engagement :                         1017 527    98     23
+ 65 0x1807F2   False CamEdit                                                             1119 498   445     25
+ 66 0x1408AA   False Static                      Pièce d'origine :                       1568 499    93     23
+ 67 0x1207B8   False CamEdit                                                             1119 526   445     25
+ 68 0x18087C   False Static                      N° marché :                             1047 499    69     23
+ 69 0x1807F6   False CamEdit                                                             1665 498   223     25
+ 70 0x180812   False CamPane                     Référence de la facture                  988 472   910     87
+ 71 0x190B4E   False ComboBox                                                            1119 444   445     25
+ 72 0x150B2C   False Static                      Cadre de facturation :                   988 445   128     23
+ 73 0x1C0B1E   False Static                      Date de validité :                       983 340   103     23
+ 74 0x1A0800   False Button                      Paiement en ligne                       1091 367   148     23
+ 75 0x17086A    True CamEdit                                                             1090 311   148     25
+ 76 0x13068C    True Static                      Mode paiement :                          978 312   108     23
+ 77 0x1505A6    True Static                      Date échéance :                          983 340   103     23
+ 78 0x270804    True CamEdit                                                             1090 339   148     25
+ 79 0x1A087E   False ComboBox                                                            1109 708   293     25
+ 80 0x1A086E   False Static                      Mode TVA :                              1032 709    74     23
+ 81 0x13063A   False CamPane                     Pane                                    1239 522     5    187
+ 82 0x1A092E   False CamEdit                                                             1514 340   389     23
+ 83 0xC0392    False CamEdit                                                             1514 367   527     23
+ 84 0x18095E   False CamEdit                                                             1356 366   155     25
+ 85 0x1A0560   False Static                      Affaire :                               1273 367    79     23
+ 86 0x4C0902    True CamPopup                    Sous-tota&l                             1504 449    98     23
+ 87 0x150660   False CamPopup                                                             978 267    39     23
+ 88 0x15065E   False CamPopup                                                             978 239    39     23
+ 89 0x140658   False CamEdit                                                             1657 475    98     25
+ 90 0x1108C4   False Static                      TTC :                                   1617 477    34     23
+ 91 0x540880   False CamPane                     Eco-participation                       1608 444   157     64
+ 92 0x240A76   False ComboBox                                                            1562 526   194     25
+ 93 0x3506C6   False Static                      Statut :                                1514 527    44     23
+ 94 0x1E0C0A   False CamPane                                                             1499 513   266     46
+ 95 0x1D0832   False ComboBox                                                            1100 600    66     25
+ 96 0x1E0B62   False CamEdit                                                             1165 601    57     25
+ 97 0x1F0AD8   False Static                      TVA sur port :                          1010 601    84     23
+ 98 0x120B7E   False Static                      Réglé :                                 1284 656    44     23
+ 99 0x140B86   False Static                      Utilisé :                               1284 656    44     23
+100 0xF0C38    False Static                      N° TVA intracom :                       1411 709   118     23
+101 0x170A98   False CamGrid                     Liste des rubriques utilisateurs         988 449   910    528
+102 0x1E0AD6   False ScrollBar                                                           1039 959   841     17
+103 0x1A09E4   False ScrollBar                                                           1880 484    17    475
+104 0xC0C76    False CamGridCond                                                          989 450     0      0
+105 0xC0C64    False CamEdit                                                              989 450     0      0
+106 0xA0C7A    False CamGridToolBar                                                       989 450     0      0
+107 0xE0B6C    False CamGridToolBar                                                      1195 450   700     33
+108 0xB0C54    False CamGridViews                                                         989 450     0      0
+109 0x290A9A   False Button                      Accusé de réception                     1662 239   148     23
+110 0xA0C7C    False Button                      Transférée                              1824 249    89     23
+111 0x230A90    True Button                      Transmise                               1834 276    79     23
+112 0x1D0B52   False Button                      Soldée                                  1844 249    69     23
+113 0x200B14    True Button                      Compta.                                 1839 249    74     23
+114 0x1E0AA4    True Button                      Validée                                 1844 221    69     23
+115 0xB0C84    False CamEdit                                                             1627 526   138     25
+116 0xB0C82    False Static                      Montant reliquat HT:                    1499 526   123     23
+117 0x190A9C   False CamEdit                                                             1055 311   184     25
+118 0x2109E2   False Static                      Réf. cde :                               993 312    59     23
+119 0x1807E0   False CamEdit                                                             1090 339   150     25
+120 0x1C08A4   False Static                      Date livraison :                         997 340    89     23
+121 0x130564   False CamEdit                                                             1090 366   150     25
+122 0x1405B6   False Static                      Mode paiement :                          983 367   103     23
+123 0x100B84   False Button                      Ne pas réintégrer les articles en stock 1514 527   246     23
+124 0xC0780     True CamPopup                    O&utils...                              1804 449    93     23
+125 0x1904E6   False Static                      Facture non validée.                     988 449   826     23
+126 0xC075C    False Static                      Echéances :                             1413 954    74     23
+127 0xC0764    False CamEdit                                                             1493 954   106     23
+128 0xC077E    False CamEdit                                                             1278 954   101     23
+129 0xC0774    False Static                      Acompte :                               1210 954    59     23
+130 0xC0766    False CamEdit                                                             1063 954   118     23
+131 0xC0772    False Static                      Total TTC :                              988 954    69     23
+132 0xC0778    False CamEdit                                                             1671 953   102     23
+133 0xC0768    False Static                      Ecart :                                 1624 954    39     23
+134 0xC076A    False Static                      Total TPF :                             1387 954    69     23
+135 0xC0758    False CamEdit                                                             1460 952    98     25
+136 0x100C3E   False Button                      Facturer en TTC                          997 522   123     23
+137 0xC0C92    False Button                      Multi-échéances                         1775 449   123     23
+138 0xC0D28    False CamEdit                                                             1533 708   145     25
+139 0x2A0B24    True CamPopup                    &Dupliquer                              1298 449    98     23
+140 0x1F0A58    True CamPopup                    &Insérer                                1091 449    98     23
+141 0xC0CA0     True CamPopup                    &Supprimer                              1194 449    98     23
+142 0x100C40    True CamPopup                    &Ajouter                                 988 449    98     23
+143 0xD0D24     True CamPopup                    &Commentaire                            1401 449    98     23
+144 0x2D094A   False CamEdit                                                             1332 655   148     25
+145 0xD0760    False CamEdit                                                             1332 628   148     25
+146 0xD0756    False Static                      Acompte :                               1269 628    59     23
+147 0xD075E     True CamEdit                                                             1264 952    98     25
+148 0x300972    True Static                      Total TVA :                             1192 954    69     23
+149 0xD075A     True CamEdit                                                             1050 952   113     25
+150 0x1F0892    True Static                      Total HT :                               988 954    59     23
+151 0x150698    True CamEdit                                                             1659 952   109     25
+152 0xD0762     True Static                      Total TTC :                             1587 954    69     23
+153 0xD0734     True CamGrid                                                              988 477   910    473
+154 0xD0736     True ScrollBar                                                           1039 932   841     17
+155 0xD074E     True ScrollBar                                                           1880 552    17    380
+156 0xD074C    False CamGridCond                                                          989 478     0      0
+157 0xD0748    False CamEdit                                                              989 478     0      0
+158 0xD0746    False CamGridToolBar                                                       989 478     0      0
+159 0xD0752     True CamGridToolBar                                                       997 478   898     33
+160 0xD0754    False CamGridViews                                                         989 478     0      0
+161 0xD077A    False Static                      Représentant :                          1263 340    89     23
+162 0xD073A    False CamEdit                                                             1356 339   155     25
+163 0xD0742     True CamEdit                                                             1046 380   868     25
+164 0xD0750     True Static                      Remarque :                               973 381    69     23
+165 0xD074A     True CamEdit                                                             1356 311   548     25
+166 0xD0744     True Static                      Référence :                             1283 312    69     23
+167 0xD0732     True CamEdit                                                             1356 266   455     25
+168 0x150700    True Static                      Nom :                                   1317 267    34     23
+169 0xD077C     True CamEdit                                                             1356 238   155     25
+170 0xD0740     True Static                      Client :                                1312 239    39     23
+171 0xD0738     True CamEdit                                                             1090 266   148     25
+172 0xD073C     True Static                      Date :                                  1047 267    39     23
+173 0xD073E     True CamEdit                                                             1090 238   148     25
+174 0x2106CE    True Static                      Numéro :                                1032 239    54     23
+175 0x120890    True CamPane                     Informations client                     1253 212   566     84
+176 0x130896    True CamPane                     Informations pièce                       973 212   276     84
+177 0xD0680    False CamEdit                                                             1616 683   135     25
+178 0xF06C0    False Static                      Total Quantité :                        1519 684    93     23
+179 0xE0664    False CamEdit                                                             1616 655   135     25
+180 0xD0776    False Static                      Total Nb Colis :                        1524 658    89     23
+181 0x1406F0   False CamEdit                                                             1616 601   135     25
+182 0x19094C   False Static                      Total Poids Net :                       1514 603    98     23
+183 0x12089E   False CamEdit                                                             1616 573   135     25
+184 0x1006BA   False Static                      Total Poids Brut :                      1509 576   103     23
+185 0xF08FA    False CamEdit                                                             1101 685   121     25
+186 0x140988   False Static                      Total HT + Port :                        995 685    98     23
+187 0x1306FE   False CamEdit                                                             1100 654   120     25
+188 0xC0CCC    False Static                      Port non soumis :                        990 655   103     23
+189 0x16085A   False CamEdit                                                             1100 627   120     25
+190 0x2F0A78   False Static                      Port Soumis :                           1015 628    79     23
+191 0x200BC4   False CamPane                                                             1499 563   266    154
+192 0x1207BC   False CamEdit                                                             1332 685   148     25
+193 0x130B80   False Static                      Solde Dû :                              1264 686    64     23
+194 0x1409F2   False CamEdit                                                             1332 573   148     25
+195 0xC0D16    False Static                      Total TPF :                             1259 573    69     23
+196 0xC0CCA    False CamEdit                                                             1332 546   148     25
+197 0xC0CDA    False Static                      Total TVA :                             1259 546    69     23
+198 0xC0CC4    False CamEdit                                                             1101 546   121     25
+199 0xC0D10    False Static                      Brut HT :                               1039 547    54     23
+200 0xC0D14    False CamEdit                                                             1101 573   121     25
+201 0xE0D96    False Static                      Total HT :                              1034 574    59     23
+202 0xF0CB6    False CamEdit                                                             1332 601   148     25
+203 0x110CFE   False Static                      Total TTC :                             1259 602    69     23
+204 0xE0D94    False CamEdit                                                             1485 475   108     25
+205 0x1A09F4   False Static                      Montant :                               1416 477    59     23
+206 0x100CC6   False CamEdit                                                             1351 474    62     25
+207 0xE0CC8    False Static                      Taux :                                  1310 475    39     23
+208 0x1A0C5A   False CamEdit                                                             1164 474   120     25
+209 0x1C07FE   False Static                      Montant :                               1103 475    59     23
+210 0x1E0B5A   False CamEdit                                                             1031 476    62     25
+211 0x1A0C20   False Static                      Taux :                                   991 475    39     23
+212 0x200B28   False CamPopup                    &Générer échéances                      1204 449   187     23
+213 0x1C0810   False CamPopup                    &Régler                                 1681 449    84     23
+214 0xE0CD2    False CamPopup                    &Supprimer                              1096 449   103     23
+215 0x1B080A   False CamPopup                    &Ajouter                                 988 449   103     23
+216 0x1407AC   False CamGrid                                                              988 477   910    473
+217 0x2E0A12   False ScrollBar                                                           1039 932   841     17
+218 0x1B081A   False ScrollBar                                                           1880 512    17    420
+219 0xE0CDC    False CamGridCond                                                          989 478     0      0
+220 0xE0CB2    False CamEdit                                                              989 478     0      0
+221 0x100D0A   False CamGridToolBar                                                       989 478     0      0
+222 0xE0CB8    False CamGridToolBar                                                       997 478   898     33
+223 0x1407AE   False CamGridViews                                                         989 478     0      0
+224 0xD0CBE    False CamRichEdit                                                          987 476   912    502
+225 0x110A94   False ScrollBar                                                            989 478     0      0
+226 0xF0D92    False ScrollBar                                                            989 478     0      0
+227 0xD0CA2    False CamPane                                                              983 512   512    205
+228 0xE0CCE    False CamPane                     Remise globale                           983 445   310     64
+229 0xD0CD6    False CamPane                     Escompte                                1298 445   305     64
+230 0xD0CC2    False CamPane                     TVA                                      988 681   856    114
+231 0xD0D7C     True SysTabControl32                                                      973 413   940    576
+232 0xD0CD0    False CamPane                                                              973 303   276     96
+233 0xF0D18    False CamPane                                                             1253 303   659     96
+234 0x140CA6    True CamPane                                                             1253 303   659     68
+235 0x180D4C    True CamPane                                                              973 303   276     68
+236 0x120B2A   False camgrip                                                             1851 796    17     17
+237 0x1608A2    True CamDialog                   Liste des factures clients               955 172   975    835
+238 0x1A0540   False HostUIWnd                                                           1489 290   369    364
+239 0x1306FA   False Chrome_WidgetWin_0                                                  1489 290   369    364
+240 0xD08F8    False Chrome_WidgetWin_1          Sage Business Docs                      1489 290   369    364
+241 0xE05CC    False Chrome_RenderWidgetHostHWND Chrome Legacy Window                    1489 290   369    364
+242 0xF0948    False Intermediate D3D Window                                             1489 290   369    364
+243 0x130128   False CamPopup                                                            1662 290   197     23
+244 0x1005A2   False CamEdit                                                             1667 290   192     23
+245 0x11055C   False CamEdit                                                             1551 290    44     23
+246 0x1A09C6   False CamPopup                                                            1627 290    30     23
+247 0x120926   False CamPopup                                                            1598 290    30     23
+248 0x1409A2   False CamPopup                                                            1519 290    30     23
+249 0x1209B6   False CamPopup                                                            1489 290    30     23
+250 0x1F093E   False CamView                                                             1488 316   371    339
+251 0x15099C   False ScrollBar                                                           1490 318     0      0
+252 0x120994   False ScrollBar                                                           1490 318     0      0
+253 0x150944   False {{zoomslider}}                                                      1490 318     0      0
+254 0x1005AA   False CamPopup                    Toutes les factures d'acompte           1415 249   403     23
+255 0x1A018C   False CamGrid                                                              968 290   949    703
+256 0x1205BA   False ScrollBar                                                           1019 975   880     17
+257 0x1507D4   False ScrollBar                                                           1899 325    17    650
+258 0x1000C2   False CamGridCond                                                          969 291   947     34
+259 0x14081C   False CamEdit                                                              969 291     0      0
+260 0x140826   False CamGridToolBar                                                       969 291   325     33
+261 0x100592   False CamGridViews                                                         969 291     0      0
+262 0x1200F2    True Button                      Le &client :                            1091 221    79     23
+263 0x1501B8    True Button                      To&us les clients                        968 221   118     23
+264 0x18079C    True CamPane                                                              968 280   944      5
+265 0xF0DB2     True CamEdit                                                             1415 221   496     25
+266 0x2D0566    True Static                      Critères :                              1356 249    54     23
+267 0x150420   False CamPopup                    Tous les avoirs                         1420 249   398     23
+268 0x1B0554    True CamPopup                    Toutes les factures                     1420 249   398     23
+269 0x2007E4   False CamPopup                                                            1420 249   398     23
+270 0x150968   False CamPopup                                                            1420 249   398     23
+271 0x140976   False CamPopup                    Tous les devis                          1420 249   491     23
+272 0x130962    True CamPopup                                                            1378 221    31     23
+273 0x13099A    True CamPopup                                                            1346 221    31     23
+274 0x1A079E   False CamPopup                    Toutes les pièces                       1415 249   403     23
+275 0x1807E2    True Static                      Période du :                             968 249    74     23
+276 0x1A088C    True Static                      au                                      1189 249    20     23
+277 0x180450    True CamEdit                                                             1213 248   125     25
+278 0x1207D6    True CamEdit                                                             1045 248   140     25
+279 0x130834   False CamGrid                                                              968 290   949    703
+280 0x100842   False ScrollBar                                                           1019 975   880     17
+281 0x1B0538   False ScrollBar                                                           1899 325    17    650
+282 0x390912   False CamGridCond                                                          969 291   947     34
+283 0x11056C   False CamEdit                                                              969 291     0      0
+284 0x150670   False CamGridToolBar                                                       969 291   325     33
+285 0x1B02B0   False CamGridViews                                                         969 291     0      0
+286 0x1207C8   False CamGrid                                                              968 290   949    703
+287 0x150970   False ScrollBar                                                           1019 975   880     17
+288 0x160C32   False ScrollBar                                                           1899 325    17    650
+289 0xE08FE    False CamGridCond                                                          969 291   947     34
+290 0x15081E   False CamEdit                                                              969 291     0      0
+291 0x100840   False CamGridToolBar                                                       969 291   325     33
+292 0x13080C   False CamGridViews                                                         969 291     0      0
+293 0x18079A    True CamGrid                                                              968 290   949    703
+294 0x1507C6    True ScrollBar                                                           1019 975   880     17
+295 0x1107DA    True ScrollBar                                                           1899 325    17    650
+296 0x1107DE    True CamGridCond                                                          969 291   947     34
+297 0x17078C   False CamEdit                                                             1418 299   213     18
+298 0x1407D2    True CamGridToolBar                                                       969 291   430     33
+299 0x1A0786   False CamGridViews                                                         969 291     0      0
+300 0xD09B2    False CamEdit                                                              969 291     0      0
+301 0xD09BA    False ComboBox                                                             969 291     0     22
+302 0x180952   False CamGrid                                                              968 290   949    703
+303 0x110932   False ScrollBar                                                           1019 975   880     17
+304 0x13095A   False ScrollBar                                                           1899 325    17    650
+305 0x1A07B6   False CamGridCond                                                          969 291   947     34
+306 0x12092A   False CamEdit                                                              969 291     0      0
+307 0xF0950    False CamGridToolBar                                                       969 291   325     33
+308 0xF01D6    False CamGridViews                                                         969 291     0      0
+309 0x1009AA   False CamGrid                                                              968 290   949    703
+310 0x1C09AE   False ScrollBar                                                           1019 975   880     17
+311 0x120922   False ScrollBar                                                           1899 325    17    650
+312 0x210946   False CamGridCond                                                          969 291   947     34
+313 0x2208FC   False CamEdit                                                              969 291     0      0
+314 0x2D099E   False CamGridToolBar                                                       969 291   325     33
+315 0x100938   False CamGridViews                                                         969 291     0      0
+316 0x230942   False CamGrid                                                             1120 549   335     91
+317 0x1D0956   False ScrollBar                                                           1171 622   266     17
+318 0x1B09A6   False ScrollBar                                                           1437 584    17     38
+319 0x1F0794   False CamGridCond                                                         1121 550     0      0
+320 0x1205A4   False CamEdit                                                             1121 550     0      0
+321 0xD068E    False CamGridToolBar                                                      1121 550     0      0
+322 0x1507D0   False CamGridToolBar                                                      1129 550   323     33
+323 0x120930   False CamGridViews                                                        1121 550     0      0
+324 0x130928   False CamGrid                                                             1120 549   335     91
+325 0x1F0900   False ScrollBar                                                           1171 622   266     17
+326 0x3D0908   False ScrollBar                                                           1437 584    17     38
+327 0x1206D6   False CamGridCond                                                         1121 550     0      0
+328 0x1C097E   False CamEdit                                                             1121 550     0      0
+329 0x150552   False CamGridToolBar                                                      1121 550     0      0
+330 0x25091A   False CamGridToolBar                                                      1129 550   323     33
+331 0x260918   False CamGridViews                                                        1121 550     0      0
+332 0x2C08DE   False SysTabControl32                                                     1111 513   353    141
+333 0x2C09D0    True CamEdit                                                             1173 220   164     25
+334 0x13092C    True CamPane                                                              968 212   944      5
+335 0x1B08E0   False CamGrid                                                              968 290   949    703
+336 0x1203C6   False ScrollBar                                                           1019 975   880     17
+337 0x120864   False ScrollBar                                                           1899 325    17    650
+338 0x1105AC   False CamGridCond                                                          969 291   947     34
+339 0x3A0916   False CamEdit                                                              969 291     0      0
+340 0x150934   False CamGridToolBar                                                       969 291   325     33
+341 0x1709FE   False CamGridViews                                                         969 291     0      0
+342 0x1F0920   False CamVTabCtl                  Pièces                                   973 212   133    467
+343 0x1E09E0   False camgrip                                                             1852 656    17     17
+344 0x140856    True CamDialog                   Liste des clients                        955 172   975    835
+345 0x90C3C    False HostUIWnd                                                           1430 212   276    410
+346 0x60C6C    False Chrome_WidgetWin_0                                                  1430 212   276    410
+347 0x60C6E    False Chrome_WidgetWin_1          Sage Business Docs                      1430 212   276    410
+348 0x60C72    False Chrome_RenderWidgetHostHWND Chrome Legacy Window                    1430 212   276    410
+349 0x60C5E    False Intermediate D3D Window                                             1430 212   276    410
+350 0x150B1C   False CamPopup                                                            1603 217   103     23
+351 0x60C68    False CamEdit                                                             1603 217   103     23
+352 0x60C66    False CamEdit                                                             1492 217    44     23
+353 0x170ACA   False CamPopup                                                            1568 217    30     23
+354 0x60C58    False CamPopup                                                            1539 217    30     23
+355 0x110B60   False CamPopup                                                            1460 217    30     23
+356 0x140A44   False CamPopup                                                            1430 217    30     23
+357 0x160AEC   False CamView                                                             1429 243   278    380
+358 0xE0B4A    False ScrollBar                                                           1431 245     0      0
+359 0xF0B94    False ScrollBar                                                           1431 245     0      0
+360 0x120B5E   False {{zoomslider}}                                                      1431 245     0      0
+361 0x2E07F8   False CamGrid                                                              973 212   944    779
+362 0x50C8A    False ScrollBar                                                           1024 973   875     17
+363 0xF09A4    False ScrollBar                                                           1899 247    17    726
+364 0x1C0B96   False CamGridCond                                                          974 213   942     34
+365 0x160B54   False CamEdit                                                              974 213     0      0
+366 0x130ACE   False CamGridToolBar                                                       974 213   325     33
+367 0x130AD0   False CamGridViews                                                         974 213     0      0
+368 0x3709D6   False CamPopup                    Toutes                                  1027 440    64     23
+369 0x310A00   False Static                      Pièces :                                 973 440    49     23
+370 0x2D0A32   False CamEdit                                                             1297 439   110     25
+371 0x50C88    False Static                      au                                      1273 440    15     23
+372 0x130A56   False CamEdit                                                             1129 439   135     25
+373 0x130A7C   False Static                      Du :                                    1101 440    25     23
+374 0x1B09D8   False CamGrid                                                              973 472   433    146
+375 0x150A62   False ScrollBar                                                           1024 600   364     17
+376 0x130C42   False ScrollBar                                                           1388 541    17     59
+377 0xE0BAA    False CamGridCond                                                          974 507   431     34
+378 0x4F0A0C   False CamEdit                                                              974 507     0      0
+379 0xD0B9E    False CamGridToolBar                                                       974 507   122     33
+380 0x1E0A3A   False CamGridViews                                                         974 473     0      0
+381 0x40DE8    False CamGrid                                                              973 472   433    150
+382 0x40DEA    False ScrollBar                                                           1024 604   364     17
+383 0x120808   False ScrollBar                                                           1388 541    17     63
+384 0x40DEC    False CamGridCond                                                          974 507   431     34
+385 0x1D0AE8   False CamEdit                                                              974 507     0      0
+386 0x70C86    False CamGridToolBar                                                       974 507   122     33
+387 0x50C7E    False CamGridViews                                                         974 473     0      0
+388 0x30DDE     True CamGrid                                                              973 212   944    779
+389 0x30DCA     True ScrollBar                                                           1094 973   805     17
+390 0x30E06     True ScrollBar                                                           1899 247    17    726
+391 0x30E08     True CamGridCond                                                          974 213   942     34
+392 0x30E02    False CamEdit                                                             1423 221   213     18
+393 0x110B8C    True CamGridToolBar                                                       974 213   430     33
+394 0x30E04    False CamGridViews                                                         974 213     0      0
+395 0x50C78    False CamEdit                                                              974 213     0      0
+396 0x160B5C   False ComboBox                                                             974 213     0     22
+397 0x40DE0    False camgrip                                                             1502 440    17     17
+398 0x100432    True CamDialog                   Mon Intuiciel                            963 203   959    796
+399 0x40402     True {{brded}}                                                            963 203   959    796
+400 0x20466     True HostUIWnd                                                            963 243   959    758
+401 0x204A0     True Chrome_WidgetWin_0                                                   963 243   959    758
+402 0x204A4     True Chrome_WidgetWin_1          camMyDesk.html                           963 243   959    758
+403 0x204C8     True Chrome_RenderWidgetHostHWND Chrome Legacy Window                     963 243   959    758
+404 0x2046E     True Intermediate D3D Window                                              963 243   959    758
+405 0x2049C     True HostUIWnd                                                            963 203   959     40
+406 0x204C6     True Chrome_WidgetWin_0                                                   963 203   959     40
+407 0x2049A     True Chrome_WidgetWin_1          camNavigation                            963 203   959     40
+408 0x20468     True Chrome_RenderWidgetHostHWND Chrome Legacy Window                     963 203   959     40
+409 0x204CC     True Intermediate D3D Window                                              963 203  1919     40
+410 0x270456    True camgrip                                                             1905 982    17     17
+411 0x7009A     True CamStatusBar                                                         963 999   960     35
+
+
+
+
+CLASS COUNTS
+
+Count Name                       
+----- ----                       
+   97 CamEdit                    
+   81 Static                     
+   39 ScrollBar                  
+   33 CamPopup                   
+   21 CamPane                    
+   21 CamGridToolBar             
+   16 CamGrid                    
+   16 CamGridCond                
+   16 CamGridViews               
+   15 ComboBox                   
+   15 Button                     
+    4 Chrome_WidgetWin_0         
+    4 Chrome_WidgetWin_1         
+    4 HostUIWnd                  
+    4 camgrip                    
+    4 CamDialog                  
+    4 Intermediate D3D Window    
+    4 Chrome_RenderWidgetHostHWND
+    2 CamView                    
+    2 {{zoomslider}}             
+    2 SysTabControl32            
+    1 {{brded}}                  
+    1 CamVTabCtl                 
+    1 CamStatusBar               
+    1 MDIClient                  
+    1 {{ribbon}}                 
+    1 CamRichEdit                
+    1 {{CamExplorerBar}}         
+
+
+
+
+SCREENSHOT: C:\Dev\sage-assistant\audit_sage\sage_window_20260529_164557.png

@@ -7,6 +7,8 @@ from pathlib import Path
 
 
 APP_NAME = "Sage Assistant"
+REAL_SAGE_ONE_LINE_MODE = "real_sage_one_line"
+SAGE_50_WINDOW_TITLE = "Sage 50 : S.Z FASHION"
 
 
 def project_root() -> Path:

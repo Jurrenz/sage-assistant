@@ -36,7 +36,15 @@ from .models import InvoiceLine, SageMapping
 from .order_folder import list_order_files, latest_order_file
 from .product_folder import latest_product_export
 from .resolver import Resolver
-from .settings import APP_NAME, AppSettings, is_windows, load_settings, save_settings
+from .settings import (
+    APP_NAME,
+    REAL_SAGE_ONE_LINE_MODE,
+    SAGE_50_WINDOW_TITLE,
+    AppSettings,
+    is_windows,
+    load_settings,
+    save_settings,
+)
 
 
 class MainWindow(QMainWindow):
@@ -267,8 +275,9 @@ class MainWindow(QMainWindow):
         self.ahk_path = QLineEdit(self.settings.autohotkey_path)
         self.sage_path = QLineEdit(self.settings.sage_executable_path)
         self.injection_mode = QComboBox()
-        self.injection_mode.addItems(["keyboard_only", "calibrated_clicks", "control_based"])
+        self.injection_mode.addItems(["keyboard_only", "calibrated_clicks", "control_based", REAL_SAGE_ONE_LINE_MODE])
         self.injection_mode.setCurrentText(self.settings.sage_profile.injection_mode)
+        self.injection_mode.currentTextChanged.connect(self._on_injection_mode_changed)
         self.window_title = QLineEdit(self.settings.sage_profile.window_title_contains)
         self.delay_ms = QSpinBox()
         self.delay_ms.setRange(10, 2000)
@@ -290,6 +299,7 @@ class MainWindow(QMainWindow):
         settings_form.addRow("", self.step_mode)
         settings_form.addRow("", self.auto_close)
         layout.addLayout(settings_form)
+        self._on_injection_mode_changed(self.injection_mode.currentText())
 
         calibration_actions = QHBoxLayout()
         diagnostic_button = QPushButton("Diagnostic Sage")
@@ -320,6 +330,14 @@ class MainWindow(QMainWindow):
         else:
             flags &= ~Qt.WindowStaysOnTopHint
         self.setWindowFlags(flags)
+
+    def _on_injection_mode_changed(self, mode: str) -> None:
+        if mode == REAL_SAGE_ONE_LINE_MODE:
+            self.line_limit.setValue(1)
+            self.line_limit.setEnabled(False)
+            self.window_title.setText(SAGE_50_WINDOW_TITLE)
+            return
+        self.line_limit.setEnabled(True)
 
     def _refresh_status(self) -> None:
         latest = self.db.latest_product_import()
@@ -437,6 +455,9 @@ class MainWindow(QMainWindow):
         for line in self.lines:
             line.validate()
         line_limit = self.settings.injection_line_limit
+        if self.settings.sage_profile.injection_mode == REAL_SAGE_ONE_LINE_MODE:
+            line_limit = 1
+            self.settings.injection_line_limit = 1
         selected_lines = self.lines[:line_limit] if line_limit > 0 else self.lines
         blocked = [line for line in selected_lines if line.validation_status != "ok"]
         if blocked:
@@ -447,7 +468,7 @@ class MainWindow(QMainWindow):
             path = write_injection_queue(
                 self.lines,
                 self.settings,
-                line_limit=self.settings.injection_line_limit,
+                line_limit=line_limit,
             )
             prepared_count = self.settings.injection_line_limit or len(self.lines)
             prepared_count = min(prepared_count, len(self.lines))
@@ -635,6 +656,9 @@ class MainWindow(QMainWindow):
         self.settings.injection_line_limit = self.line_limit.value()
         self.settings.sage_profile.step_mode = self.step_mode.isChecked()
         self.settings.auto_close_with_sage = self.auto_close.isChecked()
+        if self.settings.sage_profile.injection_mode == REAL_SAGE_ONE_LINE_MODE:
+            self.settings.injection_line_limit = 1
+            self.settings.sage_profile.window_title_contains = SAGE_50_WINDOW_TITLE
         save_settings(self.settings)
         QMessageBox.information(self, APP_NAME, "Reglages sauvegardes.")
 
@@ -650,6 +674,9 @@ class MainWindow(QMainWindow):
         self.settings.injection_line_limit = self.line_limit.value()
         self.settings.sage_profile.step_mode = self.step_mode.isChecked()
         self.settings.auto_close_with_sage = self.auto_close.isChecked()
+        if self.settings.sage_profile.injection_mode == REAL_SAGE_ONE_LINE_MODE:
+            self.settings.injection_line_limit = 1
+            self.settings.sage_profile.window_title_contains = SAGE_50_WINDOW_TITLE
         save_settings(self.settings)
 
     def _preserve_calibration_from_disk(self) -> None:

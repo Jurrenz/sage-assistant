@@ -1,0 +1,470 @@
+﻿Generated: 2026-05-29T16:47:51.3052625+02:00
+Source: C:\Dev\sage-assistant\audit_sage\sage_win32_audit_clean_20260529_164556.txt
+
+
+N              : 75
+Hwnd           : 0x17086A
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 7
+WM_GETTEXT     : CBD PFS
+
+
+
+
+
+
+N              : 78
+Hwnd           : 0x270804
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 10
+WM_GETTEXT     : 29/05/2026
+
+
+
+
+
+
+N              : 86
+Hwnd           : 0x4C0902
+Class          : CamPopup
+TitleFromEnum  : Sous-tota&l
+WM_GETTEXT_LEN : 11
+WM_GETTEXT     : Sous-tota&l
+
+
+
+
+
+
+N              : 111
+Hwnd           : 0x230A90
+Class          : Button
+TitleFromEnum  : Transmise
+WM_GETTEXT_LEN : 9
+WM_GETTEXT     : Transmise
+
+
+
+
+
+
+N              : 113
+Hwnd           : 0x200B14
+Class          : Button
+TitleFromEnum  : Compta.
+WM_GETTEXT_LEN : 7
+WM_GETTEXT     : Compta.
+
+
+
+
+
+
+N              : 114
+Hwnd           : 0x1E0AA4
+Class          : Button
+TitleFromEnum  : Validée
+WM_GETTEXT_LEN : 7
+WM_GETTEXT     : Validée
+
+
+
+
+
+
+N              : 124
+Hwnd           : 0xC0780
+Class          : CamPopup
+TitleFromEnum  : O&utils...
+WM_GETTEXT_LEN : 10
+WM_GETTEXT     : O&utils...
+
+
+
+
+
+
+N              : 139
+Hwnd           : 0x2A0B24
+Class          : CamPopup
+TitleFromEnum  : &Dupliquer
+WM_GETTEXT_LEN : 10
+WM_GETTEXT     : &Dupliquer
+
+
+
+
+
+
+N              : 140
+Hwnd           : 0x1F0A58
+Class          : CamPopup
+TitleFromEnum  : &Insérer
+WM_GETTEXT_LEN : 8
+WM_GETTEXT     : &Insérer
+
+
+
+
+
+
+N              : 141
+Hwnd           : 0xC0CA0
+Class          : CamPopup
+TitleFromEnum  : &Supprimer
+WM_GETTEXT_LEN : 10
+WM_GETTEXT     : &Supprimer
+
+
+
+
+
+
+N              : 142
+Hwnd           : 0x100C40
+Class          : CamPopup
+TitleFromEnum  : &Ajouter
+WM_GETTEXT_LEN : 8
+WM_GETTEXT     : &Ajouter
+
+
+
+
+
+
+N              : 143
+Hwnd           : 0xD0D24
+Class          : CamPopup
+TitleFromEnum  : &Commentaire
+WM_GETTEXT_LEN : 12
+WM_GETTEXT     : &Commentaire
+
+
+
+
+
+
+N              : 147
+Hwnd           : 0xD075E
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 5
+WM_GETTEXT     : 92,80
+
+
+
+
+
+
+N              : 149
+Hwnd           : 0xD075A
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 6
+WM_GETTEXT     : 447,00
+
+
+
+
+
+
+N              : 151
+Hwnd           : 0x150698
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 6
+WM_GETTEXT     : 556,80
+
+
+
+
+
+
+N              : 153
+Hwnd           : 0xD0734
+Class          : CamGrid
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 159
+Hwnd           : 0xD0752
+Class          : CamGridToolBar
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 163
+Hwnd           : 0xD0742
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 165
+Hwnd           : 0xD074A
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 167
+Hwnd           : 0xD0732
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 5
+WM_GETTEXT     : ROMIE
+
+
+
+
+
+
+N              : 169
+Hwnd           : 0xD077C
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 3
+WM_GETTEXT     : 119
+
+
+
+
+
+
+N              : 171
+Hwnd           : 0xD0738
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 10
+WM_GETTEXT     : 29/05/2026
+
+
+
+
+
+
+N              : 173
+Hwnd           : 0xD073E
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 6
+WM_GETTEXT     : FA2861
+
+
+
+
+
+
+N              : 231
+Hwnd           : 0xD0D7C
+Class          : SysTabControl32
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 262
+Hwnd           : 0x1200F2
+Class          : Button
+TitleFromEnum  : Le &client :
+WM_GETTEXT_LEN : 12
+WM_GETTEXT     : Le &client :
+
+
+
+
+
+
+N              : 263
+Hwnd           : 0x1501B8
+Class          : Button
+TitleFromEnum  : To&us les clients
+WM_GETTEXT_LEN : 17
+WM_GETTEXT     : To&us les clients
+
+
+
+
+
+
+N              : 265
+Hwnd           : 0xF0DB2
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 268
+Hwnd           : 0x1B0554
+Class          : CamPopup
+TitleFromEnum  : Toutes les factures
+WM_GETTEXT_LEN : 19
+WM_GETTEXT     : Toutes les factures
+
+
+
+
+
+
+N              : 272
+Hwnd           : 0x130962
+Class          : CamPopup
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 1
+WM_GETTEXT     :  
+
+
+
+
+
+
+N              : 273
+Hwnd           : 0x13099A
+Class          : CamPopup
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 1
+WM_GETTEXT     :  
+
+
+
+
+
+
+N              : 277
+Hwnd           : 0x180450
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 10
+WM_GETTEXT     : 29/05/2026
+
+
+
+
+
+
+N              : 278
+Hwnd           : 0x1207D6
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 10
+WM_GETTEXT     : 01/01/2021
+
+
+
+
+
+
+N              : 293
+Hwnd           : 0x18079A
+Class          : CamGrid
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 296
+Hwnd           : 0x1107DE
+Class          : CamGridCond
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 298
+Hwnd           : 0x1407D2
+Class          : CamGridToolBar
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 333
+Hwnd           : 0x2C09D0
+Class          : CamEdit
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 388
+Hwnd           : 0x30DDE
+Class          : CamGrid
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 391
+Hwnd           : 0x30E08
+Class          : CamGridCond
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+
+
+
+N              : 393
+Hwnd           : 0x110B8C
+Class          : CamGridToolBar
+TitleFromEnum  : 
+WM_GETTEXT_LEN : 0
+WM_GETTEXT     : 
+
+
+
+

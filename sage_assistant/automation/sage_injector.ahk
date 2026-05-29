@@ -66,6 +66,12 @@ articleCellY := profile.Has("article_cell_y") ? Integer(profile["article_cell_y"
 
 LogLine(logPath, "START queue=" queuePath " lines=" lines.Length)
 
+if (injectionMode = "real_sage_one_line" && lines.Length != 1) {
+    LogLine(logPath, "ERROR real_sage_one_line requires exactly one line, got=" lines.Length)
+    MsgBox("Le mode Sage reel impose exactement 1 ligne. Injection annulee.", "Sage Assistant")
+    ExitApp(5)
+}
+
 MsgBox("Prepare Sage sur une facture brouillon, puis clique OK.`nMode: " injectionMode "`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S`nLigne suivante: Ctrl+Alt+N", "Sage Assistant")
 
 if !WinExist(windowTitle) {
@@ -80,6 +86,26 @@ if focusGuard && !WinActive(windowTitle) {
     LogLine(logPath, "ERROR Sage window not active after activation")
     MsgBox("Sage n'est pas actif. Injection annulee.")
     ExitApp(1)
+}
+
+if (injectionMode = "real_sage_one_line") {
+    line := lines[1]
+    realTarget := FindRealSageOneLineTarget(windowTitle, logPath)
+    beforePath := CaptureWindow(realTarget["mainHwnd"], logPath, "before")
+    LogLine(logPath, "CAPTURE before=" beforePath)
+    MsgBox("Controle avant injection:`nFacture: " realTarget["invoiceTitle"] "`nBouton: &Ajouter`nLigne: " line["ref"] "`n`nClique OK pour envoyer UNE ligne dans Sage.", "Sage Assistant")
+    EnsureSageActive(windowTitle, focusGuard, logPath, 1, line["ref"])
+    Click(realTarget["addCenterX"], realTarget["addCenterY"])
+    Sleep(delayMs * 2)
+    EnsureSageActive(windowTitle, focusGuard, logPath, 1, line["ref"])
+    LogLine(logPath, "SEND line=1 ref=" line["ref"])
+    SendInvoiceLine(line, afterArticleTabs, afterDescriptionTabs, afterQuantityTabs, validateKey, delayMs, windowTitle, focusGuard, logPath, 1)
+    afterPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after")
+    LogLine(logPath, "CAPTURE after=" afterPath)
+    LogLine(logPath, "OK line=1 ref=" line["ref"])
+    LogLine(logPath, "DONE lines=1")
+    MsgBox("Injection envoyee.`nVerifie visuellement la ligne dans Sage avant toute autre action.`n`nCapture avant:`n" beforePath "`n`nCapture apres:`n" afterPath, "Sage Assistant")
+    ExitApp(0)
 }
 
 for index, line in lines {
@@ -100,6 +126,11 @@ for index, line in lines {
         LogLine(logPath, "INFO control_based not implemented, using keyboard_only line=" index " ref=" line["ref"])
     }
 
+    SendInvoiceLine(line, afterArticleTabs, afterDescriptionTabs, afterQuantityTabs, validateKey, delayMs, windowTitle, focusGuard, logPath, index)
+    LogLine(logPath, "OK line=" index " ref=" line["ref"])
+}
+
+SendInvoiceLine(line, afterArticleTabs, afterDescriptionTabs, afterQuantityTabs, validateKey, delayMs, windowTitle, focusGuard, logPath, index) {
     SendText(line["article_code"])
     Sleep(delayMs)
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
@@ -120,7 +151,6 @@ for index, line in lines {
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
     Send("{" validateKey "}")
     Sleep(delayMs)
-    LogLine(logPath, "OK line=" index " ref=" line["ref"])
 }
 
 PrepareCalibratedLine(windowTitle, newLineX, newLineY, articleCellX, articleCellY, delayMs, focusGuard, logPath, index, ref) {
@@ -136,6 +166,117 @@ PrepareCalibratedLine(windowTitle, newLineX, newLineY, articleCellX, articleCell
     EnsureSageActive(windowTitle, focusGuard, logPath, index, ref)
     Click(wx + articleCellX, wy + articleCellY)
     Sleep(delayMs)
+}
+
+FindRealSageOneLineTarget(windowTitle, logPath) {
+    mainHwnd := FindSageMainWindow(windowTitle)
+    if !mainHwnd {
+        LogLine(logPath, "ERROR real Sage main window not found title=" windowTitle)
+        MsgBox("Fenetre Sage 50 introuvable.`nTitre attendu: " windowTitle, "Sage Assistant")
+        ExitApp(6)
+    }
+    mainTitle := WinGetTitle("ahk_id " mainHwnd)
+    mainClass := WinGetClass("ahk_id " mainHwnd)
+    LogLine(logPath, "FOUND Sage main hwnd=" HwndHex(mainHwnd) " class=" mainClass " title=" mainTitle)
+
+    invoiceHwnd := 0
+    invoiceTitle := ""
+    invoiceCount := 0
+    for hwnd in WinGetControlsHwnd("ahk_id " mainHwnd) {
+        try {
+            cls := WinGetClass("ahk_id " hwnd)
+            title := WinGetTitle("ahk_id " hwnd)
+            if (cls = "CamDialog" && IsWindowVisible(hwnd) && RegExMatch(title, "^Facture")) {
+                invoiceHwnd := hwnd
+                invoiceTitle := title
+                invoiceCount += 1
+            }
+        }
+    }
+    if invoiceCount != 1 {
+        LogLine(logPath, "ERROR invoice window count=" invoiceCount)
+        MsgBox("Facture Sage active introuvable ou ambigue.`nOuvre exactement une fenetre 'Facture - ...'.", "Sage Assistant")
+        ExitApp(7)
+    }
+    LogLine(logPath, "FOUND invoice hwnd=" HwndHex(invoiceHwnd) " title=" invoiceTitle)
+
+    addButtons := []
+    for hwnd in WinGetControlsHwnd("ahk_id " invoiceHwnd) {
+        try {
+            cls := WinGetClass("ahk_id " hwnd)
+            text := ControlGetText("ahk_id " hwnd)
+            if (cls = "CamPopup" && text = "&Ajouter" && IsWindowVisible(hwnd)) {
+                rect := GetWindowRect(hwnd)
+                addButtons.Push(Map("hwnd", hwnd, "left", rect.left, "top", rect.top, "right", rect.right, "bottom", rect.bottom))
+            }
+        }
+    }
+    if addButtons.Length != 1 {
+        LogLine(logPath, "ERROR add button count=" addButtons.Length)
+        MsgBox("Bouton Sage '&Ajouter' introuvable ou ambigu dans la facture.", "Sage Assistant")
+        ExitApp(8)
+    }
+    add := addButtons[1]
+    centerX := Floor((add["left"] + add["right"]) / 2)
+    centerY := Floor((add["top"] + add["bottom"]) / 2)
+    LogLine(logPath, "FOUND add hwnd=" HwndHex(add["hwnd"]) " rect=" add["left"] "," add["top"] "," add["right"] "," add["bottom"] " center=" centerX "," centerY)
+    return Map("mainHwnd", mainHwnd, "invoiceHwnd", invoiceHwnd, "invoiceTitle", invoiceTitle, "addHwnd", add["hwnd"], "addCenterX", centerX, "addCenterY", centerY)
+}
+
+FindSageMainWindow(windowTitle) {
+    for hwnd in WinGetList(windowTitle) {
+        try {
+            if (WinGetClass("ahk_id " hwnd) = "CamMainFrame" && WinGetProcessName("ahk_id " hwnd) = "WGC.exe") {
+                return hwnd
+            }
+        }
+    }
+    return 0
+}
+
+IsWindowVisible(hwnd) {
+    return DllCall("user32\IsWindowVisible", "ptr", hwnd, "int") != 0
+}
+
+GetWindowRect(hwnd) {
+    buf := Buffer(16, 0)
+    if !DllCall("user32\GetWindowRect", "ptr", hwnd, "ptr", buf, "int") {
+        throw Error("GetWindowRect failed for " HwndHex(hwnd))
+    }
+    return {
+        left: NumGet(buf, 0, "int"),
+        top: NumGet(buf, 4, "int"),
+        right: NumGet(buf, 8, "int"),
+        bottom: NumGet(buf, 12, "int"),
+    }
+}
+
+CaptureWindow(hwnd, logPath, label) {
+    SplitPath(logPath, , &dir)
+    if !dir {
+        dir := A_ScriptDir
+    }
+    captureDir := dir "\captures"
+    if !DirExist(captureDir) {
+        DirCreate(captureDir)
+    }
+    path := captureDir "\sage_" label "_" FormatTime(, "yyyyMMdd_HHmmss") ".png"
+    rect := GetWindowRect(hwnd)
+    ps := "$p='" EscapePowerShell(path) "';$x=" rect.left ";$y=" rect.top ";$w=" (rect.right - rect.left) ";$h=" (rect.bottom - rect.top) ";Add-Type -AssemblyName System.Windows.Forms;Add-Type -AssemblyName System.Drawing;$b=New-Object Drawing.Bitmap $w,$h;$g=[Drawing.Graphics]::FromImage($b);$g.CopyFromScreen($x,$y,0,0,$b.Size);$b.Save($p,[Drawing.Imaging.ImageFormat]::Png);$g.Dispose();$b.Dispose()"
+    RunWait("powershell -NoProfile -ExecutionPolicy Bypass -Command " QuoteArg(ps), , "Hide")
+    return path
+}
+
+EscapePowerShell(text) {
+    return StrReplace(text, "'", "''")
+}
+
+QuoteArg(text) {
+    return '"' StrReplace(text, '"', '\"') '"'
+}
+
+HwndHex(hwnd) {
+    return Format("0x{:X}", Integer(hwnd))
 }
 
 LogLine(logPath, "DONE lines=" lines.Length)
