@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from app.injection import write_injection_queue
 from app.models import InvoiceLine
-from app.settings import REAL_SAGE_ONE_LINE_MODE, AppSettings
+from app.settings import REAL_SAGE_ONE_LINE_MODE, SAGE_50_WINDOW_TITLE, AppSettings, load_settings, save_settings
 
 
 def test_write_injection_queue(tmp_path):
@@ -27,7 +27,7 @@ def test_write_injection_queue(tmp_path):
     assert payload["lines"][0]["unit_price_ht"] == "6.80"
 
 
-def test_write_injection_queue_can_limit_lines(tmp_path):
+def test_write_injection_queue_writes_all_valid_lines(tmp_path):
     lines = []
     for index in range(3):
         line = InvoiceLine(
@@ -42,20 +42,19 @@ def test_write_injection_queue_can_limit_lines(tmp_path):
         lines.append(line)
 
     settings = AppSettings()
-    settings.sage_profile.step_mode = True
     queue_path = write_injection_queue(lines, settings, tmp_path / "queue.json", line_limit=1)
     payload = json.loads(queue_path.read_text(encoding="utf-8"))
 
     assert payload["source_line_count"] == 3
-    assert payload["line_limit"] == 1
-    assert len(payload["lines"]) == 1
-    assert payload["profile"]["step_mode"] is True
+    assert payload["line_limit"] == 0
+    assert len(payload["lines"]) == 3
+    assert payload["profile"]["step_mode"] is False
     assert payload["profile"]["focus_guard"] is True
-    assert payload["profile"]["injection_mode"] == "keyboard_only"
+    assert payload["profile"]["injection_mode"] == REAL_SAGE_ONE_LINE_MODE
     assert "diagnostics_path" in payload["profile"]
 
 
-def test_write_injection_queue_limit_ignores_blocked_lines_outside_selection(tmp_path):
+def test_write_injection_queue_refuses_any_blocked_line(tmp_path):
     ok_line = InvoiceLine(
         ref="CM55-9",
         sage_code="RO",
@@ -76,14 +75,15 @@ def test_write_injection_queue_limit_ignores_blocked_lines_outside_selection(tmp
     )
     blocked_line.validate()
 
-    queue_path = write_injection_queue([ok_line, blocked_line], AppSettings(), tmp_path / "queue.json", line_limit=1)
-    payload = json.loads(queue_path.read_text(encoding="utf-8"))
+    try:
+        write_injection_queue([ok_line, blocked_line], AppSettings(), tmp_path / "queue.json", line_limit=1)
+    except ValueError as exc:
+        assert "FL96-9" in str(exc)
+    else:
+        raise AssertionError("blocked line should stop queue creation")
 
-    assert len(payload["lines"]) == 1
-    assert payload["lines"][0]["ref"] == "CM55-9"
 
-
-def test_real_sage_one_line_mode_forces_exactly_one_selected_line(tmp_path):
+def test_real_sage_mode_ignores_legacy_line_limit(tmp_path):
     lines = []
     for index in range(2):
         line = InvoiceLine(
@@ -104,10 +104,10 @@ def test_real_sage_one_line_mode_forces_exactly_one_selected_line(tmp_path):
     payload = json.loads(queue_path.read_text(encoding="utf-8"))
 
     assert payload["profile"]["injection_mode"] == REAL_SAGE_ONE_LINE_MODE
-    assert len(payload["lines"]) == 1
+    assert len(payload["lines"]) == 2
 
 
-def test_real_sage_one_line_mode_rejects_multiple_selected_lines(tmp_path):
+def test_real_sage_mode_allows_multiple_selected_lines(tmp_path):
     lines = []
     for index in range(2):
         line = InvoiceLine(
@@ -124,9 +124,25 @@ def test_real_sage_one_line_mode_rejects_multiple_selected_lines(tmp_path):
     settings = AppSettings()
     settings.sage_profile.injection_mode = REAL_SAGE_ONE_LINE_MODE
 
-    try:
-        write_injection_queue(lines, settings, tmp_path / "queue.json", line_limit=0)
-    except ValueError as exc:
-        assert "exactement 1 ligne" in str(exc)
-    else:
-        raise AssertionError("real_sage_one_line should reject multiple selected lines")
+    queue_path = write_injection_queue(lines, settings, tmp_path / "queue.json", line_limit=0)
+    payload = json.loads(queue_path.read_text(encoding="utf-8"))
+
+    assert payload["profile"]["injection_mode"] == REAL_SAGE_ONE_LINE_MODE
+    assert len(payload["lines"]) == 2
+
+
+def test_load_settings_migrates_legacy_injection_modes(tmp_path):
+    settings = AppSettings()
+    settings.sage_profile.injection_mode = "calibrated_clicks"
+    settings.sage_profile.window_title_contains = "Sage"
+    settings.sage_profile.step_mode = True
+    settings.injection_line_limit = 1
+    path = tmp_path / "settings.json"
+
+    save_settings(settings, path)
+    loaded = load_settings(path)
+
+    assert loaded.sage_profile.injection_mode == REAL_SAGE_ONE_LINE_MODE
+    assert loaded.sage_profile.window_title_contains == SAGE_50_WINDOW_TITLE
+    assert loaded.sage_profile.step_mode is False
+    assert loaded.injection_line_limit == 0

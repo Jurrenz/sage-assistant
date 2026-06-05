@@ -5,11 +5,10 @@ Assistant Windows compagnon de Sage 50 pour grossiste textile.
 Le MVP est une application desktop Python/PySide6 qui :
 
 - importe un export produits Microstore Excel ;
-- garde un cache SQLite local pour recherche/autocomplete ;
+- garde un cache SQLite local pour resoudre les references commandes ;
 - maintient les correspondances type Microstore -> code article Sage/libelle Sage ;
-- prépare des lignes de facture manuelles ou depuis un Excel commande ;
-- exporte une file JSON injectee dans Sage par AutoHotkey v2.
-- importe les commandes Microstore `.xls` generees apres acceptation.
+- affiche les commandes Microstore deposees dans un dossier ;
+- injecte la commande selectionnee dans une facture Sage deja ouverte via AutoHotkey v2.
 
 ## Demarrage developpement
 
@@ -33,18 +32,15 @@ pytest
 
 ## Usage MVP
 
-1. Importer l'export produits Microstore.
-2. Completer les mappings type Microstore -> code Sage/libelle.
-3. Dans `Imports`, configurer le dossier `MS_IMPORT` Google Drive pour detecter la derniere BDD produits.
-4. Cliquer `Mettre a jour BDD` quand une nouvelle BDD Microstore est detectee.
-5. Configurer le dossier ou Microstore depose automatiquement les commandes.
-6. Choisir une commande dans le tableau : client, ville, date, lignes, pieces et total sont affiches.
-7. Ajouter aussi des lignes par recherche reference si besoin.
-8. Verifier les lignes.
-9. Cliquer `Preparer injection Sage`.
-10. Pour un premier test Sage, garder `Limite lignes test = 1` et `Mode pas-a-pas AHK`.
-11. Sur Windows, lancer AutoHotkey v2 avec `automation/sage_injector.ahk` ou laisser l'app le lancer si le chemin AHK est configure.
+1. Dans `Reglages`, configurer le dossier BDD Microstore et mettre a jour la BDD produits.
+2. Ouvrir `Mappings Sage` pour completer les correspondances type Microstore -> code Sage/libelle.
+3. Configurer le dossier ou Microstore depose automatiquement les commandes.
+4. Ouvrir Sage sur une facture brouillon deja creee.
+5. Dans `Commandes`, selectionner une commande.
+6. Double-cliquer si besoin pour verifier ou supprimer une ligne.
+7. Cliquer `Injecter dans Sage`.
+8. Confirmer les controles AHK, puis verifier visuellement les lignes dans Sage.
 
 ## Important
 
-Sage reste le moteur comptable. L'assistant ne modifie pas Sage directement par API et ne tente pas de reverse-engineer le clipboard Sage.
+Sage reste le moteur comptable. L'assistant ne cree pas de facture, ne valide pas la facture et ne transmet rien en comptabilite.

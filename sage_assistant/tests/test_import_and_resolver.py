@@ -61,6 +61,21 @@ def test_default_sage_mappings_are_seeded_and_do_not_overwrite_user_edits(tmp_pa
     db.close()
 
 
+def test_deactivate_mapping_hides_it_and_blocks_resolution(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    db.upsert_mapping(SageMapping("ROBES TEST", "RO", "Robe"))
+
+    assert db.get_mapping("ROBES TEST") is not None
+
+    db.deactivate_mapping("ROBES TEST")
+
+    assert db.get_mapping("ROBES TEST") is None
+    assert all(mapping.microstore_type != "ROBES TEST" for mapping in db.list_mappings())
+    inactive = [mapping for mapping in db.list_mappings(active_only=False) if mapping.microstore_type == "ROBES TEST"]
+    assert inactive and inactive[0].is_active is False
+    db.close()
+
+
 def test_import_order_reads_packages_and_calculates_pieces(tmp_path):
     workbook = Workbook()
     sheet = workbook.active

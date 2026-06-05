@@ -12,6 +12,7 @@ from .settings import (
     default_ahk_diagnostics_path,
     default_ahk_log_path,
     default_queue_path,
+    normalize_sage_profile,
     project_root,
 )
 
@@ -22,10 +23,9 @@ def write_injection_queue(
     path: Path | None = None,
     line_limit: int | None = None,
 ) -> Path:
-    selected_lines = lines[:line_limit] if line_limit and line_limit > 0 else lines
-    if settings.sage_profile.injection_mode == REAL_SAGE_ONE_LINE_MODE:
-        if len(selected_lines) != 1:
-            raise ValueError("Le mode Sage reel impose exactement 1 ligne a injecter.")
+    normalize_sage_profile(settings.sage_profile)
+    line_limit = 0
+    selected_lines = lines
     blocked = [line for line in selected_lines if line.validation_status != "ok"]
     if blocked:
         refs = ", ".join(line.ref for line in blocked[:5])
@@ -40,7 +40,7 @@ def write_injection_queue(
         "created_at": utc_now_iso(),
         "profile": asdict(settings.sage_profile),
         "source_line_count": len(lines),
-        "line_limit": line_limit or 0,
+        "line_limit": 0,
         "lines": [line.as_injection_dict() for line in selected_lines],
     }
     queue_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")

@@ -1,193 +1,854 @@
 ﻿Sage Assistant diagnostics
-Generated: 2026-05-29 16:14:06
+Generated: 2026-06-05 16:13:09
 Window title: Sage 50 : S.Z FASHION
 Window class: CamMainFrame
 Process name: WGC.exe
 Process path: C:\Program Files (x86)\Ciel\Gestion Commerciale\WGC.exe
-HWND: 198076
-Window rect: x=962 y=4 w=961 h=1031
-Mouse screen: x=542 y=821
-Mouse relative: x=-420 y=817
+HWND: 262212
+Window rect: x=959 y=1 w=961 h=1031
+Mouse screen: x=573 y=161
+Mouse relative: x=-386 y=160
 Mouse control: 
-Focused control: 1574810
+Focused control: 4720354
 
-Controls:
+Controls summary:
 1. {{CamExplorerBar}}1
 2. ScrollBar1
 3. {{ribbon}}1
 4. MDIClient1
 5. CamDialog1
-6. HostUIWnd1
-7. Chrome_WidgetWin_01
-8. Chrome_WidgetWin_11
-9. Chrome_RenderWidgetHostHWND1
-10. Intermediate D3D Window1
-11. CamPopup1
-12. CamEdit1
-13. CamEdit2
-14. CamPopup2
-15. CamPopup3
-16. CamPopup4
-17. CamPopup5
-18. CamView1
-19. ScrollBar2
-20. ScrollBar3
-21. {{zoomslider}}1
-22. CamPopup6
-23. CamGrid1
-24. ScrollBar4
-25. ScrollBar5
-26. CamGridCond1
-27. CamEdit3
-28. CamGridToolBar1
-29. CamGridViews1
-30. Button1
-31. Button2
-32. CamPane1
-33. CamEdit4
-34. Static1
-35. CamPopup7
-36. CamPopup8
-37. CamPopup9
-38. CamPopup10
-39. CamPopup11
-40. CamPopup12
-41. CamPopup13
-42. CamPopup14
-43. Static2
-44. Static3
-45. CamEdit5
-46. CamEdit6
-47. CamGrid2
-48. ScrollBar6
-49. ScrollBar7
-50. CamGridCond2
-51. CamEdit7
-52. CamGridToolBar2
-53. CamGridViews2
-54. CamGrid3
-55. ScrollBar8
-56. ScrollBar9
-57. CamGridCond3
-58. CamEdit8
-59. CamGridToolBar3
-60. CamGridViews3
-61. CamGrid4
-62. ScrollBar10
-63. ScrollBar11
-64. CamGridCond4
-65. CamEdit9
-66. CamGridToolBar4
-67. CamGridViews4
-68. CamEdit10
-69. ComboBox1
-70. CamGrid5
-71. ScrollBar12
-72. ScrollBar13
-73. CamGridCond5
-74. CamEdit11
-75. CamGridToolBar5
-76. CamGridViews5
-77. CamGrid6
-78. ScrollBar14
-79. ScrollBar15
-80. CamGridCond6
-81. CamEdit12
-82. CamGridToolBar6
-83. CamGridViews6
-84. CamGrid7
-85. ScrollBar16
-86. ScrollBar17
-87. CamGridCond7
-88. CamEdit13
-89. CamGridToolBar7
-90. CamGridToolBar8
-91. CamGridViews7
-92. CamGrid8
-93. ScrollBar18
-94. ScrollBar19
-95. CamGridCond8
-96. CamEdit14
-97. CamGridToolBar9
-98. CamGridToolBar10
-99. CamGridViews8
-100. SysTabControl321
-101. CamEdit15
-102. CamPane2
-103. CamGrid9
-104. ScrollBar20
-105. ScrollBar21
-106. CamGridCond9
-107. CamEdit16
-108. CamGridToolBar11
-109. CamGridViews9
-110. CamVTabCtl1
-111. camgrip1
-112. CamDialog2
-113. HostUIWnd2
-114. Chrome_WidgetWin_02
-115. Chrome_WidgetWin_12
-116. Chrome_RenderWidgetHostHWND2
-117. Intermediate D3D Window2
-118. CamPopup15
-119. CamEdit17
-120. CamEdit18
-121. CamPopup16
-122. CamPopup17
-123. CamPopup18
-124. CamPopup19
-125. CamView2
-126. ScrollBar22
-127. ScrollBar23
-128. {{zoomslider}}2
-129. CamGrid10
-130. ScrollBar24
-131. ScrollBar25
-132. CamGridCond10
-133. CamEdit19
-134. CamGridToolBar12
-135. CamGridViews10
-136. CamPopup20
-137. Static4
-138. CamEdit20
-139. Static5
-140. CamEdit21
-141. Static6
-142. CamGrid11
-143. ScrollBar26
-144. ScrollBar27
-145. CamGridCond11
-146. CamEdit22
-147. CamGridToolBar13
-148. CamGridViews11
-149. CamGrid12
-150. ScrollBar28
-151. ScrollBar29
-152. CamGridCond12
-153. CamEdit23
-154. CamGridToolBar14
-155. CamGridViews12
-156. CamGrid13
-157. ScrollBar30
-158. ScrollBar31
-159. CamGridCond13
-160. CamEdit24
-161. CamGridToolBar15
-162. CamGridViews13
-163. CamEdit25
-164. ComboBox2
-165. camgrip2
-166. CamDialog3
-167. {{brded}}1
-168. HostUIWnd3
-169. Chrome_WidgetWin_03
-170. Chrome_WidgetWin_13
-171. Chrome_RenderWidgetHostHWND3
-172. Intermediate D3D Window3
-173. HostUIWnd4
-174. Chrome_WidgetWin_04
-175. Chrome_WidgetWin_14
-176. Chrome_RenderWidgetHostHWND4
-177. Intermediate D3D Window4
-178. camgrip3
-179. CamStatusBar1
+6. CamEdit1
+7. CamEdit2
+8. CamEdit3
+9. ComboBox1
+10. Static1
+11. CamEdit4
+12. CamEdit5
+13. CamEdit6
+14. Static2
+15. Static3
+16. Static4
+17. Static5
+18. ComboBox2
+19. Static6
+20. Static7
+21. CamEdit7
+22. Button1
+23. Static8
+24. Static9
+25. ComboBox3
+26. ComboBox4
+27. CamEdit8
+28. CamPane1
+29. Button2
+30. Button3
+31. CamEdit9
+32. CamEdit10
+33. CamEdit11
+34. ComboBox5
+35. Static10
+36. CamEdit12
+37. CamEdit13
+38. CamEdit14
+39. Static11
+40. Static12
+41. Static13
+42. CamPane2
+43. ComboBox6
+44. Static14
+45. ComboBox7
+46. Static15
+47. CamEdit15
+48. CamEdit16
+49. Static16
+50. ComboBox8
+51. Static17
+52. Static18
+53. CamEdit17
+54. Static19
+55. CamEdit18
+56. ComboBox9
+57. Static20
+58. CamEdit19
+59. CamEdit20
+60. Static21
+61. Static22
+62. CamPane3
+63. CamPane4
+64. Static23
+65. CamEdit21
+66. Static24
+67. CamEdit22
+68. Static25
+69. CamEdit23
+70. CamPane5
+71. ComboBox10
+72. Static26
+73. Static27
+74. Button4
+75. CamEdit24
+76. Static28
+77. Static29
+78. CamEdit25
+79. ComboBox11
+80. Static30
+81. CamPane6
+82. CamEdit26
+83. CamEdit27
+84. CamEdit28
+85. Static31
+86. CamPopup1
+87. CamPopup2
+88. CamPopup3
+89. CamEdit29
+90. Static32
+91. CamPane7
+92. ComboBox12
+93. Static33
+94. CamPane8
+95. ComboBox13
+96. CamEdit30
+97. Static34
+98. Static35
+99. Static36
+100. Static37
+101. CamGrid1
+102. ScrollBar2
+103. ScrollBar3
+104. CamGridCond1
+105. CamEdit31
+106. CamGridToolBar1
+107. CamGridToolBar2
+108. CamGridViews1
+109. Button5
+110. Button6
+111. Button7
+112. Button8
+113. Button9
+114. Button10
+115. CamEdit32
+116. Static38
+117. CamEdit33
+118. Static39
+119. CamEdit34
+120. Static40
+121. CamEdit35
+122. Static41
+123. Button11
+124. CamPopup4
+125. Static42
+126. Static43
+127. CamEdit36
+128. CamEdit37
+129. Static44
+130. CamEdit38
+131. Static45
+132. CamEdit39
+133. Static46
+134. Static47
+135. CamEdit40
+136. Button12
+137. Button13
+138. CamEdit41
+139. CamPopup5
+140. CamPopup6
+141. CamPopup7
+142. CamPopup8
+143. CamPopup9
+144. CamEdit42
+145. CamEdit43
+146. Static48
+147. CamEdit44
+148. Static49
+149. CamEdit45
+150. Static50
+151. CamEdit46
+152. Static51
+153. CamGrid2
+154. ScrollBar4
+155. ScrollBar5
+156. CamGridCond2
+157. CamEdit47
+158. CamGridToolBar3
+159. CamGridToolBar4
+160. CamGridViews2
+161. Static52
+162. CamEdit48
+163. CamEdit49
+164. Static53
+165. CamEdit50
+166. Static54
+167. CamEdit51
+168. Static55
+169. CamEdit52
+170. Static56
+171. CamEdit53
+172. Static57
+173. CamEdit54
+174. Static58
+175. CamPane9
+176. CamPane10
+177. CamEdit55
+178. Static59
+179. CamEdit56
+180. Static60
+181. CamEdit57
+182. Static61
+183. CamEdit58
+184. Static62
+185. CamEdit59
+186. Static63
+187. CamEdit60
+188. Static64
+189. CamEdit61
+190. Static65
+191. CamPane11
+192. CamEdit62
+193. Static66
+194. CamEdit63
+195. Static67
+196. CamEdit64
+197. Static68
+198. CamEdit65
+199. Static69
+200. CamEdit66
+201. Static70
+202. CamEdit67
+203. Static71
+204. CamEdit68
+205. Static72
+206. CamEdit69
+207. Static73
+208. CamEdit70
+209. Static74
+210. CamEdit71
+211. Static75
+212. CamPopup10
+213. CamPopup11
+214. CamPopup12
+215. CamPopup13
+216. CamGrid3
+217. ScrollBar6
+218. ScrollBar7
+219. CamGridCond3
+220. CamEdit72
+221. CamGridToolBar5
+222. CamGridToolBar6
+223. CamGridViews3
+224. CamRichEdit1
+225. ScrollBar8
+226. ScrollBar9
+227. CamPane12
+228. CamPane13
+229. CamPane14
+230. CamPane15
+231. SysTabControl321
+232. CamPane16
+233. CamPane17
+234. CamPane18
+235. CamPane19
+236. camgrip1
+237. CamDialog2
+238. HostUIWnd1
+239. Chrome_WidgetWin_01
+240. Chrome_WidgetWin_11
+241. Chrome_RenderWidgetHostHWND1
+242. Intermediate D3D Window1
+243. CamPopup14
+244. CamEdit73
+245. CamEdit74
+246. CamPopup15
+247. CamPopup16
+248. CamPopup17
+249. CamPopup18
+250. CamView1
+251. ScrollBar10
+252. ScrollBar11
+253. {{zoomslider}}1
+254. CamPopup19
+255. CamGrid4
+256. ScrollBar12
+257. ScrollBar13
+258. CamGridCond4
+259. CamEdit75
+260. CamGridToolBar7
+261. CamGridViews4
+262. Button14
+263. Button15
+264. CamPane20
+265. CamEdit76
+266. Static76
+267. CamPopup20
+268. CamPopup21
+269. CamPopup22
+270. CamPopup23
+271. CamPopup24
+272. CamPopup25
+273. CamPopup26
+274. CamPopup27
+275. Static77
+276. Static78
+277. CamEdit77
+278. CamEdit78
+279. CamGrid5
+280. ScrollBar14
+281. ScrollBar15
+282. CamGridCond5
+283. CamEdit79
+284. CamGridToolBar8
+285. CamGridViews5
+286. CamGrid6
+287. ScrollBar16
+288. ScrollBar17
+289. CamGridCond6
+290. CamEdit80
+291. CamGridToolBar9
+292. CamGridViews6
+293. CamGrid7
+294. ScrollBar18
+295. ScrollBar19
+296. CamGridCond7
+297. CamEdit81
+298. CamGridToolBar10
+299. CamGridViews7
+300. CamEdit82
+301. ComboBox14
+302. CamGrid8
+303. ScrollBar20
+304. ScrollBar21
+305. CamGridCond8
+306. CamEdit83
+307. CamGridToolBar11
+308. CamGridViews8
+309. CamGrid9
+310. ScrollBar22
+311. ScrollBar23
+312. CamGridCond9
+313. CamEdit84
+314. CamGridToolBar12
+315. CamGridViews9
+316. CamGrid10
+317. ScrollBar24
+318. ScrollBar25
+319. CamGridCond10
+320. CamEdit85
+321. CamGridToolBar13
+322. CamGridToolBar14
+323. CamGridViews10
+324. CamGrid11
+325. ScrollBar26
+326. ScrollBar27
+327. CamGridCond11
+328. CamEdit86
+329. CamGridToolBar15
+330. CamGridToolBar16
+331. CamGridViews11
+332. SysTabControl322
+333. CamEdit87
+334. CamPane21
+335. CamGrid12
+336. ScrollBar28
+337. ScrollBar29
+338. CamGridCond12
+339. CamEdit88
+340. CamGridToolBar17
+341. CamGridViews12
+342. CamVTabCtl1
+343. camgrip2
+344. CamDialog3
+345. HostUIWnd2
+346. Chrome_WidgetWin_02
+347. Chrome_WidgetWin_12
+348. Chrome_RenderWidgetHostHWND2
+349. Intermediate D3D Window2
+350. CamPopup28
+351. CamEdit89
+352. CamEdit90
+353. CamPopup29
+354. CamPopup30
+355. CamPopup31
+356. CamPopup32
+357. CamView2
+358. ScrollBar30
+359. ScrollBar31
+360. {{zoomslider}}2
+361. CamGrid13
+362. ScrollBar32
+363. ScrollBar33
+364. CamGridCond13
+365. CamEdit91
+366. CamGridToolBar18
+367. CamGridViews13
+368. CamPopup33
+369. Static79
+370. CamEdit92
+371. Static80
+372. CamEdit93
+373. Static81
+374. CamGrid14
+375. ScrollBar34
+376. ScrollBar35
+377. CamGridCond14
+378. CamEdit94
+379. CamGridToolBar19
+380. CamGridViews14
+381. CamGrid15
+382. ScrollBar36
+383. ScrollBar37
+384. CamGridCond15
+385. CamEdit95
+386. CamGridToolBar20
+387. CamGridViews15
+388. CamGrid16
+389. ScrollBar38
+390. ScrollBar39
+391. CamGridCond16
+392. CamEdit96
+393. CamGridToolBar21
+394. CamGridViews16
+395. CamEdit97
+396. ComboBox15
+397. camgrip3
+398. CamDialog4
+399. {{brded}}1
+400. HostUIWnd3
+401. Chrome_WidgetWin_03
+402. Chrome_WidgetWin_13
+403. Chrome_RenderWidgetHostHWND3
+404. Intermediate D3D Window3
+405. HostUIWnd4
+406. Chrome_WidgetWin_04
+407. Chrome_WidgetWin_14
+408. Chrome_RenderWidgetHostHWND4
+409. Intermediate D3D Window4
+410. camgrip4
+411. CamStatusBar1
+
+Detailed controls:
+Index	Depth	HWND	Parent	Class	Text	Title	Visible	Enabled	Rect	RelativeToMain	ParentClass	ParentText
+1	1	0x4027E	0x40044	{{CamExplorerBar}}			0	1	960,200,0,796	1,199	CamMainFrame	
+2	2	0x204CC	0x4027E	ScrollBar			0	1	960,200,0,0	1,199	{{CamExplorerBar}}	
+3	1	0x3024C	0x40044	{{ribbon}}			1	1	960,66,959,134	1,65	CamMainFrame	
+4	1	0x4018E	0x40044	MDIClient			1	1	960,200,959,796	1,199	CamMainFrame	
+5	2	0x8E083C	0x4018E	CamDialog		Facture - FA2912	1	1	952,169,975,835	-7,168	MDIClient	
+6	3	0x6A07A2	0x8E083C	CamEdit			0	1	1062,582,332,25	103,581	CamDialog	
+7	3	0x5B0942	0x8E083C	CamEdit			0	1	1062,527,332,25	103,526	CamDialog	
+8	3	0x80069C	0x8E083C	CamEdit			0	1	1062,609,81,25	103,608	CamDialog	
+9	3	0x67086A	0x8E083C	ComboBox			0	1	1062,636,332,25	103,635	CamDialog	
+10	3	0x55038A	0x8E083C	Static		Adresse :	0	1	1004,528,54,23	45,527	CamDialog	
+11	3	0x4708EC	0x8E083C	CamEdit			0	1	1062,555,332,25	103,554	CamDialog	
+12	3	0x7508A2	0x8E083C	CamEdit			0	1	1062,500,332,25	103,499	CamDialog	
+13	3	0x50089C	0x8E083C	CamEdit			0	1	1146,609,248,25	187,608	CamDialog	
+14	3	0x470904	0x8E083C	Static		Société :	0	1	1004,501,54,23	45,500	CamDialog	
+15	3	0x4708FA	0x8E083C	Static		Pays :	0	1	1019,637,39,23	60,636	CamDialog	
+16	3	0x49078C	0x8E083C	Static		CP / Ville :	0	1	994,610,64,23	35,609	CamDialog	
+17	3	0x1C099A	0x8E083C	Static		Crédit disponible :	0	1	1427,610,103,23	468,609	CamDialog	
+18	3	0x430A50	0x8E083C	ComboBox			0	1	1534,527,298,25	575,526	CamDialog	
+19	3	0x74047A	0x8E083C	Static		Forme juridique :	0	1	1432,474,98,23	473,473	CamDialog	
+20	3	0x530600	0x8E083C	Static		Tarif :	0	1	1496,528,34,23	537,527	CamDialog	
+21	3	0x5A0286	0x8E083C	CamEdit			0	1	1536,610,143,23	577,609	CamDialog	
+22	3	0x4E0938	0x8E083C	Button		Assujetti à TPF	0	1	1536,583,113,23	577,582	CamDialog	
+23	3	0x7B04DC	0x8E083C	Static		SIRET :	0	1	1467,556,64,23	508,555	CamDialog	
+24	3	0x6508E6	0x8E083C	Static		Nom contact :	0	1	1447,501,84,23	488,500	CamDialog	
+25	3	0x49078A	0x8E083C	ComboBox			0	1	1534,472,298,25	575,471	CamDialog	
+26	3	0x270B7C	0x8E083C	ComboBox			0	1	1534,500,298,25	575,499	CamDialog	
+27	3	0x4208F0	0x8E083C	CamEdit			0	1	1535,555,145,25	576,554	CamDialog	
+28	3	0x4C08B0	0x8E083C	CamPane			0	1	1418,460,423,214	459,459	CamDialog	
+29	3	0x6209F4	0x8E083C	Button		Livraison	0	1	1098,474,79,23	139,473	CamDialog	
+30	3	0x1B0C0A	0x8E083C	Button		Facturation	0	1	999,474,93,23	40,473	CamDialog	
+31	3	0x47090C	0x8E083C	CamEdit			0	1	1062,582,332,25	103,581	CamDialog	
+32	3	0x5B0872	0x8E083C	CamEdit			0	1	1062,527,332,25	103,526	CamDialog	
+33	3	0x5B0812	0x8E083C	CamEdit			0	1	1062,609,81,25	103,608	CamDialog	
+34	3	0x640912	0x8E083C	ComboBox			0	1	1062,636,332,25	103,635	CamDialog	
+35	3	0x4208F6	0x8E083C	Static		Adresse :	0	1	1004,528,54,23	45,527	CamDialog	
+36	3	0x1D0B94	0x8E083C	CamEdit			0	1	1062,555,332,25	103,554	CamDialog	
+37	3	0xC0C2A	0x8E083C	CamEdit			0	1	1062,500,332,25	103,499	CamDialog	
+38	3	0x73060A	0x8E083C	CamEdit			0	1	1146,609,248,25	187,608	CamDialog	
+39	3	0x160B90	0x8E083C	Static		Société :	0	1	1004,501,54,23	45,500	CamDialog	
+40	3	0x450702	0x8E083C	Static		Pays :	0	1	1019,637,39,23	60,636	CamDialog	
+41	3	0x160BA2	0x8E083C	Static		CP / Ville :	0	1	994,610,64,23	35,609	CamDialog	
+42	3	0x49093E	0x8E083C	CamPane		Adresse	0	1	985,446,423,228	26,445	CamDialog	
+43	3	0x4801CE	0x8E083C	ComboBox			0	0	1106,759,726,25	147,758	CamDialog	
+44	3	0x470448	0x8E083C	Static		Motif exonération :	0	0	994,760,108,23	35,759	CamDialog	
+45	3	0x3C04D4	0x8E083C	ComboBox			0	1	1106,732,726,25	147,731	CamDialog	
+46	3	0x400A0E	0x8E083C	Static		Catégorie TVA :	0	0	1009,733,93,23	50,732	CamDialog	
+47	3	0x58082A	0x8E083C	CamEdit			0	1	1662,495,223,25	703,494	CamDialog	
+48	3	0x9D0AFE	0x8E083C	CamEdit			0	1	1662,441,233,25	703,440	CamDialog	
+49	3	0x310732	0x8E083C	Static		Statut :	0	1	1614,442,44,23	655,441	CamDialog	
+50	3	0x5707AC	0x8E083C	ComboBox			0	1	1116,696,253,25	157,695	CamDialog	
+51	3	0x3F0498	0x8E083C	Static		Identifiant :	0	1	1413,669,69,23	454,668	CamDialog	
+52	3	0x2B0B86	0x8E083C	Static		Nom du service :	0	1	1009,610,103,23	50,609	CamDialog	
+53	3	0x400A5E	0x8E083C	CamEdit			0	1	1116,582,769,25	157,581	CamDialog	
+54	3	0x4402BE	0x8E083C	Static		Code service :	0	1	1019,583,93,23	60,582	CamDialog	
+55	3	0x4D00F4	0x8E083C	CamEdit			0	1	1116,609,769,25	157,608	CamDialog	
+56	3	0x66089A	0x8E083C	ComboBox			0	1	1116,668,253,25	157,667	CamDialog	
+57	3	0x3B0A2A	0x8E083C	Static		Raison sociale :	0	1	1378,697,103,23	419,696	CamDialog	
+58	3	0x5209EE	0x8E083C	CamEdit			0	1	1485,696,400,25	526,695	CamDialog	
+59	3	0x420A18	0x8E083C	CamEdit			0	1	1485,668,174,25	526,667	CamDialog	
+60	3	0x400A4C	0x8E083C	Static		Type d'identifiant :	0	1	994,669,118,23	35,668	CamDialog	
+61	3	0x49081A	0x8E083C	Static		Nom pays :	0	1	1039,697,74,23	80,696	CamDialog	
+62	3	0x5700E6	0x8E083C	CamPane		Valideur	0	1	985,642,910,87	26,641	CamDialog	
+63	3	0x17077E	0x8E083C	CamPane		Destinataire	0	1	985,556,910,87	26,555	CamDialog	
+64	3	0x4A01F0	0x8E083C	Static		N° engagement :	0	1	1014,524,98,23	55,523	CamDialog	
+65	3	0x55093A	0x8E083C	CamEdit			0	1	1116,495,445,25	157,494	CamDialog	
+66	3	0x460A14	0x8E083C	Static		Pièce d'origine :	0	1	1565,496,93,23	606,495	CamDialog	
+67	3	0x5908A8	0x8E083C	CamEdit			0	1	1116,523,445,25	157,522	CamDialog	
+68	3	0x470176	0x8E083C	Static		N° marché :	0	1	1044,496,69,23	85,495	CamDialog	
+69	3	0x170390	0x8E083C	CamEdit			0	1	1662,495,223,25	703,494	CamDialog	
+70	3	0x5409F2	0x8E083C	CamPane		Référence de la facture	0	1	985,469,910,87	26,468	CamDialog	
+71	3	0x60087C	0x8E083C	ComboBox			0	1	1116,441,445,25	157,440	CamDialog	
+72	3	0x5700BA	0x8E083C	Static		Cadre de facturation :	0	1	985,442,128,23	26,441	CamDialog	
+73	3	0x4C0258	0x8E083C	Static		Date de validité :	0	1	980,337,103,23	21,336	CamDialog	
+74	3	0x160982	0x8E083C	Button		Paiement en ligne	0	1	1088,364,148,23	129,363	CamDialog	
+75	3	0x150980	0x8E083C	CamEdit			1	1	1087,308,148,25	128,307	CamDialog	
+76	3	0x43097C	0x8E083C	Static		Mode paiement :	1	1	975,309,108,23	16,308	CamDialog	
+77	3	0x65085A	0x8E083C	Static		Date échéance :	1	1	980,337,103,23	21,336	CamDialog	
+78	3	0x4904D0	0x8E083C	CamEdit			1	1	1087,336,148,25	128,335	CamDialog	
+79	3	0x4F0840	0x8E083C	ComboBox			0	1	1106,705,293,25	147,704	CamDialog	
+80	3	0x430972	0x8E083C	Static		Mode TVA :	0	1	1029,706,74,23	70,705	CamDialog	
+81	3	0x6E0490	0x8E083C	CamPane		Pane	0	1	1236,519,5,187	277,518	CamDialog	
+82	3	0x5303EC	0x8E083C	CamEdit			0	1	1511,337,389,23	552,336	CamDialog	
+83	3	0x58084A	0x8E083C	CamEdit			0	1	1511,364,527,23	552,363	CamDialog	
+84	3	0x540804	0x8E083C	CamEdit			0	1	1353,363,155,25	394,362	CamDialog	
+85	3	0x150974	0x8E083C	Static		Affaire :	0	1	1270,364,79,23	311,363	CamDialog	
+86	3	0x4E0296	0x8E083C	CamPopup		Sous-tota&l	1	1	1501,446,98,23	542,445	CamDialog	
+87	3	0x43097A	0x8E083C	CamPopup			0	0	975,264,39,23	16,263	CamDialog	
+88	3	0x43095E	0x8E083C	CamPopup			0	0	975,236,39,23	16,235	CamDialog	
+89	3	0x4706CA	0x8E083C	CamEdit			0	1	1654,472,98,25	695,471	CamDialog	
+90	3	0x4904C2	0x8E083C	Static		TTC :	0	1	1614,474,34,23	655,473	CamDialog	
+91	3	0x4D04BA	0x8E083C	CamPane		Eco-participation	0	1	1605,441,157,64	646,440	CamDialog	
+92	3	0x450482	0x8E083C	ComboBox			0	1	1559,523,194,25	600,522	CamDialog	
+93	3	0x43096E	0x8E083C	Static		Statut :	0	1	1511,524,44,23	552,523	CamDialog	
+94	3	0x4404EE	0x8E083C	CamPane			0	1	1496,510,266,46	537,509	CamDialog	
+95	3	0x5A089E	0x8E083C	ComboBox			0	1	1097,597,66,25	138,596	CamDialog	
+96	3	0x4601FA	0x8E083C	CamEdit			0	1	1162,598,57,25	203,597	CamDialog	
+97	3	0x4404B8	0x8E083C	Static		TVA sur port :	0	1	1007,598,84,23	48,597	CamDialog	
+98	3	0x4C00EA	0x8E083C	Static		Réglé :	0	1	1281,653,44,23	322,652	CamDialog	
+99	3	0x4404B6	0x8E083C	Static		Utilisé :	0	1	1281,653,44,23	322,652	CamDialog	
+100	3	0x560852	0x8E083C	Static		N° TVA intracom :	0	1	1408,706,118,23	449,705	CamDialog	
+101	3	0x4800C6	0x8E083C	CamGrid		Liste des rubriques utilisateurs	0	1	985,446,910,528	26,445	CamDialog	
+102	4	0x570892	0x4800C6	ScrollBar			0	0	1036,956,841,17	77,955	CamGrid	
+103	4	0x5F092C	0x4800C6	ScrollBar			0	0	1877,481,17,475	918,480	CamGrid	
+104	4	0x2606A4	0x4800C6	CamGridCond			0	1	986,447,0,0	27,446	CamGrid	
+105	5	0x13096A	0x2606A4	CamEdit			0	1	986,447,0,0	27,446	CamGridCond	
+106	5	0x130950	0x2606A4	CamGridToolBar			0	1	986,447,0,0	27,446	CamGridCond	
+107	4	0x5C0838	0x4800C6	CamGridToolBar			0	1	1192,447,700,33	233,446	CamGrid	
+108	4	0x220694	0x4800C6	CamGridViews			0	1	986,447,0,0	27,446	CamGrid	
+109	3	0x550802	0x8E083C	Button		Accusé de réception	0	1	1659,236,148,23	700,235	CamDialog	
+110	3	0x4402F8	0x8E083C	Button		Transférée	0	0	1821,246,89,23	862,245	CamDialog	
+111	3	0x580830	0x8E083C	Button		Transmise	1	0	1831,273,79,23	872,272	CamDialog	
+112	3	0x130964	0x8E083C	Button		Soldée	0	0	1841,246,69,23	882,245	CamDialog	
+113	3	0x130948	0x8E083C	Button		Compta.	1	0	1836,246,74,23	877,245	CamDialog	
+114	3	0x130944	0x8E083C	Button		Validée	1	0	1841,218,69,23	882,217	CamDialog	
+115	3	0x510B78	0x8E083C	CamEdit			0	1	1624,523,138,25	665,522	CamDialog	
+116	3	0x4C04BC	0x8E083C	Static		Montant reliquat HT:	0	1	1496,523,123,23	537,522	CamDialog	
+117	3	0x130930	0x8E083C	CamEdit			0	1	1052,308,184,25	93,307	CamDialog	
+118	3	0x210BF6	0x8E083C	Static		Réf. cde :	0	1	990,309,59,23	31,308	CamDialog	
+119	3	0x69065C	0x8E083C	CamEdit			0	1	1087,336,150,25	128,335	CamDialog	
+120	3	0x130954	0x8E083C	Static		Date livraison :	0	1	994,337,89,23	35,336	CamDialog	
+121	3	0x13093C	0x8E083C	CamEdit			0	1	1087,363,150,25	128,362	CamDialog	
+122	3	0x430586	0x8E083C	Static		Mode paiement :	0	1	980,364,103,23	21,363	CamDialog	
+123	3	0x440A46	0x8E083C	Button		Ne pas réintégrer les articles en stock	0	1	1511,524,246,23	552,523	CamDialog	
+124	3	0x130958	0x8E083C	CamPopup		O&utils...	1	1	1801,446,93,23	842,445	CamDialog	
+125	3	0x130968	0x8E083C	Static		Facture non validée.	0	1	985,446,826,23	26,445	CamDialog	
+126	3	0x13094A	0x8E083C	Static		Echéances :	0	1	1410,951,74,23	451,950	CamDialog	
+127	3	0x13095A	0x8E083C	CamEdit			0	1	1490,951,106,23	531,950	CamDialog	
+128	3	0x1A0682	0x8E083C	CamEdit			0	1	1275,951,101,23	316,950	CamDialog	
+129	3	0x1E0934	0x8E083C	Static		Acompte :	0	1	1207,951,59,23	248,950	CamDialog	
+130	3	0x280690	0x8E083C	CamEdit			0	1	1060,951,118,23	101,950	CamDialog	
+131	3	0x1702A0	0x8E083C	Static		Total TTC :	0	1	985,951,69,23	26,950	CamDialog	
+132	3	0x2901AC	0x8E083C	CamEdit			0	1	1668,950,102,23	709,949	CamDialog	
+133	3	0x2802BA	0x8E083C	Static		Ecart :	0	1	1621,951,39,23	662,950	CamDialog	
+134	3	0x8907BC	0x8E083C	Static		Total TPF :	0	0	1384,951,69,23	425,950	CamDialog	
+135	3	0x5306C0	0x8E083C	CamEdit			0	1	1457,949,98,25	498,948	CamDialog	
+136	3	0x7804A2	0x8E083C	Button		Facturer en TTC	0	1	994,519,123,23	35,518	CamDialog	
+137	3	0x5609B8	0x8E083C	Button		Multi-échéances	0	1	1772,446,123,23	813,445	CamDialog	
+138	3	0x5F06A0	0x8E083C	CamEdit			0	1	1530,705,145,25	571,704	CamDialog	
+139	3	0x130966	0x8E083C	CamPopup		&Dupliquer	1	1	1295,446,98,23	336,445	CamDialog	
+140	3	0x13096C	0x8E083C	CamPopup		&Insérer	1	1	1088,446,98,23	129,445	CamDialog	
+141	3	0x920698	0x8E083C	CamPopup		&Supprimer	1	1	1191,446,98,23	232,445	CamDialog	
+142	3	0x540924	0x8E083C	CamPopup		&Ajouter	1	1	985,446,98,23	26,445	CamDialog	
+143	3	0x5308C4	0x8E083C	CamPopup		&Commentaire	1	1	1398,446,98,23	439,445	CamDialog	
+144	3	0x5409BA	0x8E083C	CamEdit			0	1	1329,652,148,25	370,651	CamDialog	
+145	3	0x530A08	0x8E083C	CamEdit			0	1	1329,625,148,25	370,624	CamDialog	
+146	3	0x550808	0x8E083C	Static		Acompte :	0	1	1266,625,59,23	307,624	CamDialog	
+147	3	0x55083E	0x8E083C	CamEdit			1	1	1261,949,98,25	302,948	CamDialog	
+148	3	0x5F023E	0x8E083C	Static		Total TVA :	1	1	1189,951,69,23	230,950	CamDialog	
+149	3	0x5009F0	0x8E083C	CamEdit			1	1	1047,949,113,25	88,948	CamDialog	
+150	3	0x5308F4	0x8E083C	Static		Total HT :	1	1	985,951,59,23	26,950	CamDialog	
+151	3	0x8801C4	0x8E083C	CamEdit			1	1	1656,949,109,25	697,948	CamDialog	
+152	3	0x820B66	0x8E083C	Static		Total TTC :	1	1	1584,951,69,23	625,950	CamDialog	
+153	3	0x5109FC	0x8E083C	CamGrid			1	1	985,474,910,473	26,473	CamDialog	
+154	4	0x520810	0x5109FC	ScrollBar			1	1	1036,929,841,17	77,928	CamGrid	
+155	4	0x5E0850	0x5109FC	ScrollBar			1	0	1877,549,17,380	918,548	CamGrid	
+156	4	0x4B0A70	0x5109FC	CamGridCond			0	1	986,475,0,0	27,474	CamGrid	
+157	5	0x4507AE	0x4B0A70	CamEdit			0	1	986,475,0,0	27,474	CamGridCond	
+158	5	0x6106BE	0x4B0A70	CamGridToolBar			0	1	986,475,0,0	27,474	CamGridCond	
+159	4	0x570884	0x5109FC	CamGridToolBar			1	1	994,475,898,33	35,474	CamGrid	
+160	4	0x5608B4	0x5109FC	CamGridViews			0	1	986,475,0,0	27,474	CamGrid	
+161	3	0x480550	0x8E083C	Static		Représentant :	0	1	1260,337,89,23	301,336	CamDialog	
+162	3	0x610648	0x8E083C	CamEdit			0	1	1353,336,155,25	394,335	CamDialog	
+163	3	0x4907C4	0x8E083C	CamEdit			1	1	1043,377,868,25	84,376	CamDialog	
+164	3	0x210BA4	0x8E083C	Static		Remarque :	1	1	970,378,69,23	11,377	CamDialog	
+165	3	0x5D086C	0x8E083C	CamEdit			1	1	1353,308,548,25	394,307	CamDialog	
+166	3	0x4108FC	0x8E083C	Static		Référence :	1	1	1280,309,69,23	321,308	CamDialog	
+167	3	0x4806E2	0x8E083C	CamEdit			1	1	1353,263,455,25	394,262	CamDialog	
+168	3	0x4707A8	0x8E083C	Static		Nom :	1	1	1314,264,34,23	355,263	CamDialog	
+169	3	0x57049A	0x8E083C	CamEdit			1	1	1353,235,155,25	394,234	CamDialog	
+170	3	0x4E08AE	0x8E083C	Static		Client :	1	1	1309,236,39,23	350,235	CamDialog	
+171	3	0x6109FE	0x8E083C	CamEdit			1	1	1087,263,148,25	128,262	CamDialog	
+172	3	0x5409EC	0x8E083C	Static		Date :	1	1	1044,264,39,23	85,263	CamDialog	
+173	3	0x400A44	0x8E083C	CamEdit			1	1	1087,235,148,25	128,234	CamDialog	
+174	3	0x45082C	0x8E083C	Static		Numéro :	1	1	1029,236,54,23	70,235	CamDialog	
+175	3	0x42070C	0x8E083C	CamPane		Informations client	1	1	1250,209,566,84	291,208	CamDialog	
+176	3	0x4607A4	0x8E083C	CamPane		Informations pièce	1	1	970,209,276,84	11,208	CamDialog	
+177	3	0x4E0940	0x8E083C	CamEdit			0	1	1613,680,135,25	654,679	CamDialog	
+178	3	0x4407CA	0x8E083C	Static		Total Quantité :	0	1	1516,681,93,23	557,680	CamDialog	
+179	3	0x4608BA	0x8E083C	CamEdit			0	1	1613,652,135,25	654,651	CamDialog	
+180	3	0x4A079C	0x8E083C	Static		Total Nb Colis :	0	1	1521,655,89,23	562,654	CamDialog	
+181	3	0x420710	0x8E083C	CamEdit			0	1	1613,598,135,25	654,597	CamDialog	
+182	3	0x42070E	0x8E083C	Static		Total Poids Net :	0	1	1511,600,98,23	552,599	CamDialog	
+183	3	0x5809C8	0x8E083C	CamEdit			0	1	1613,570,135,25	654,569	CamDialog	
+184	3	0x4B070A	0x8E083C	Static		Total Poids Brut :	0	1	1506,573,103,23	547,572	CamDialog	
+185	3	0x4F08BC	0x8E083C	CamEdit			0	1	1098,682,121,25	139,681	CamDialog	
+186	3	0x4207C6	0x8E083C	Static		Total HT + Port :	0	1	992,682,98,23	33,681	CamDialog	
+187	3	0xE20A6E	0x8E083C	CamEdit			0	1	1097,651,120,25	138,650	CamDialog	
+188	3	0x62084C	0x8E083C	Static		Port non soumis :	0	1	987,652,103,23	28,651	CamDialog	
+189	3	0x630868	0x8E083C	CamEdit			0	1	1097,624,120,25	138,623	CamDialog	
+190	3	0x5407C8	0x8E083C	Static		Port Soumis :	0	1	1012,625,79,23	53,624	CamDialog	
+191	3	0x4909E8	0x8E083C	CamPane			0	1	1496,560,266,154	537,559	CamDialog	
+192	3	0x530878	0x8E083C	CamEdit			0	1	1329,682,148,25	370,681	CamDialog	
+193	3	0x3F0A56	0x8E083C	Static		Solde Dû :	0	1	1261,683,64,23	302,682	CamDialog	
+194	3	0x390B40	0x8E083C	CamEdit			0	1	1329,570,148,25	370,569	CamDialog	
+195	3	0x4C0AB6	0x8E083C	Static		Total TPF :	0	1	1256,570,69,23	297,569	CamDialog	
+196	3	0x450A24	0x8E083C	CamEdit			0	1	1329,543,148,25	370,542	CamDialog	
+197	3	0x630506	0x8E083C	Static		Total TVA :	0	1	1256,543,69,23	297,542	CamDialog	
+198	3	0x5409FA	0x8E083C	CamEdit			0	1	1098,543,121,25	139,542	CamDialog	
+199	3	0x4209A4	0x8E083C	Static		Brut HT :	0	1	1036,544,54,23	77,543	CamDialog	
+200	3	0x4809E2	0x8E083C	CamEdit			0	1	1098,570,121,25	139,569	CamDialog	
+201	3	0x4408FE	0x8E083C	Static		Total HT :	0	1	1031,571,59,23	72,570	CamDialog	
+202	3	0x600854	0x8E083C	CamEdit			0	1	1329,598,148,25	370,597	CamDialog	
+203	3	0x5F09F8	0x8E083C	Static		Total TTC :	0	1	1256,599,69,23	297,598	CamDialog	
+204	3	0xB00B62	0x8E083C	CamEdit			0	1	1482,472,108,25	523,471	CamDialog	
+205	3	0x4B0932	0x8E083C	Static		Montant :	0	1	1413,474,59,23	454,473	CamDialog	
+206	3	0x440A26	0x8E083C	CamEdit			0	1	1348,471,62,25	389,470	CamDialog	
+207	3	0x4B0814	0x8E083C	Static		Taux :	0	1	1307,472,39,23	348,471	CamDialog	
+208	3	0x46098E	0x8E083C	CamEdit			0	1	1161,471,120,25	202,470	CamDialog	
+209	3	0x4909AA	0x8E083C	Static		Montant :	0	1	1100,472,59,23	141,471	CamDialog	
+210	3	0x4908CE	0x8E083C	CamEdit			0	1	1028,473,62,25	69,472	CamDialog	
+211	3	0x400A10	0x8E083C	Static		Taux :	0	1	988,472,39,23	29,471	CamDialog	
+212	3	0x400A0C	0x8E083C	CamPopup		&Générer échéances	0	0	1201,446,187,23	242,445	CamDialog	
+213	3	0x440688	0x8E083C	CamPopup		&Régler	0	0	1678,446,84,23	719,445	CamDialog	
+214	3	0x4909A8	0x8E083C	CamPopup		&Supprimer	0	0	1093,446,103,23	134,445	CamDialog	
+215	3	0x4B092E	0x8E083C	CamPopup		&Ajouter	0	0	985,446,103,23	26,445	CamDialog	
+216	3	0x410A32	0x8E083C	CamGrid			0	1	985,474,910,473	26,473	CamDialog	
+217	4	0x4608C2	0x410A32	ScrollBar			0	0	1036,929,841,17	77,928	CamGrid	
+218	4	0x5408D2	0x410A32	ScrollBar			0	0	1877,509,17,420	918,508	CamGrid	
+219	4	0x470708	0x410A32	CamGridCond			0	1	986,475,0,0	27,474	CamGrid	
+220	5	0x290946	0x470708	CamEdit			0	1	986,475,0,0	27,474	CamGridCond	
+221	5	0x4807D2	0x470708	CamGridToolBar			0	1	986,475,0,0	27,474	CamGridCond	
+222	4	0x5C0806	0x410A32	CamGridToolBar			0	1	994,475,898,33	35,474	CamGrid	
+223	4	0x5609E6	0x410A32	CamGridViews			0	1	986,475,0,0	27,474	CamGrid	
+224	3	0x4B0832	0x8E083C	CamRichEdit			0	1	984,473,912,502	25,472	CamDialog	
+225	4	0x4C085E	0x4B0832	ScrollBar			0	1	986,475,0,0	27,474	CamRichEdit	
+226	4	0x470798	0x4B0832	ScrollBar			0	1	986,475,0,0	27,474	CamRichEdit	
+227	3	0x4A08AC	0x8E083C	CamPane			0	1	980,509,512,205	21,508	CamDialog	
+228	3	0x5804C8	0x8E083C	CamPane		Remise globale	0	1	980,442,310,64	21,441	CamDialog	
+229	3	0x4809D6	0x8E083C	CamPane		Escompte	0	1	1295,442,305,64	336,441	CamDialog	
+230	3	0x4C048C	0x8E083C	CamPane		TVA	0	1	985,678,856,114	26,677	CamDialog	
+231	3	0x870B36	0x8E083C	SysTabControl32			1	1	970,410,940,576	11,409	CamDialog	
+232	3	0x1A0B82	0x8E083C	CamPane			0	1	970,300,276,96	11,299	CamDialog	
+233	3	0x110B70	0x8E083C	CamPane			0	1	1250,300,659,96	291,299	CamDialog	
+234	3	0x4708EE	0x8E083C	CamPane			1	1	1250,300,659,68	291,299	CamDialog	
+235	3	0x8C06AA	0x8E083C	CamPane			1	1	970,300,276,68	11,299	CamDialog	
+236	3	0x2F00CE	0x8E083C	camgrip			0	1	1848,793,17,17	889,792	CamDialog	
+237	2	0x110822	0x4018E	CamDialog		Liste des factures clients	1	1	952,169,975,835	-7,168	MDIClient	
+238	3	0xB0778	0x110822	HostUIWnd			0	1	1486,287,369,364	527,286	CamDialog	
+239	4	0xB0774	0xB0778	Chrome_WidgetWin_0			0	1	1486,287,369,364	527,286	HostUIWnd	
+240	5	0xB0796	0xB0774	Chrome_WidgetWin_1		Pas de connexion Internet	0	1	1486,287,369,364	527,286	Chrome_WidgetWin_0	
+241	6	0xB0766	0xB0796	Chrome_RenderWidgetHostHWND		Chrome Legacy Window	0	1	1486,287,369,364	527,286	Chrome_WidgetWin_1	
+242	6	0x140992	0xB0796	Intermediate D3D Window			0	0	1486,287,369,364	527,286	Chrome_WidgetWin_1	
+243	3	0xB0768	0x110822	CamPopup			0	1	1659,287,197,23	700,286	CamDialog	
+244	3	0xB0776	0x110822	CamEdit			0	1	1664,287,192,23	705,286	CamDialog	
+245	3	0xB077A	0x110822	CamEdit			0	1	1548,287,44,23	589,286	CamDialog	
+246	3	0xB0790	0x110822	CamPopup			0	0	1624,287,30,23	665,286	CamDialog	
+247	3	0xB0772	0x110822	CamPopup			0	0	1595,287,30,23	636,286	CamDialog	
+248	3	0xB0760	0x110822	CamPopup			0	0	1516,287,30,23	557,286	CamDialog	
+249	3	0xA094E	0x110822	CamPopup			0	0	1486,287,30,23	527,286	CamDialog	
+250	3	0xB076A	0x110822	CamView			0	1	1485,313,371,339	526,312	CamDialog	
+251	4	0xA0952	0xB076A	ScrollBar			0	1	1487,315,0,0	528,314	CamView	
+252	4	0xA0962	0xB076A	ScrollBar			0	1	1487,315,0,0	528,314	CamView	
+253	4	0xA0922	0xB076A	{{zoomslider}}			0	1	1487,315,0,0	528,314	CamView	
+254	3	0xB0764	0x110822	CamPopup		Toutes les factures d'acompte	0	1	1412,246,403,23	453,245	CamDialog	
+255	3	0xB076E	0x110822	CamGrid			0	1	965,287,949,703	6,286	CamDialog	
+256	4	0xB0744	0xB076E	ScrollBar			0	0	1016,972,880,17	57,971	CamGrid	
+257	4	0xA0956	0xB076E	ScrollBar			0	0	1896,322,17,650	937,321	CamGrid	
+258	4	0xA0960	0xB076E	CamGridCond			0	1	966,288,947,34	7,287	CamGrid	
+259	5	0x410820	0xA0960	CamEdit			0	1	966,288,0,0	7,287	CamGridCond	
+260	5	0xA095C	0xA0960	CamGridToolBar			0	1	966,288,325,33	7,287	CamGridCond	
+261	4	0xA094C	0xB076E	CamGridViews			0	1	966,288,0,0	7,287	CamGrid	
+262	3	0xB0758	0x110822	Button		Le &client :	1	1	1088,218,79,23	129,217	CamDialog	
+263	3	0xB076C	0x110822	Button		To&us les clients	1	1	965,218,118,23	6,217	CamDialog	
+264	3	0xB0762	0x110822	CamPane			1	1	965,277,944,5	6,276	CamDialog	
+265	3	0xB0752	0x110822	CamEdit			1	1	1412,218,496,25	453,217	CamDialog	
+266	3	0xB074A	0x110822	Static		Critères :	1	1	1353,246,54,23	394,245	CamDialog	
+267	3	0xB073C	0x110822	CamPopup		Tous les avoirs	0	1	1417,246,398,23	458,245	CamDialog	
+268	3	0xB0748	0x110822	CamPopup		Toutes les factures	1	1	1417,246,398,23	458,245	CamDialog	
+269	3	0xB0742	0x110822	CamPopup			0	1	1417,246,398,23	458,245	CamDialog	
+270	3	0xB0738	0x110822	CamPopup			0	1	1417,246,398,23	458,245	CamDialog	
+271	3	0xB0754	0x110822	CamPopup		Tous les devis	0	1	1417,246,491,23	458,245	CamDialog	
+272	3	0xB0740	0x110822	CamPopup			1	1	1375,218,31,23	416,217	CamDialog	
+273	3	0x1306D8	0x110822	CamPopup			1	1	1343,218,31,23	384,217	CamDialog	
+274	3	0xC078E	0x110822	CamPopup		Toutes les pièces	0	1	1412,246,403,23	453,245	CamDialog	
+275	3	0xB074C	0x110822	Static		Période du :	1	1	965,246,74,23	6,245	CamDialog	
+276	3	0xB075E	0x110822	Static		au	1	1	1186,246,20,23	227,245	CamDialog	
+277	3	0xB073E	0x110822	CamEdit			1	1	1210,245,125,25	251,244	CamDialog	
+278	3	0xB0784	0x110822	CamEdit			1	1	1042,245,140,25	83,244	CamDialog	
+279	3	0xB0746	0x110822	CamGrid			0	1	965,287,949,703	6,286	CamDialog	
+280	4	0xB073A	0xB0746	ScrollBar			0	0	1016,972,880,17	57,971	CamGrid	
+281	4	0xB0770	0xB0746	ScrollBar			0	0	1896,322,17,650	937,321	CamGrid	
+282	4	0xB075C	0xB0746	CamGridCond			0	1	966,288,947,34	7,287	CamGrid	
+283	5	0xB0756	0xB075C	CamEdit			0	1	966,288,0,0	7,287	CamGridCond	
+284	5	0xB074E	0xB075C	CamGridToolBar			0	1	966,288,325,33	7,287	CamGridCond	
+285	4	0xB075A	0xB0746	CamGridViews			0	1	966,288,0,0	7,287	CamGrid	
+286	3	0x1A068E	0x110822	CamGrid			0	1	965,287,949,703	6,286	CamDialog	
+287	4	0xB077C	0x1A068E	ScrollBar			0	0	1016,972,880,17	57,971	CamGrid	
+288	4	0x120718	0x1A068E	ScrollBar			0	0	1896,322,17,650	937,321	CamGrid	
+289	4	0xB0780	0x1A068E	CamGridCond			0	1	966,288,947,34	7,287	CamGrid	
+290	5	0xB0750	0xB0780	CamEdit			0	1	966,288,0,0	7,287	CamGridCond	
+291	5	0xB0734	0xB0780	CamGridToolBar			0	1	966,288,325,33	7,287	CamGridCond	
+292	4	0xB07F0	0x1A068E	CamGridViews			0	1	966,288,0,0	7,287	CamGrid	
+293	3	0x100BC6	0x110822	CamGrid			1	1	965,287,949,703	6,286	CamDialog	
+294	4	0xD052C	0x100BC6	ScrollBar			1	1	1016,972,880,17	57,971	CamGrid	
+295	4	0xD0794	0x100BC6	ScrollBar			1	1	1896,322,17,650	937,321	CamGrid	
+296	4	0x1406E6	0x100BC6	CamGridCond			1	1	966,288,947,34	7,287	CamGrid	
+297	5	0xC0730	0x1406E6	CamEdit			0	1	966,288,0,0	7,287	CamGridCond	
+298	5	0xB07F2	0x1406E6	CamGridToolBar			1	1	966,288,430,33	7,287	CamGridCond	
+299	4	0x1106EA	0x100BC6	CamGridViews			0	1	966,288,0,0	7,287	CamGrid	
+300	4	0xB0736	0x100BC6	CamEdit			0	1	966,288,0,0	7,287	CamGrid	
+301	4	0x1C0846	0x100BC6	ComboBox			0	1	966,288,0,22	7,287	CamGrid	
+302	3	0x70AB8	0x110822	CamGrid			0	1	965,287,949,703	6,286	CamDialog	
+303	4	0xB07F8	0x70AB8	ScrollBar			0	0	1016,972,880,17	57,971	CamGrid	
+304	4	0x4309DA	0x70AB8	ScrollBar			0	0	1896,322,17,650	937,321	CamGrid	
+305	4	0x2109BE	0x70AB8	CamGridCond			0	1	966,288,947,34	7,287	CamGrid	
+306	5	0x3E0B6C	0x2109BE	CamEdit			0	1	966,288,0,0	7,287	CamGridCond	
+307	5	0x1406C8	0x2109BE	CamGridToolBar			0	1	966,288,325,33	7,287	CamGridCond	
+308	4	0xD0BCA	0x70AB8	CamGridViews			0	1	966,288,0,0	7,287	CamGrid	
+309	3	0x1F09EA	0x110822	CamGrid			0	1	965,287,949,703	6,286	CamDialog	
+310	4	0x3908F2	0x1F09EA	ScrollBar			0	0	1016,972,880,17	57,971	CamGrid	
+311	4	0x4D0022	0x1F09EA	ScrollBar			0	0	1896,322,17,650	937,321	CamGrid	
+312	4	0x47040E	0x1F09EA	CamGridCond			0	1	966,288,947,34	7,287	CamGrid	
+313	5	0x2A0A6A	0x47040E	CamEdit			0	1	966,288,0,0	7,287	CamGridCond	
+314	5	0x130900	0x47040E	CamGridToolBar			0	1	966,288,325,33	7,287	CamGridCond	
+315	4	0x7608D8	0x1F09EA	CamGridViews			0	1	966,288,0,0	7,287	CamGrid	
+316	3	0x180824	0x110822	CamGrid			0	1	1117,546,335,91	158,545	CamDialog	
+317	4	0x1509B6	0x180824	ScrollBar			0	0	1168,619,266,17	209,618	CamGrid	
+318	4	0x150A1C	0x180824	ScrollBar			0	0	1434,581,17,38	475,580	CamGrid	
+319	4	0x1D06B0	0x180824	CamGridCond			0	1	1118,547,0,0	159,546	CamGrid	
+320	5	0xB0816	0x1D06B0	CamEdit			0	1	1118,547,0,0	159,546	CamGridCond	
+321	5	0x1F088A	0x1D06B0	CamGridToolBar			0	1	1118,547,0,0	159,546	CamGridCond	
+322	4	0x1803C8	0x180824	CamGridToolBar			0	1	1126,547,323,33	167,546	CamGrid	
+323	4	0xB080C	0x180824	CamGridViews			0	1	1118,547,0,0	159,546	CamGrid	
+324	3	0x2B0842	0x110822	CamGrid			0	1	1117,546,335,91	158,545	CamDialog	
+325	4	0xA081C	0x2B0842	ScrollBar			0	0	1168,619,266,17	209,618	CamGrid	
+326	4	0x1908A4	0x2B0842	ScrollBar			0	0	1434,581,17,38	475,580	CamGrid	
+327	4	0x210926	0x2B0842	CamGridCond			0	1	1118,547,0,0	159,546	CamGrid	
+328	5	0x2C00F2	0x210926	CamEdit			0	1	1118,547,0,0	159,546	CamGridCond	
+329	5	0x480848	0x210926	CamGridToolBar			0	1	1118,547,0,0	159,546	CamGridCond	
+330	4	0x2B068A	0x2B0842	CamGridToolBar			0	1	1126,547,323,33	167,546	CamGrid	
+331	4	0xC081E	0x2B0842	CamGridViews			0	1	1118,547,0,0	159,546	CamGrid	
+332	3	0x180496	0x110822	SysTabControl32			0	1	1108,510,353,141	149,509	CamDialog	
+333	3	0x1609D8	0x110822	CamEdit			1	1	1170,217,164,25	211,216	CamDialog	
+334	3	0x330A02	0x110822	CamPane			1	1	965,209,944,5	6,208	CamDialog	
+335	3	0x170876	0x110822	CamGrid			0	1	965,287,949,703	6,286	CamDialog	
+336	4	0x180800	0x170876	ScrollBar			0	0	1016,972,880,17	57,971	CamGrid	
+337	4	0x23082E	0x170876	ScrollBar			0	0	1896,322,17,650	937,321	CamGrid	
+338	4	0x2806BA	0x170876	CamGridCond			0	1	966,288,947,34	7,287	CamGrid	
+339	5	0x2302CE	0x2806BA	CamEdit			0	1	966,288,0,0	7,287	CamGridCond	
+340	5	0xB080E	0x2806BA	CamGridToolBar			0	1	966,288,325,33	7,287	CamGridCond	
+341	4	0x808DE	0x170876	CamGridViews			0	1	966,288,0,0	7,287	CamGrid	
+342	3	0x2F0828	0x110822	CamVTabCtl		Pièces	0	1	970,209,133,467	11,208	CamDialog	
+343	3	0x1A09DC	0x110822	camgrip			0	1	1849,653,17,17	890,652	CamDialog	
+344	2	0xE0910	0x4018E	CamDialog		Liste des clients	1	1	952,169,975,835	-7,168	MDIClient	
+345	3	0xE0580	0xE0910	HostUIWnd			0	1	1427,209,276,410	468,208	CamDialog	
+346	4	0x25086E	0xE0580	Chrome_WidgetWin_0			0	1	1427,209,276,410	468,208	HostUIWnd	
+347	5	0x11062E	0x25086E	Chrome_WidgetWin_1		Sage Business Docs	0	1	1427,209,276,410	468,208	Chrome_WidgetWin_0	
+348	6	0xF024A	0x11062E	Chrome_RenderWidgetHostHWND		Chrome Legacy Window	0	1	1427,209,276,410	468,208	Chrome_WidgetWin_1	
+349	6	0xD0686	0x11062E	Intermediate D3D Window			0	0	1427,209,276,410	468,208	Chrome_WidgetWin_1	
+350	3	0xD0576	0xE0910	CamPopup			0	1	1600,214,103,23	641,213	CamDialog	
+351	3	0xD0574	0xE0910	CamEdit			0	1	1600,214,103,23	641,213	CamDialog	
+352	3	0xD054C	0xE0910	CamEdit			0	1	1489,214,44,23	530,213	CamDialog	
+353	3	0xB06CC	0xE0910	CamPopup			0	0	1565,214,30,23	606,213	CamDialog	
+354	3	0xB07FC	0xE0910	CamPopup			0	0	1536,214,30,23	577,213	CamDialog	
+355	3	0xB07FA	0xE0910	CamPopup			0	0	1457,214,30,23	498,213	CamDialog	
+356	3	0xB06D0	0xE0910	CamPopup			0	0	1427,214,30,23	468,213	CamDialog	
+357	3	0x1006E4	0xE0910	CamView			0	1	1426,240,278,380	467,239	CamDialog	
+358	4	0xB07F4	0x1006E4	ScrollBar			0	1	1428,242,0,0	469,241	CamView	
+359	4	0xB07F6	0x1006E4	ScrollBar			0	1	1428,242,0,0	469,241	CamView	
+360	4	0x1009C0	0x1006E4	{{zoomslider}}			0	1	1428,242,0,0	469,241	CamView	
+361	3	0xB07E4	0xE0910	CamGrid			0	1	970,209,944,779	11,208	CamDialog	
+362	4	0xB07EA	0xB07E4	ScrollBar			0	0	1021,970,875,17	62,969	CamGrid	
+363	4	0xB07EC	0xB07E4	ScrollBar			0	0	1896,244,17,726	937,243	CamGrid	
+364	4	0xB07EE	0xB07E4	CamGridCond			0	1	971,210,942,34	12,209	CamGrid	
+365	5	0xD0534	0xB07EE	CamEdit			0	1	971,210,0,0	12,209	CamGridCond	
+366	5	0xB06CE	0xB07EE	CamGridToolBar			0	1	971,210,325,33	12,209	CamGridCond	
+367	4	0xB07FE	0xB07E4	CamGridViews			0	1	971,210,0,0	12,209	CamGrid	
+368	3	0xB07E6	0xE0910	CamPopup		Toutes	0	1	1024,437,64,23	65,436	CamDialog	
+369	3	0xB07E8	0xE0910	Static		Pièces :	0	1	970,437,49,23	11,436	CamDialog	
+370	3	0xB07D8	0xE0910	CamEdit			0	1	1294,436,110,25	335,435	CamDialog	
+371	3	0xB07E0	0xE0910	Static		au	0	1	1270,437,15,23	311,436	CamDialog	
+372	3	0xB07E2	0xE0910	CamEdit			0	1	1126,436,135,25	167,435	CamDialog	
+373	3	0xB07A6	0xE0910	Static		Du :	0	1	1098,437,25,23	139,436	CamDialog	
+374	3	0xB07A0	0xE0910	CamGrid			0	1	970,469,433,146	11,468	CamDialog	
+375	4	0xE097E	0xB07A0	ScrollBar			0	0	1021,597,364,17	62,596	CamGrid	
+376	4	0xB08E4	0xB07A0	ScrollBar			0	0	1385,538,17,59	426,537	CamGrid	
+377	4	0xB07DA	0xB07A0	CamGridCond			0	1	971,504,431,34	12,503	CamGrid	
+378	5	0xB07DC	0xB07DA	CamEdit			0	1	971,504,0,0	12,503	CamGridCond	
+379	5	0xB079A	0xB07DA	CamGridToolBar			0	1	971,504,122,33	12,503	CamGridCond	
+380	4	0xB07D4	0xB07A0	CamGridViews			0	1	971,470,0,0	12,469	CamGrid	
+381	3	0xB0914	0xE0910	CamGrid			0	1	970,469,433,150	11,468	CamDialog	
+382	4	0xB0918	0xB0914	ScrollBar			0	0	1021,601,364,17	62,600	CamGrid	
+383	4	0xB091A	0xB0914	ScrollBar			0	0	1385,538,17,63	426,537	CamGrid	
+384	4	0xB0902	0xB0914	CamGridCond			0	1	971,504,431,34	12,503	CamGrid	
+385	5	0xB07DE	0xB0902	CamEdit			0	1	971,504,0,0	12,503	CamGridCond	
+386	5	0xC08E8	0xB0902	CamGridToolBar			0	1	971,504,122,33	12,503	CamGridCond	
+387	4	0xB07CE	0xB0914	CamGridViews			0	1	971,470,0,0	12,469	CamGrid	
+388	3	0x3E0B60	0xE0910	CamGrid			1	1	970,209,944,779	11,208	CamDialog	
+389	4	0xD092A	0x3E0B60	ScrollBar			1	1	1091,970,805,17	132,969	CamGrid	
+390	4	0x1204AE	0x3E0B60	ScrollBar			1	0	1896,244,17,726	937,243	CamGrid	
+391	4	0xF01D4	0x3E0B60	CamGridCond			1	1	971,210,942,34	12,209	CamGrid	
+392	5	0xC0782	0xF01D4	CamEdit			0	1	1420,218,213,18	461,217	CamGridCond	
+393	5	0xB08E2	0xF01D4	CamGridToolBar			1	1	971,210,430,33	12,209	CamGridCond	
+394	4	0xB0916	0x3E0B60	CamGridViews			0	1	971,210,0,0	12,209	CamGrid	
+395	4	0x12067C	0x3E0B60	CamEdit			0	1	971,210,0,0	12,209	CamGrid	
+396	4	0x1105A2	0x3E0B60	ComboBox			0	1	971,210,0,22	12,209	CamGrid	
+397	3	0x100920	0xE0910	camgrip			0	1	1499,437,17,17	540,436	CamDialog	
+398	2	0x304D2	0x4018E	CamDialog		Mon Intuiciel	1	1	960,200,959,796	1,199	MDIClient	
+399	3	0x30654	0x304D2	{{brded}}			1	1	960,200,959,796	1,199	CamDialog	
+400	4	0x20524	0x30654	HostUIWnd			1	1	960,240,959,758	1,239	{{brded}}	
+401	5	0x2058C	0x20524	Chrome_WidgetWin_0			1	1	960,240,959,758	1,239	HostUIWnd	
+402	6	0x2058E	0x2058C	Chrome_WidgetWin_1		camMyDesk.html	1	1	960,240,959,758	1,239	Chrome_WidgetWin_0	
+403	7	0x20588	0x2058E	Chrome_RenderWidgetHostHWND		Chrome Legacy Window	1	1	960,240,959,758	1,239	Chrome_WidgetWin_1	
+404	7	0x20528	0x2058E	Intermediate D3D Window			1	0	960,240,2304,1024	1,239	Chrome_WidgetWin_1	
+405	4	0x20546	0x30654	HostUIWnd			1	1	960,200,959,40	1,199	{{brded}}	
+406	5	0x20590	0x20546	Chrome_WidgetWin_0			1	1	960,200,959,40	1,199	HostUIWnd	
+407	6	0x2054A	0x20590	Chrome_WidgetWin_1		camNavigation	1	1	960,200,959,40	1,199	Chrome_WidgetWin_0	
+408	7	0x20570	0x2054A	Chrome_RenderWidgetHostHWND		Chrome Legacy Window	1	1	960,200,959,40	1,199	Chrome_WidgetWin_1	
+409	7	0x20536	0x2054A	Intermediate D3D Window			1	0	960,200,1919,40	1,199	Chrome_WidgetWin_1	
+410	3	0x303A4	0x304D2	camgrip			1	1	1902,979,17,17	943,978	CamDialog	
+411	1	0x3025A	0x40044	CamStatusBar			1	1	960,996,960,35	1,995	CamMainFrame	
+
+Visible CamPopup candidates:
+86	3	0x4E0296	0x8E083C	CamPopup		Sous-tota&l	1	1	1501,446,98,23	542,445	CamDialog	
+124	3	0x130958	0x8E083C	CamPopup		O&utils...	1	1	1801,446,93,23	842,445	CamDialog	
+139	3	0x130966	0x8E083C	CamPopup		&Dupliquer	1	1	1295,446,98,23	336,445	CamDialog	
+140	3	0x13096C	0x8E083C	CamPopup		&Insérer	1	1	1088,446,98,23	129,445	CamDialog	
+141	3	0x920698	0x8E083C	CamPopup		&Supprimer	1	1	1191,446,98,23	232,445	CamDialog	
+142	3	0x540924	0x8E083C	CamPopup		&Ajouter	1	1	985,446,98,23	26,445	CamDialog	
+143	3	0x5308C4	0x8E083C	CamPopup		&Commentaire	1	1	1398,446,98,23	439,445	CamDialog	
+268	3	0xB0748	0x110822	CamPopup		Toutes les factures	1	1	1417,246,398,23	458,245	CamDialog	
+272	3	0xB0740	0x110822	CamPopup			1	1	1375,218,31,23	416,217	CamDialog	
+273	3	0x1306D8	0x110822	CamPopup			1	1	1343,218,31,23	384,217	CamDialog	
+
+Visible invoice dialogs:
+5	2	0x8E083C	0x4018E	CamDialog		Facture - FA2912	1	1	952,169,975,835	-7,168	MDIClient	

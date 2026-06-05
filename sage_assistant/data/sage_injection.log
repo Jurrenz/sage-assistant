@@ -37,3 +37,575 @@
 2026-05-29 16:15:11 | WAIT line=1 ref=LA55-1
 2026-05-29 16:15:21 | SEND line=1 ref=LA55-1
 2026-05-29 16:15:21 | ERROR missing calibrated positions line=1 ref=LA55-1
+2026-05-29 17:55:40 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 17:55:50 | FOUND Sage main hwnd=0x305BC class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-05-29 17:55:50 | FOUND invoice hwnd=0x110768 title=Facture - FA2862
+2026-05-29 17:55:50 | ERROR add button count=0
+2026-05-29 17:56:10 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 17:56:12 | FOUND Sage main hwnd=0x305BC class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-05-29 17:56:12 | FOUND invoice hwnd=0x110768 title=Facture - FA2862
+2026-05-29 17:56:12 | ERROR add button count=0
+2026-05-29 17:56:50 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 17:56:52 | FOUND Sage main hwnd=0x305BC class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-05-29 17:56:52 | FOUND invoice hwnd=0x110768 title=Facture - FA2862
+2026-05-29 17:56:52 | ERROR add button count=0
+2026-05-29 18:09:00 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 18:09:01 | FOUND Sage main hwnd=0x305BC class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-05-29 18:09:01 | FOUND invoice hwnd=0x110768 title=Facture - FA2862
+2026-05-29 18:09:01 | ERROR add button count=0
+2026-05-29 18:13:13 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 18:13:14 | FOUND Sage main hwnd=0x305BC class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-05-29 18:13:14 | FOUND invoice hwnd=0x110768 title=Facture - FA2862
+2026-05-29 18:13:14 | FOUND add hwnd=0x100D02 rect=988,449,1086,472 center=1037,460
+2026-05-29 18:13:15 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260529_181314.png
+2026-05-29 18:13:19 | SEND line=1 ref=LA55-1
+2026-05-29 18:13:20 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260529_181320.png
+2026-05-29 18:13:20 | OK line=1 ref=LA55-1
+2026-05-29 18:13:20 | DONE lines=1
+2026-05-29 18:13:44 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 18:13:46 | FOUND Sage main hwnd=0x305BC class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-05-29 18:13:46 | FOUND invoice hwnd=0x110768 title=Facture - FA2862
+2026-05-29 18:13:46 | FOUND add hwnd=0x100D02 rect=988,449,1086,472 center=1037,460
+2026-05-29 18:13:46 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260529_181346.png
+2026-05-29 18:13:50 | SEND line=1 ref=LA55-1
+2026-05-29 18:13:51 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260529_181350.png
+2026-05-29 18:13:51 | OK line=1 ref=LA55-1
+2026-05-29 18:13:51 | DONE lines=1
+2026-05-29 18:17:03 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-05-29 18:17:07 | FOUND Sage main hwnd=0x305BC class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-05-29 18:17:07 | FOUND invoice hwnd=0x120768 title=Facture - FA2862
+2026-05-29 18:17:07 | FOUND add hwnd=0x110D14 rect=988,449,1086,472 center=1037,460
+2026-05-29 18:17:07 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260529_181707.png
+2026-05-29 18:17:08 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260529_181708.png
+2026-05-29 18:17:08 | SEND line=1 ref=LA55-1
+2026-05-29 18:17:10 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260529_181709.png
+2026-05-29 18:17:10 | OK line=1 ref=LA55-1
+2026-05-29 18:17:10 | DONE lines=1
+2026-06-05 13:41:10 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:41:15 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:41:15 | FOUND invoice hwnd=0x270022 title=Facture - FA2907
+2026-06-05 13:41:15 | FOUND add hwnd=0x1F09E6 rect=985,446,1083,469 center=1034,457
+2026-06-05 13:41:15 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_134115.png
+2026-06-05 13:41:20 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_134120.png
+2026-06-05 13:41:20 | SEND line=1 ref=LAB03-1A
+2026-06-05 13:41:21 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_134121.png
+2026-06-05 13:41:21 | OK line=1 ref=LAB03-1A
+2026-06-05 13:41:21 | DONE lines=1
+2026-06-05 13:41:47 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:41:57 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:41:57 | FOUND invoice hwnd=0x270022 title=Facture - FA2907 *
+2026-06-05 13:41:57 | FOUND add hwnd=0x1F09E6 rect=985,446,1083,469 center=1034,457
+2026-06-05 13:41:57 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_134157.png
+2026-06-05 13:42:13 | ERROR focus lost line=1 ref=LAB03-1A
+2026-06-05 13:42:19 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:42:20 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:42:20 | FOUND invoice hwnd=0x270022 title=Facture - FA2907 *
+2026-06-05 13:42:20 | FOUND add hwnd=0x1F09E6 rect=985,446,1083,469 center=1034,457
+2026-06-05 13:42:21 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_134220.png
+2026-06-05 13:42:24 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_134223.png
+2026-06-05 13:42:24 | SEND line=1 ref=LAB03-1A
+2026-06-05 13:42:25 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_134224.png
+2026-06-05 13:42:25 | OK line=1 ref=LAB03-1A
+2026-06-05 13:42:25 | DONE lines=1
+2026-06-05 13:45:02 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:45:05 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:45:05 | FOUND invoice hwnd=0x270022 title=Facture - FA2907 *
+2026-06-05 13:45:05 | FOUND add hwnd=0x1F09E6 rect=985,446,1083,469 center=1034,457
+2026-06-05 13:45:05 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_134505.png
+2026-06-05 13:45:07 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_134507.png
+2026-06-05 13:45:07 | SEND line=1 ref=LAB03-1A
+2026-06-05 13:45:09 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_134508.png
+2026-06-05 13:45:09 | OK line=1 ref=LAB03-1A
+2026-06-05 13:45:09 | DONE lines=1
+2026-06-05 13:45:24 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:45:25 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:45:25 | FOUND invoice hwnd=0x280022 title=Facture - FA2907
+2026-06-05 13:45:25 | FOUND add hwnd=0x1209E2 rect=985,446,1083,469 center=1034,457
+2026-06-05 13:45:26 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_134525.png
+2026-06-05 13:45:27 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_134527.png
+2026-06-05 13:45:27 | SEND line=1 ref=LAB03-1A
+2026-06-05 13:45:29 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_134528.png
+2026-06-05 13:45:29 | OK line=1 ref=LAB03-1A
+2026-06-05 13:45:29 | DONE lines=1
+2026-06-05 13:45:43 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:45:50 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:45:50 | FOUND invoice hwnd=0x290022 title=Facture - FA2907
+2026-06-05 13:45:50 | FOUND add hwnd=0x1309D4 rect=985,446,1083,469 center=1034,457
+2026-06-05 13:45:50 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_134550.png
+2026-06-05 13:45:57 | ERROR focus lost line=1 ref=LAB03-1A
+2026-06-05 13:46:04 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:46:05 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:46:05 | FOUND invoice hwnd=0x290022 title=Facture - FA2907
+2026-06-05 13:46:05 | FOUND add hwnd=0x1309D4 rect=985,446,1083,469 center=1034,457
+2026-06-05 13:46:05 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_134605.png
+2026-06-05 13:46:06 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_134606.png
+2026-06-05 13:46:06 | SEND line=1 ref=LAB03-1A
+2026-06-05 13:46:08 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_134607.png
+2026-06-05 13:46:08 | OK line=1 ref=LAB03-1A
+2026-06-05 13:46:08 | DONE lines=1
+2026-06-05 13:48:17 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:48:18 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:48:18 | FOUND invoice hwnd=0x290022 title=Facture - FA2907 *
+2026-06-05 13:48:18 | FOUND add hwnd=0x1309D4 rect=985,446,1083,469 center=1034,457
+2026-06-05 13:48:18 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_134818.png
+2026-06-05 13:48:20 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_134819.png
+2026-06-05 13:48:20 | SEND line=1 ref=LAB03-1A
+2026-06-05 13:48:21 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_134821.png
+2026-06-05 13:48:21 | OK line=1 ref=LAB03-1A
+2026-06-05 13:48:21 | DONE lines=1
+2026-06-05 13:48:31 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:48:32 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:48:32 | FOUND invoice hwnd=0x2A0022 title=Facture - FA2907
+2026-06-05 13:48:32 | FOUND add hwnd=0x1008EE rect=985,446,1083,469 center=1034,457
+2026-06-05 13:48:33 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_134832.png
+2026-06-05 13:48:34 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_134833.png
+2026-06-05 13:48:34 | SEND line=1 ref=LAB03-1A
+2026-06-05 13:48:35 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_134835.png
+2026-06-05 13:48:35 | OK line=1 ref=LAB03-1A
+2026-06-05 13:48:35 | DONE lines=1
+2026-06-05 13:49:19 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:49:20 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:49:20 | FOUND invoice hwnd=0x2A0022 title=Facture - FA2907 *
+2026-06-05 13:49:20 | FOUND add hwnd=0x1008EE rect=985,446,1083,469 center=1034,457
+2026-06-05 13:49:21 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_134920.png
+2026-06-05 13:49:22 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_134922.png
+2026-06-05 13:49:22 | SEND line=1 ref=LAB03-1A
+2026-06-05 13:49:23 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_134923.png
+2026-06-05 13:49:23 | OK line=1 ref=LAB03-1A
+2026-06-05 13:49:23 | DONE lines=1
+2026-06-05 13:51:40 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:51:41 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:51:41 | FOUND invoice hwnd=0x2A0022 title=Facture - FA2907 *
+2026-06-05 13:51:41 | FOUND add hwnd=0x1008EE rect=985,446,1083,469 center=1034,457
+2026-06-05 13:51:42 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_135141.png
+2026-06-05 13:51:43 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_135142.png
+2026-06-05 13:51:43 | SEND line=1 ref=LAB03-1A
+2026-06-05 13:51:44 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_20260605_135143.png
+2026-06-05 13:51:44 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_20260605_135144.png
+2026-06-05 13:51:45 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_135144.png
+2026-06-05 13:51:45 | OK line=1 ref=LAB03-1A
+2026-06-05 13:51:45 | DONE lines=1
+2026-06-05 13:51:55 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:51:57 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:51:57 | FOUND invoice hwnd=0x2B0022 title=Facture - FA2907
+2026-06-05 13:51:57 | FOUND add hwnd=0x1D0886 rect=985,446,1083,469 center=1034,457
+2026-06-05 13:51:57 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_135157.png
+2026-06-05 13:51:58 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_135158.png
+2026-06-05 13:51:58 | SEND line=1 ref=LAB03-1A
+2026-06-05 13:51:59 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_20260605_135159.png
+2026-06-05 13:52:00 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_20260605_135159.png
+2026-06-05 13:52:00 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_135200.png
+2026-06-05 13:52:00 | OK line=1 ref=LAB03-1A
+2026-06-05 13:52:00 | DONE lines=1
+2026-06-05 13:57:21 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 13:57:22 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 13:57:22 | FOUND invoice hwnd=0x2C0022 title=Facture - FA2907
+2026-06-05 13:57:22 | FOUND add hwnd=0x12079E rect=985,446,1083,469 center=1034,457
+2026-06-05 13:57:22 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_135722.png
+2026-06-05 13:57:23 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_135723.png
+2026-06-05 13:57:23 | SEND line=1 ref=LAB03-1A
+2026-06-05 13:57:24 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_20260605_135724.png
+2026-06-05 13:57:25 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_20260605_135724.png
+2026-06-05 13:57:25 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_20260605_135725.png
+2026-06-05 13:57:26 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_135726.png
+2026-06-05 13:57:26 | OK line=1 ref=LAB03-1A
+2026-06-05 13:57:26 | DONE lines=1
+2026-06-05 14:00:25 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 14:00:26 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:00:26 | FOUND invoice hwnd=0x2C0022 title=Facture - FA2907 *
+2026-06-05 14:00:26 | FOUND add hwnd=0x12079E rect=985,446,1083,469 center=1034,457
+2026-06-05 14:00:26 | FOUND grid hwnd=0x12090E rect=985,474,1895,947
+2026-06-05 14:00:26 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_140026.png
+2026-06-05 14:00:28 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_140027.png
+2026-06-05 14:00:28 | SEND line=1 ref=LAB03-1A
+2026-06-05 14:00:28 | ACTIVE after_add rect=1482,618,1588,646
+2026-06-05 14:00:29 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_20260605_140028.png
+2026-06-05 14:00:29 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_20260605_140029.png
+2026-06-05 14:00:30 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_20260605_140029.png
+2026-06-05 14:00:31 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_140030.png
+2026-06-05 14:00:31 | OK line=1 ref=LAB03-1A
+2026-06-05 14:00:31 | DONE lines=1
+2026-06-05 14:02:07 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 14:02:08 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:02:08 | FOUND invoice hwnd=0x2C0022 title=Facture - FA2907 *
+2026-06-05 14:02:08 | FOUND add hwnd=0x12079E rect=985,446,1083,469 center=1034,457
+2026-06-05 14:02:08 | FOUND grid hwnd=0x12090E rect=985,474,1895,947
+2026-06-05 14:02:09 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_140208.png
+2026-06-05 14:02:10 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_140210.png
+2026-06-05 14:02:10 | SEND line=1 ref=LAB03-1A
+2026-06-05 14:02:10 | ACTIVE after_add rect=1482,675,1588,703
+2026-06-05 14:02:11 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_20260605_140211.png
+2026-06-05 14:02:12 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_20260605_140211.png
+2026-06-05 14:02:13 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_20260605_140212.png
+2026-06-05 14:02:13 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_140213.png
+2026-06-05 14:02:13 | OK line=1 ref=LAB03-1A
+2026-06-05 14:02:13 | DONE lines=1
+2026-06-05 14:10:52 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 14:10:53 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:10:53 | FOUND invoice hwnd=0x2D0022 title=Facture - FA2907
+2026-06-05 14:10:53 | FOUND add hwnd=0x1909A8 rect=985,446,1083,469 center=1034,457
+2026-06-05 14:10:53 | FOUND grid hwnd=0x13090C rect=985,474,1895,947
+2026-06-05 14:10:54 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_141053.png
+2026-06-05 14:10:55 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_141055.png
+2026-06-05 14:10:55 | ACTIVE after_add rect=1482,561,1588,589
+2026-06-05 14:10:55 | SEND line=1 ref=LAB03-1A rowY=575
+2026-06-05 14:10:56 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_141056.png
+2026-06-05 14:10:57 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_141056.png
+2026-06-05 14:10:57 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_141057.png
+2026-06-05 14:10:58 | OK line=1 ref=LAB03-1A
+2026-06-05 14:10:58 | SEND line=2 ref=LAB01-6 rowY=603
+2026-06-05 14:10:59 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260605_141058.png
+2026-06-05 14:10:59 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260605_141059.png
+2026-06-05 14:11:00 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260605_141100.png
+2026-06-05 14:11:01 | OK line=2 ref=LAB01-6
+2026-06-05 14:11:01 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_141101.png
+2026-06-05 14:11:01 | DONE lines=2
+2026-06-05 14:18:25 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 14:18:26 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:18:26 | FOUND invoice hwnd=0x60B40 title=Facture - FA2907 *
+2026-06-05 14:18:27 | FOUND add hwnd=0x1A09AA rect=985,446,1083,469 center=1034,457
+2026-06-05 14:18:27 | FOUND grid hwnd=0x140906 rect=985,474,1895,947
+2026-06-05 14:18:27 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_141827.png
+2026-06-05 14:18:28 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_141828.png
+2026-06-05 14:18:28 | ACTIVE after_add rect=1482,879,1588,907
+2026-06-05 14:18:28 | SEND line=1 ref=LAB03-1A from=quantity_focus
+2026-06-05 14:18:29 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_141829.png
+2026-06-05 14:18:30 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_141830.png
+2026-06-05 14:18:31 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_141830.png
+2026-06-05 14:18:31 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_141831.png
+2026-06-05 14:18:32 | OK line=1 ref=LAB03-1A
+2026-06-05 14:18:32 | SEND line=2 ref=LAB01-6 from=quantity_focus
+2026-06-05 14:18:33 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260605_141832.png
+2026-06-05 14:18:33 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260605_141833.png
+2026-06-05 14:18:34 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260605_141834.png
+2026-06-05 14:18:35 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260605_141834.png
+2026-06-05 14:18:35 | OK line=2 ref=LAB01-6
+2026-06-05 14:18:35 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_141835.png
+2026-06-05 14:18:35 | DONE lines=2
+2026-06-05 14:20:16 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 14:20:17 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:20:17 | FOUND invoice hwnd=0x60B40 title=Facture - FA2907 *
+2026-06-05 14:20:18 | FOUND add hwnd=0x1A09AA rect=985,446,1083,469 center=1034,457
+2026-06-05 14:20:18 | FOUND grid hwnd=0x140906 rect=985,474,1895,947
+2026-06-05 14:20:18 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_142018.png
+2026-06-05 14:20:19 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_142019.png
+2026-06-05 14:20:19 | ACTIVE after_add rect=1482,879,1588,907
+2026-06-05 14:20:19 | SEND line=1 ref=LAB03-1A from=quantity_focus
+2026-06-05 14:20:20 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_142020.png
+2026-06-05 14:20:21 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_142021.png
+2026-06-05 14:20:22 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_142021.png
+2026-06-05 14:20:22 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_142022.png
+2026-06-05 14:20:22 | OK line=1 ref=LAB03-1A
+2026-06-05 14:20:22 | SEND line=2 ref=LAB01-6 from=quantity_focus
+2026-06-05 14:20:23 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260605_142023.png
+2026-06-05 14:20:24 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260605_142024.png
+2026-06-05 14:20:24 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260605_142024.png
+2026-06-05 14:20:25 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260605_142025.png
+2026-06-05 14:20:25 | OK line=2 ref=LAB01-6
+2026-06-05 14:20:25 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_142025.png
+2026-06-05 14:20:25 | DONE lines=2
+2026-06-05 14:22:43 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 14:22:44 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:22:44 | FOUND invoice hwnd=0x60B40 title=Facture - FA2907 *
+2026-06-05 14:22:44 | FOUND add hwnd=0x1A09AA rect=985,446,1083,469 center=1034,457
+2026-06-05 14:22:44 | FOUND grid hwnd=0x140906 rect=985,474,1895,947
+2026-06-05 14:22:44 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_142244.png
+2026-06-05 14:22:46 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_142245.png
+2026-06-05 14:22:46 | ACTIVE after_add rect=1482,879,1588,907
+2026-06-05 14:22:46 | SEND line=1 ref=LAB03-1A from=quantity_focus
+2026-06-05 14:22:47 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_142246.png
+2026-06-05 14:22:47 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_142247.png
+2026-06-05 14:22:48 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_142247.png
+2026-06-05 14:22:48 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_142248.png
+2026-06-05 14:22:48 | OK line=1 ref=LAB03-1A
+2026-06-05 14:22:49 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_142248.png
+2026-06-05 14:22:49 | DONE lines=1
+2026-06-05 14:38:36 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=1
+2026-06-05 14:38:37 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:38:37 | FOUND invoice hwnd=0x1310AF6 title=Facture - FA2907
+2026-06-05 14:38:38 | FOUND add hwnd=0x320834 rect=985,446,1083,469 center=1034,457
+2026-06-05 14:38:38 | FOUND grid hwnd=0x29092E rect=985,474,1895,947
+2026-06-05 14:38:38 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_143838.png
+2026-06-05 14:38:39 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_143839.png
+2026-06-05 14:38:39 | ACTIVE after_add rect=1482,561,1588,589
+2026-06-05 14:38:39 | SEND line=1 ref=LAB03-1A mode=keyboard_from_sage_focus article_focus=0
+2026-06-05 14:38:41 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_143840.png
+2026-06-05 14:38:42 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_143842.png
+2026-06-05 14:38:43 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_143842.png
+2026-06-05 14:38:44 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_143843.png
+2026-06-05 14:38:44 | OK line=1 ref=LAB03-1A
+2026-06-05 14:38:44 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_143844.png
+2026-06-05 14:38:44 | DONE lines=1
+2026-06-05 14:40:04 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 14:40:05 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:40:05 | FOUND invoice hwnd=0x1310AF6 title=Facture - FA2907 *
+2026-06-05 14:40:06 | FOUND add hwnd=0x320834 rect=985,446,1083,469 center=1034,457
+2026-06-05 14:40:06 | FOUND grid hwnd=0x29092E rect=985,474,1895,947
+2026-06-05 14:40:06 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_144006.png
+2026-06-05 14:40:07 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_144007.png
+2026-06-05 14:40:07 | ACTIVE after_add rect=1482,618,1588,646
+2026-06-05 14:40:07 | SEND line=1 ref=LAB03-1A mode=keyboard_from_sage_focus article_focus=0
+2026-06-05 14:40:09 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_144008.png
+2026-06-05 14:40:10 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_144010.png
+2026-06-05 14:40:11 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_144010.png
+2026-06-05 14:40:12 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_144011.png
+2026-06-05 14:40:12 | OK line=1 ref=LAB03-1A
+2026-06-05 14:40:12 | SEND line=2 ref=LAB01-6 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 14:40:13 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260605_144013.png
+2026-06-05 14:40:14 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260605_144014.png
+2026-06-05 14:40:15 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260605_144015.png
+2026-06-05 14:40:16 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260605_144016.png
+2026-06-05 14:40:16 | OK line=2 ref=LAB01-6
+2026-06-05 14:40:17 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_144016.png
+2026-06-05 14:40:17 | DONE lines=2
+2026-06-05 14:42:42 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 14:42:43 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:42:43 | FOUND invoice hwnd=0x1310AF6 title=Facture - FA2907 *
+2026-06-05 14:42:43 | FOUND add hwnd=0x320834 rect=985,446,1083,469 center=1034,457
+2026-06-05 14:42:43 | FOUND grid hwnd=0x29092E rect=985,474,1895,947
+2026-06-05 14:42:43 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_144243.png
+2026-06-05 14:42:45 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_144244.png
+2026-06-05 14:42:45 | ACTIVE after_add rect=1482,690,1588,718
+2026-06-05 14:42:45 | SEND line=1 ref=LAB03-1A mode=keyboard_from_sage_focus article_focus=0
+2026-06-05 14:42:46 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_144246.png
+2026-06-05 14:42:47 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_144247.png
+2026-06-05 14:42:48 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_144248.png
+2026-06-05 14:42:49 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_144249.png
+2026-06-05 14:42:50 | OK line=1 ref=LAB03-1A
+2026-06-05 14:42:50 | SEND line=2 ref=LAB01-6 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 14:42:51 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260605_144251.png
+2026-06-05 14:42:52 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260605_144252.png
+2026-06-05 14:42:53 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260605_144253.png
+2026-06-05 14:42:54 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260605_144253.png
+2026-06-05 14:42:54 | OK line=2 ref=LAB01-6
+2026-06-05 14:42:54 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_144254.png
+2026-06-05 14:42:54 | DONE lines=2
+2026-06-05 14:46:03 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 14:46:04 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:46:04 | FOUND invoice hwnd=0x380820 title=Facture - FA2907
+2026-06-05 14:46:04 | FOUND add hwnd=0x270976 rect=985,446,1083,469 center=1034,457
+2026-06-05 14:46:04 | FOUND grid hwnd=0x2E0940 rect=985,474,1895,947
+2026-06-05 14:46:05 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_144604.png
+2026-06-05 14:46:06 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_144606.png
+2026-06-05 14:46:06 | ACTIVE after_add rect=1482,561,1588,589
+2026-06-05 14:46:06 | SEND line=1 ref=LAB03-1A mode=keyboard_from_sage_focus article_focus=0
+2026-06-05 14:46:07 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_144607.png
+2026-06-05 14:46:08 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_144608.png
+2026-06-05 14:46:09 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_144609.png
+2026-06-05 14:46:10 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_144610.png
+2026-06-05 14:46:11 | OK line=1 ref=LAB03-1A
+2026-06-05 14:46:11 | SEND line=2 ref=LAB01-6 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 14:46:12 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260605_144612.png
+2026-06-05 14:46:13 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260605_144613.png
+2026-06-05 14:46:14 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260605_144614.png
+2026-06-05 14:46:15 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260605_144614.png
+2026-06-05 14:46:15 | OK line=2 ref=LAB01-6
+2026-06-05 14:46:15 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_144615.png
+2026-06-05 14:46:15 | DONE lines=2
+2026-06-05 14:46:23 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 14:46:24 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:46:24 | FOUND invoice hwnd=0x380820 title=Facture - FA2907 *
+2026-06-05 14:46:24 | FOUND add hwnd=0x270976 rect=985,446,1083,469 center=1034,457
+2026-06-05 14:46:24 | FOUND grid hwnd=0x2E0940 rect=985,474,1895,947
+2026-06-05 14:46:24 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_144624.png
+2026-06-05 14:46:25 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_144625.png
+2026-06-05 14:46:25 | ACTIVE after_add rect=1482,648,1588,676
+2026-06-05 14:46:25 | SEND line=1 ref=LAB03-1A mode=keyboard_from_sage_focus article_focus=0
+2026-06-05 14:46:27 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_144627.png
+2026-06-05 14:46:28 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_144628.png
+2026-06-05 14:46:29 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_144629.png
+2026-06-05 14:46:30 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_144629.png
+2026-06-05 14:46:30 | OK line=1 ref=LAB03-1A
+2026-06-05 14:46:30 | SEND line=2 ref=LAB01-6 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 14:46:32 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260605_144631.png
+2026-06-05 14:46:33 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260605_144632.png
+2026-06-05 14:46:34 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260605_144633.png
+2026-06-05 14:46:35 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260605_144634.png
+2026-06-05 14:46:35 | OK line=2 ref=LAB01-6
+2026-06-05 14:46:35 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_144635.png
+2026-06-05 14:46:35 | DONE lines=2
+2026-06-05 14:47:16 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 14:47:17 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:47:17 | FOUND invoice hwnd=0x390820 title=Facture - FA2907 *
+2026-06-05 14:47:18 | FOUND add hwnd=0x270798 rect=985,446,1083,469 center=1034,457
+2026-06-05 14:47:18 | FOUND grid hwnd=0x2608FA rect=985,474,1895,947
+2026-06-05 14:47:18 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_144718.png
+2026-06-05 14:47:19 | ERROR focus lost line=1 ref=LAB03-1A
+2026-06-05 14:47:22 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 14:47:23 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 14:47:23 | FOUND invoice hwnd=0x390820 title=Facture - FA2907 *
+2026-06-05 14:47:23 | FOUND add hwnd=0x270798 rect=985,446,1083,469 center=1034,457
+2026-06-05 14:47:23 | FOUND grid hwnd=0x2608FA rect=985,474,1895,947
+2026-06-05 14:47:23 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_144723.png
+2026-06-05 14:47:25 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_144724.png
+2026-06-05 14:47:25 | ACTIVE after_add rect=1482,588,1588,616
+2026-06-05 14:47:25 | SEND line=1 ref=LAB03-1A mode=keyboard_from_sage_focus article_focus=0
+2026-06-05 14:47:26 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_144726.png
+2026-06-05 14:47:27 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_144727.png
+2026-06-05 14:47:28 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_144728.png
+2026-06-05 14:47:29 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_144728.png
+2026-06-05 14:47:29 | OK line=1 ref=LAB03-1A
+2026-06-05 14:47:29 | SEND line=2 ref=LAB01-6 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 14:47:31 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260605_144730.png
+2026-06-05 14:47:32 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260605_144731.png
+2026-06-05 14:47:33 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260605_144732.png
+2026-06-05 14:47:33 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260605_144733.png
+2026-06-05 14:47:33 | OK line=2 ref=LAB01-6
+2026-06-05 14:47:34 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_144733.png
+2026-06-05 14:47:34 | DONE lines=2
+2026-06-05 15:55:47 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 15:55:49 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 15:55:49 | ERROR invoice window count=0
+2026-06-05 15:55:55 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 15:55:56 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 15:55:56 | ERROR invoice window count=0
+2026-06-05 15:56:28 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=2
+2026-06-05 15:56:29 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 15:56:29 | FOUND invoice hwnd=0x8D083C title=Facture - FA2912
+2026-06-05 15:56:29 | FOUND add hwnd=0x560884 rect=985,446,1083,469 center=1034,457
+2026-06-05 15:56:29 | FOUND grid hwnd=0x5309EC rect=985,474,1895,947
+2026-06-05 15:56:30 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_155629.png
+2026-06-05 15:56:31 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_155631.png
+2026-06-05 15:56:31 | ACTIVE after_add rect=1482,561,1588,589
+2026-06-05 15:56:31 | SEND line=1 ref=G01-116 mode=keyboard_from_sage_focus article_focus=0
+2026-06-05 15:56:33 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_155632.png
+2026-06-05 15:56:34 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_155634.png
+2026-06-05 15:56:35 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_155635.png
+2026-06-05 15:56:36 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_155635.png
+2026-06-05 15:56:37 | OK line=1 ref=G01-116
+2026-06-05 15:56:37 | SEND line=2 ref=G01-113 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 15:56:38 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260605_155637.png
+2026-06-05 15:56:39 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260605_155638.png
+2026-06-05 15:56:40 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260605_155639.png
+2026-06-05 15:56:40 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260605_155640.png
+2026-06-05 15:56:41 | OK line=2 ref=G01-113
+2026-06-05 15:56:41 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_155641.png
+2026-06-05 15:56:41 | DONE lines=2
+2026-06-05 15:57:00 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=9
+2026-06-05 15:57:01 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 15:57:01 | FOUND invoice hwnd=0x8D083C title=Facture - FA2912 *
+2026-06-05 15:57:02 | FOUND add hwnd=0x560884 rect=985,446,1083,469 center=1034,457
+2026-06-05 15:57:02 | FOUND grid hwnd=0x5309EC rect=985,474,1895,947
+2026-06-05 15:57:02 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_155702.png
+2026-06-05 15:57:03 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_155703.png
+2026-06-05 15:57:03 | ACTIVE after_add rect=1482,648,1588,676
+2026-06-05 15:57:03 | SEND line=1 ref=G01-116 mode=keyboard_from_sage_focus article_focus=0
+2026-06-05 15:57:05 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_155704.png
+2026-06-05 15:57:06 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_155706.png
+2026-06-05 15:57:07 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_155706.png
+2026-06-05 15:57:08 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_155707.png
+2026-06-05 15:57:08 | OK line=1 ref=G01-116
+2026-06-05 15:57:08 | SEND line=2 ref=G01-113 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 15:57:09 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260605_155709.png
+2026-06-05 15:57:11 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260605_155710.png
+2026-06-05 15:57:11 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260605_155711.png
+2026-06-05 15:57:12 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260605_155712.png
+2026-06-05 15:57:13 | OK line=2 ref=G01-113
+2026-06-05 15:57:13 | SEND line=3 ref=G01-106 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 15:57:14 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_3_20260605_155714.png
+2026-06-05 15:57:15 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_3_20260605_155715.png
+2026-06-05 15:57:16 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_3_20260605_155716.png
+2026-06-05 15:57:17 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_3_20260605_155717.png
+2026-06-05 15:57:18 | OK line=3 ref=G01-106
+2026-06-05 15:57:18 | SEND line=4 ref=G01-111 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 15:57:19 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_4_20260605_155718.png
+2026-06-05 15:57:20 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_4_20260605_155720.png
+2026-06-05 15:57:21 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_4_20260605_155720.png
+2026-06-05 15:57:22 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_4_20260605_155721.png
+2026-06-05 15:57:22 | OK line=4 ref=G01-111
+2026-06-05 15:57:22 | SEND line=5 ref=FL680-5 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 15:57:24 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_5_20260605_155723.png
+2026-06-05 15:57:25 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_5_20260605_155724.png
+2026-06-05 15:57:25 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_5_20260605_155725.png
+2026-06-05 15:57:26 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_5_20260605_155726.png
+2026-06-05 15:57:27 | OK line=5 ref=FL680-5
+2026-06-05 15:57:27 | SEND line=6 ref=FL696-3 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 15:57:28 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_6_20260605_155728.png
+2026-06-05 15:57:29 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_6_20260605_155729.png
+2026-06-05 15:57:30 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_6_20260605_155730.png
+2026-06-05 15:57:31 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_6_20260605_155731.png
+2026-06-05 15:57:32 | OK line=6 ref=FL696-3
+2026-06-05 15:57:32 | SEND line=7 ref=FL782 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 15:57:33 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_7_20260605_155732.png
+2026-06-05 15:57:34 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_7_20260605_155734.png
+2026-06-05 15:57:35 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_7_20260605_155734.png
+2026-06-05 15:57:36 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_7_20260605_155735.png
+2026-06-05 15:57:36 | OK line=7 ref=FL782
+2026-06-05 15:57:36 | SEND line=8 ref=LA67-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 15:57:38 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_8_20260605_155737.png
+2026-06-05 15:57:39 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_8_20260605_155738.png
+2026-06-05 15:57:40 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_8_20260605_155739.png
+2026-06-05 15:57:40 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_8_20260605_155740.png
+2026-06-05 15:57:41 | OK line=8 ref=LA67-1
+2026-06-05 15:57:41 | SEND line=9 ref=G01-99 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 15:57:42 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_9_20260605_155742.png
+2026-06-05 15:57:43 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_9_20260605_155743.png
+2026-06-05 15:57:44 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_9_20260605_155744.png
+2026-06-05 15:57:45 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_9_20260605_155745.png
+2026-06-05 15:57:45 | OK line=9 ref=G01-99
+2026-06-05 15:57:45 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_155745.png
+2026-06-05 15:57:45 | DONE lines=9
+2026-06-05 16:15:16 | START queue=C:\Dev\sage-assistant\sage_assistant\data\sage_queue.json lines=9
+2026-06-05 16:15:18 | FOUND Sage main hwnd=0x40044 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-05 16:15:18 | FOUND invoice hwnd=0x8E083C title=Facture - FA2912
+2026-06-05 16:15:18 | FOUND add hwnd=0x540924 rect=985,446,1083,469 center=1034,457
+2026-06-05 16:15:18 | FOUND grid hwnd=0x5109FC rect=985,474,1895,947
+2026-06-05 16:15:18 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260605_161518.png
+2026-06-05 16:15:20 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260605_161519.png
+2026-06-05 16:15:20 | ACTIVE after_add rect=1482,801,1588,829
+2026-06-05 16:15:20 | SEND line=1 ref=G01-116 mode=keyboard_from_sage_focus article_focus=0
+2026-06-05 16:15:20 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260605_161520.png
+2026-06-05 16:15:21 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260605_161520.png
+2026-06-05 16:15:21 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260605_161521.png
+2026-06-05 16:15:21 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260605_161521.png
+2026-06-05 16:15:21 | OK line=1 ref=G01-116
+2026-06-05 16:15:21 | SEND line=2 ref=G01-113 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 16:15:22 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260605_161522.png
+2026-06-05 16:15:22 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260605_161522.png
+2026-06-05 16:15:23 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260605_161522.png
+2026-06-05 16:15:23 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260605_161523.png
+2026-06-05 16:15:23 | OK line=2 ref=G01-113
+2026-06-05 16:15:23 | SEND line=3 ref=G01-106 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 16:15:24 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_3_20260605_161523.png
+2026-06-05 16:15:24 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_3_20260605_161524.png
+2026-06-05 16:15:25 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_3_20260605_161524.png
+2026-06-05 16:15:25 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_3_20260605_161525.png
+2026-06-05 16:15:25 | OK line=3 ref=G01-106
+2026-06-05 16:15:25 | SEND line=4 ref=G01-111 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 16:15:26 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_4_20260605_161525.png
+2026-06-05 16:15:26 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_4_20260605_161526.png
+2026-06-05 16:15:26 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_4_20260605_161526.png
+2026-06-05 16:15:27 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_4_20260605_161526.png
+2026-06-05 16:15:27 | OK line=4 ref=G01-111
+2026-06-05 16:15:27 | SEND line=5 ref=FL680-5 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 16:15:27 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_5_20260605_161527.png
+2026-06-05 16:15:28 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_5_20260605_161527.png
+2026-06-05 16:15:28 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_5_20260605_161528.png
+2026-06-05 16:15:28 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_5_20260605_161528.png
+2026-06-05 16:15:29 | OK line=5 ref=FL680-5
+2026-06-05 16:15:29 | SEND line=6 ref=FL696-3 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 16:15:29 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_6_20260605_161529.png
+2026-06-05 16:15:29 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_6_20260605_161529.png
+2026-06-05 16:15:30 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_6_20260605_161530.png
+2026-06-05 16:15:30 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_6_20260605_161530.png
+2026-06-05 16:15:30 | OK line=6 ref=FL696-3
+2026-06-05 16:15:30 | SEND line=7 ref=FL782 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 16:15:31 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_7_20260605_161530.png
+2026-06-05 16:15:31 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_7_20260605_161531.png
+2026-06-05 16:15:32 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_7_20260605_161531.png
+2026-06-05 16:15:32 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_7_20260605_161532.png
+2026-06-05 16:15:32 | OK line=7 ref=FL782
+2026-06-05 16:15:32 | SEND line=8 ref=LA67-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 16:15:33 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_8_20260605_161532.png
+2026-06-05 16:15:33 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_8_20260605_161533.png
+2026-06-05 16:15:33 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_8_20260605_161533.png
+2026-06-05 16:15:34 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_8_20260605_161533.png
+2026-06-05 16:15:34 | OK line=8 ref=LA67-1
+2026-06-05 16:15:34 | SEND line=9 ref=G01-99 mode=keyboard_from_sage_focus article_focus=1
+2026-06-05 16:15:34 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_9_20260605_161534.png
+2026-06-05 16:15:35 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_9_20260605_161534.png
+2026-06-05 16:15:35 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_9_20260605_161535.png
+2026-06-05 16:15:36 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_9_20260605_161535.png
+2026-06-05 16:15:36 | OK line=9 ref=G01-99
+2026-06-05 16:15:36 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260605_161536.png
+2026-06-05 16:15:36 | DONE lines=9

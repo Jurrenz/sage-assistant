@@ -1,6 +1,7 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 SetTitleMatchMode(2)
+CoordMode("Mouse", "Screen")
 
 ; AutoHotkey v2 injector for Sage Assistant.
 ; Hotkeys:
@@ -49,30 +50,20 @@ queue := Jxon_Load(&jsonText)
 profile := queue["profile"]
 lines := queue["lines"]
 
-windowTitle := profile.Has("window_title_contains") ? profile["window_title_contains"] : "Sage"
-injectionMode := profile.Has("injection_mode") ? profile["injection_mode"] : "keyboard_only"
+windowTitle := profile.Has("window_title_contains") ? profile["window_title_contains"] : "Sage 50 : S.Z FASHION"
+injectionMode := "real_sage_one_line"
 delayMs := profile.Has("delay_ms") ? Integer(profile["delay_ms"]) : 80
 afterArticleTabs := profile.Has("after_article_tabs") ? Integer(profile["after_article_tabs"]) : 1
 afterDescriptionTabs := profile.Has("after_description_tabs") ? Integer(profile["after_description_tabs"]) : 1
 afterQuantityTabs := profile.Has("after_quantity_tabs") ? Integer(profile["after_quantity_tabs"]) : 1
 validateKey := profile.Has("validate_key") ? profile["validate_key"] : "Enter"
 focusGuard := profile.Has("focus_guard") ? ToBool(profile["focus_guard"]) : true
-stepMode := profile.Has("step_mode") ? ToBool(profile["step_mode"]) : true
+stepMode := false
 logPath := profile.Has("log_path") ? profile["log_path"] : A_ScriptDir "\sage_injection.log"
-newLineX := profile.Has("new_line_x") ? Integer(profile["new_line_x"]) : 0
-newLineY := profile.Has("new_line_y") ? Integer(profile["new_line_y"]) : 0
-articleCellX := profile.Has("article_cell_x") ? Integer(profile["article_cell_x"]) : 0
-articleCellY := profile.Has("article_cell_y") ? Integer(profile["article_cell_y"]) : 0
 
 LogLine(logPath, "START queue=" queuePath " lines=" lines.Length)
 
-if (injectionMode = "real_sage_one_line" && lines.Length != 1) {
-    LogLine(logPath, "ERROR real_sage_one_line requires exactly one line, got=" lines.Length)
-    MsgBox("Le mode Sage reel impose exactement 1 ligne. Injection annulee.", "Sage Assistant")
-    ExitApp(5)
-}
-
-MsgBox("Prepare Sage sur une facture brouillon, puis clique OK.`nMode: " injectionMode "`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S`nLigne suivante: Ctrl+Alt+N", "Sage Assistant")
+MsgBox("Prepare Sage sur une facture brouillon, puis clique OK.`nMode: Injection Sage reelle`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S", "Sage Assistant")
 
 if !WinExist(windowTitle) {
     LogLine(logPath, "ERROR Sage window not found: " windowTitle)
@@ -88,84 +79,105 @@ if focusGuard && !WinActive(windowTitle) {
     ExitApp(1)
 }
 
-if (injectionMode = "real_sage_one_line") {
-    line := lines[1]
-    realTarget := FindRealSageOneLineTarget(windowTitle, logPath)
-    beforePath := CaptureWindow(realTarget["mainHwnd"], logPath, "before")
-    LogLine(logPath, "CAPTURE before=" beforePath)
-    MsgBox("Controle avant injection:`nFacture: " realTarget["invoiceTitle"] "`nBouton: &Ajouter`nLigne: " line["ref"] "`n`nClique OK pour envoyer UNE ligne dans Sage.", "Sage Assistant")
-    EnsureSageActive(windowTitle, focusGuard, logPath, 1, line["ref"])
-    Click(realTarget["addCenterX"], realTarget["addCenterY"])
-    Sleep(delayMs * 2)
-    EnsureSageActive(windowTitle, focusGuard, logPath, 1, line["ref"])
-    LogLine(logPath, "SEND line=1 ref=" line["ref"])
-    SendInvoiceLine(line, afterArticleTabs, afterDescriptionTabs, afterQuantityTabs, validateKey, delayMs, windowTitle, focusGuard, logPath, 1)
-    afterPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after")
-    LogLine(logPath, "CAPTURE after=" afterPath)
-    LogLine(logPath, "OK line=1 ref=" line["ref"])
-    LogLine(logPath, "DONE lines=1")
-    MsgBox("Injection envoyee.`nVerifie visuellement la ligne dans Sage avant toute autre action.`n`nCapture avant:`n" beforePath "`n`nCapture apres:`n" afterPath, "Sage Assistant")
-    ExitApp(0)
-}
+realTarget := FindRealSageOneLineTarget(windowTitle, logPath)
+beforePath := CaptureWindow(realTarget["mainHwnd"], logPath, "before")
+LogLine(logPath, "CAPTURE before=" beforePath)
+MsgBox("Controle avant injection:`nFacture: " realTarget["invoiceTitle"] "`nBouton: &Ajouter`nLignes: " lines.Length "`n`nClique OK pour envoyer les lignes dans Sage.", "Sage Assistant")
+EnsureSageActive(windowTitle, focusGuard, logPath, 1, lines[1]["ref"])
+Click(realTarget["addCenterX"], realTarget["addCenterY"])
+Sleep(delayMs * 2)
+EnsureSageActive(windowTitle, focusGuard, logPath, 1, lines[1]["ref"])
+afterClickPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_click")
+LogLine(logPath, "CAPTURE after_click=" afterClickPath)
+activeCell := FocusedControlRect(windowTitle)
+LogLine(logPath, "ACTIVE after_add rect=" activeCell.left "," activeCell.top "," activeCell.right "," activeCell.bottom)
+focusAtArticle := false
 
 for index, line in lines {
-    if stepMode {
-        WaitNextLine(index, line["ref"], logPath)
-    }
     WaitIfPaused()
     if StopRequested {
         LogLine(logPath, "STOP before line " index " ref=" line["ref"])
         ExitApp(2)
     }
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
-    LogLine(logPath, "SEND line=" index " ref=" line["ref"])
-
-    if (injectionMode = "calibrated_clicks") {
-        PrepareCalibratedLine(windowTitle, newLineX, newLineY, articleCellX, articleCellY, delayMs, focusGuard, logPath, index, line["ref"])
-    } else if (injectionMode = "control_based") {
-        LogLine(logPath, "INFO control_based not implemented, using keyboard_only line=" index " ref=" line["ref"])
-    }
-
-    SendInvoiceLine(line, afterArticleTabs, afterDescriptionTabs, afterQuantityTabs, validateKey, delayMs, windowTitle, focusGuard, logPath, index)
+    LogLine(logPath, "SEND line=" index " ref=" line["ref"] " mode=keyboard_from_sage_focus article_focus=" focusAtArticle)
+    SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, logPath, realTarget, index, index < lines.Length, focusAtArticle)
     LogLine(logPath, "OK line=" index " ref=" line["ref"])
+    focusAtArticle := index < lines.Length
 }
 
-SendInvoiceLine(line, afterArticleTabs, afterDescriptionTabs, afterQuantityTabs, validateKey, delayMs, windowTitle, focusGuard, logPath, index) {
-    SendText(line["article_code"])
-    Sleep(delayMs)
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
-    SendTabs(afterArticleTabs, delayMs)
+afterPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after")
+LogLine(logPath, "CAPTURE after=" afterPath)
+LogLine(logPath, "DONE lines=" lines.Length)
+MsgBox("Injection envoyee.`nVerifie visuellement les lignes dans Sage avant toute autre action.`n`nCapture avant:`n" beforePath "`n`nCapture apres clic:`n" afterClickPath "`n`nCapture apres:`n" afterPath, "Sage Assistant")
+ExitApp(0)
 
-    SendText(line["description"])
-    Sleep(delayMs)
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
-    SendTabs(afterDescriptionTabs, delayMs)
-
-    SendText(String(line["quantity"]))
-    Sleep(delayMs)
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
-    SendTabs(afterQuantityTabs, delayMs)
-
-    SendText(line["unit_price_ht"])
-    Sleep(delayMs)
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
-    Send("{" validateKey "}")
-    Sleep(delayMs)
-}
-
-PrepareCalibratedLine(windowTitle, newLineX, newLineY, articleCellX, articleCellY, delayMs, focusGuard, logPath, index, ref) {
-    if !newLineX || !newLineY || !articleCellX || !articleCellY {
-        LogLine(logPath, "ERROR missing calibrated positions line=" index " ref=" ref)
-        MsgBox("Profil calibrated_clicks incomplet. Enregistre les positions nouvelle ligne et colonne article.")
-        ExitApp(4)
+SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, logPath, realTarget, index, moveToNextLine, focusAtArticle) {
+    if !focusAtArticle {
+        Send("+{Tab}")
+        Sleep(delayMs * 2)
+        Send("+{Tab}")
+        Sleep(delayMs * 2)
     }
-    WinGetPos(&wx, &wy, &ww, &wh, windowTitle)
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, ref)
-    Click(wx + newLineX, wy + newLineY)
-    Sleep(delayMs)
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, ref)
-    Click(wx + articleCellX, wy + articleCellY)
-    Sleep(delayMs)
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+
+    SendText(line["article_code"])
+    Sleep(delayMs * 2)
+    Send("{Tab}")
+    Sleep(delayMs * 8)
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+    afterArticlePath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_article_" index)
+    LogLine(logPath, "CAPTURE after_article=" afterArticlePath)
+
+    Send("{Up}")
+    Sleep(delayMs * 2)
+    Send("{Left}")
+    Sleep(delayMs * 2)
+    Send("{Space}")
+    Sleep(delayMs * 2)
+    Send("{End}")
+    Sleep(delayMs * 2)
+    SendText(" " line["ref"])
+    Sleep(delayMs * 2)
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+    afterDescriptionPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_description_" index)
+    LogLine(logPath, "CAPTURE after_description=" afterDescriptionPath)
+
+    Send("{Tab}")
+    Sleep(delayMs * 2)
+    Send("{Tab}")
+    Sleep(delayMs * 2)
+    SendText(String(line["quantity"]))
+    Sleep(delayMs * 2)
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+    afterQuantityPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_quantity_" index)
+    LogLine(logPath, "CAPTURE after_quantity=" afterQuantityPath)
+
+    Send("{Tab}")
+    Sleep(delayMs * 2)
+    Send("{Tab}")
+    Sleep(delayMs * 2)
+    SendText(line["unit_price_ht"])
+    Sleep(delayMs * 2)
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+    afterPricePath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_price_" index)
+    LogLine(logPath, "CAPTURE after_price=" afterPricePath)
+
+    if moveToNextLine {
+        Send("{" validateKey "}")
+        Sleep(delayMs * 3)
+        Send("{Down}")
+        Sleep(delayMs * 2)
+        Send("{Left}")
+        Sleep(delayMs)
+        Send("{Left}")
+        Sleep(delayMs)
+        Send("{Left}")
+        Sleep(delayMs * 2)
+    } else {
+        Send("{" validateKey "}")
+        Sleep(delayMs)
+    }
 }
 
 FindRealSageOneLineTarget(windowTitle, logPath) {
@@ -201,26 +213,87 @@ FindRealSageOneLineTarget(windowTitle, logPath) {
     LogLine(logPath, "FOUND invoice hwnd=" HwndHex(invoiceHwnd) " title=" invoiceTitle)
 
     addButtons := []
+    popupCandidates := []
+    gridCandidates := []
     for hwnd in WinGetControlsHwnd("ahk_id " invoiceHwnd) {
         try {
             cls := WinGetClass("ahk_id " hwnd)
-            text := ControlGetText("ahk_id " hwnd)
+            text := ControlLabel(hwnd)
+            if (cls = "CamPopup" && IsWindowVisible(hwnd)) {
+                rect := GetWindowRect(hwnd)
+                popupCandidates.Push(HwndHex(hwnd) "|" text "|" rect.left "," rect.top "," (rect.right - rect.left) "," (rect.bottom - rect.top))
+            }
             if (cls = "CamPopup" && text = "&Ajouter" && IsWindowVisible(hwnd)) {
                 rect := GetWindowRect(hwnd)
                 addButtons.Push(Map("hwnd", hwnd, "left", rect.left, "top", rect.top, "right", rect.right, "bottom", rect.bottom))
+            }
+            if (cls = "CamGrid" && IsWindowVisible(hwnd)) {
+                rect := GetWindowRect(hwnd)
+                if ((rect.right - rect.left) > 500 && (rect.bottom - rect.top) > 200) {
+                    gridCandidates.Push(Map("hwnd", hwnd, "left", rect.left, "top", rect.top, "right", rect.right, "bottom", rect.bottom))
+                }
             }
         }
     }
     if addButtons.Length != 1 {
         LogLine(logPath, "ERROR add button count=" addButtons.Length)
+        for index, candidate in popupCandidates {
+            LogLine(logPath, "CAMPOPUP candidate " index "=" candidate)
+        }
         MsgBox("Bouton Sage '&Ajouter' introuvable ou ambigu dans la facture.", "Sage Assistant")
         ExitApp(8)
     }
+    if gridCandidates.Length != 1 {
+        LogLine(logPath, "ERROR invoice grid count=" gridCandidates.Length)
+        MsgBox("Grille lignes Sage introuvable ou ambigue dans la facture.", "Sage Assistant")
+        ExitApp(9)
+    }
     add := addButtons[1]
+    grid := gridCandidates[1]
     centerX := Floor((add["left"] + add["right"]) / 2)
     centerY := Floor((add["top"] + add["bottom"]) / 2)
     LogLine(logPath, "FOUND add hwnd=" HwndHex(add["hwnd"]) " rect=" add["left"] "," add["top"] "," add["right"] "," add["bottom"] " center=" centerX "," centerY)
-    return Map("mainHwnd", mainHwnd, "invoiceHwnd", invoiceHwnd, "invoiceTitle", invoiceTitle, "addHwnd", add["hwnd"], "addCenterX", centerX, "addCenterY", centerY)
+    LogLine(logPath, "FOUND grid hwnd=" HwndHex(grid["hwnd"]) " rect=" grid["left"] "," grid["top"] "," grid["right"] "," grid["bottom"])
+    return Map(
+        "mainHwnd", mainHwnd,
+        "invoiceHwnd", invoiceHwnd,
+        "invoiceTitle", invoiceTitle,
+        "addHwnd", add["hwnd"],
+        "addCenterX", centerX,
+        "addCenterY", centerY,
+        "gridHwnd", grid["hwnd"],
+        "gridLeft", grid["left"],
+        "gridTop", grid["top"],
+        "gridRight", grid["right"],
+        "gridBottom", grid["bottom"]
+    )
+}
+
+FocusedControlRect(windowTitle) {
+    try {
+        focusedControl := ControlGetFocus(windowTitle)
+        focusedHwnd := ControlGetHwnd(focusedControl, windowTitle)
+        rect := GetWindowRect(focusedHwnd)
+        if (rect.right - rect.left) > 0 && (rect.bottom - rect.top) > 0 {
+            return rect
+        }
+    }
+    WinGetPos(&wx, &wy, &ww, &wh, windowTitle)
+    return {left: wx + 520, top: wy + 570, right: wx + 625, bottom: wy + 595}
+}
+
+ControlLabel(hwnd) {
+    text := ""
+    try {
+        text := ControlGetText("ahk_id " hwnd)
+    }
+    if text {
+        return text
+    }
+    try {
+        return WinGetTitle("ahk_id " hwnd)
+    }
+    return ""
 }
 
 FindSageMainWindow(windowTitle) {
@@ -284,13 +357,6 @@ ToolTip("Injection Sage terminee")
 SetTimer(() => ToolTip(), -1500)
 ExitApp(0)
 
-SendTabs(count, delayMs) {
-    Loop count {
-        Send("{Tab}")
-        Sleep(delayMs)
-    }
-}
-
 WaitIfPaused() {
     global Paused, StopRequested
     while Paused && !StopRequested {
@@ -344,8 +410,8 @@ Jxon_Load(&src, args*) {
     linesText := JsonExtractArray(src, "lines")
 
     profile := Map()
-    profile["injection_mode"] := JsonGetString(profileText, "injection_mode", "keyboard_only")
-    profile["window_title_contains"] := JsonGetString(profileText, "window_title_contains", "Sage")
+    profile["injection_mode"] := JsonGetString(profileText, "injection_mode", "real_sage_one_line")
+    profile["window_title_contains"] := JsonGetString(profileText, "window_title_contains", "Sage 50 : S.Z FASHION")
     profile["start_position"] := JsonGetString(profileText, "start_position", "article_code")
     profile["delay_ms"] := JsonGetNumber(profileText, "delay_ms", 80)
     profile["after_article_tabs"] := JsonGetNumber(profileText, "after_article_tabs", 1)
@@ -353,7 +419,7 @@ Jxon_Load(&src, args*) {
     profile["after_quantity_tabs"] := JsonGetNumber(profileText, "after_quantity_tabs", 1)
     profile["validate_key"] := JsonGetString(profileText, "validate_key", "Enter")
     profile["focus_guard"] := JsonGetBool(profileText, "focus_guard", true)
-    profile["step_mode"] := JsonGetBool(profileText, "step_mode", true)
+    profile["step_mode"] := JsonGetBool(profileText, "step_mode", false)
     profile["log_path"] := JsonGetString(profileText, "log_path", A_ScriptDir "\sage_injection.log")
     profile["new_line_x"] := JsonGetNumber(profileText, "new_line_x", 0)
     profile["new_line_y"] := JsonGetNumber(profileText, "new_line_y", 0)

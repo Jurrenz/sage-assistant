@@ -132,16 +132,15 @@ class Database:
             SELECT DISTINCT p.type_label
             FROM products p
             LEFT JOIN sage_type_mappings m ON m.microstore_type = p.type_label
-            WHERE p.type_label <> '' AND m.microstore_type IS NULL
+            WHERE p.type_label <> '' AND (m.microstore_type IS NULL OR m.is_active = 0)
             ORDER BY p.type_label
             """
         ).fetchall()
         return [row["type_label"] for row in rows]
 
-    def list_mappings(self) -> list[SageMapping]:
-        rows = self.conn.execute(
-            "SELECT * FROM sage_type_mappings ORDER BY microstore_type"
-        ).fetchall()
+    def list_mappings(self, active_only: bool = True) -> list[SageMapping]:
+        where = "WHERE is_active = 1" if active_only else ""
+        rows = self.conn.execute(f"SELECT * FROM sage_type_mappings {where} ORDER BY microstore_type").fetchall()
         return [self._row_to_mapping(row) for row in rows]
 
     def get_mapping(self, microstore_type: str) -> SageMapping | None:
@@ -170,6 +169,14 @@ class Database:
                 ),
             )
         self.log("mapping_update", f"Mapping mis a jour: {mapping.microstore_type}")
+
+    def deactivate_mapping(self, microstore_type: str) -> None:
+        with self.conn:
+            self.conn.execute(
+                "UPDATE sage_type_mappings SET is_active = 0 WHERE microstore_type = ?",
+                (microstore_type.strip(),),
+            )
+        self.log("mapping_delete", f"Mapping desactive: {microstore_type}")
 
     def seed_default_mappings(self) -> int:
         count = 0
