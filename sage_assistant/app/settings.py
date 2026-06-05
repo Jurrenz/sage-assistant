@@ -75,6 +75,11 @@ class AppSettings:
     sage_executable_path: str = ""
     microstore_api_token: str = ""
     microstore_sync_days: int = 45
+    portal_order_limit: int = 100
+    efashion_email: str = ""
+    efashion_password: str = ""
+    pfs_email: str = ""
+    pfs_password: str = ""
     product_folder_path: str = ""
     last_product_file_path: str = ""
     order_folder_path: str = ""

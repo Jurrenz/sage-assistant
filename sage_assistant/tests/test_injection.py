@@ -27,6 +27,24 @@ def test_write_injection_queue(tmp_path):
     assert payload["lines"][0]["unit_price_ht"] == "6.80"
 
 
+def test_write_injection_queue_default_is_temporary_file():
+    line = InvoiceLine(
+        ref="FL530-1",
+        sage_code="RO",
+        description="ROBE / TUNIC FL530-1",
+        quantity_pieces=12,
+        unit_price_ht=Decimal("6.80"),
+        product_id=1,
+    )
+    line.validate()
+
+    queue_path = write_injection_queue([line], AppSettings())
+
+    assert queue_path.name.startswith("sage_assistant_queue_")
+    assert queue_path.exists()
+    queue_path.unlink()
+
+
 def test_write_injection_queue_writes_all_valid_lines(tmp_path):
     lines = []
     for index in range(3):
@@ -146,3 +164,22 @@ def test_load_settings_migrates_legacy_injection_modes(tmp_path):
     assert loaded.sage_profile.window_title_contains == SAGE_50_WINDOW_TITLE
     assert loaded.sage_profile.step_mode is False
     assert loaded.injection_line_limit == 0
+
+
+def test_settings_persist_separate_portal_credentials(tmp_path):
+    settings = AppSettings()
+    settings.efashion_email = "efashion@example.com"
+    settings.efashion_password = "efashion-secret"
+    settings.pfs_email = "pfs@example.com"
+    settings.pfs_password = "pfs-secret"
+    settings.portal_order_limit = 250
+    path = tmp_path / "settings.json"
+
+    save_settings(settings, path)
+    loaded = load_settings(path)
+
+    assert loaded.efashion_email == "efashion@example.com"
+    assert loaded.efashion_password == "efashion-secret"
+    assert loaded.pfs_email == "pfs@example.com"
+    assert loaded.pfs_password == "pfs-secret"
+    assert loaded.portal_order_limit == 250

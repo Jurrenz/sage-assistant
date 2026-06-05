@@ -265,6 +265,104 @@ class OrderDetailDialog(QDialog):
             line.validate()
 
 
+class SageMappingsDialog(QDialog):
+    def __init__(self, db: Database, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.db = db
+        self.setWindowTitle("Mappings Sage")
+        self.resize(980, 680)
+
+        layout = QVBoxLayout(self)
+        form = QHBoxLayout()
+        self.mapping_type = QLineEdit()
+        self.mapping_type.setPlaceholderText("Categorie fournisseur")
+        self.mapping_code = QLineEdit()
+        self.mapping_code.setPlaceholderText("Code Sage")
+        form.addWidget(self.mapping_type, 3)
+        form.addWidget(self.mapping_code, 1)
+        layout.addLayout(form)
+
+        actions = QHBoxLayout()
+        new_button = QPushButton("Nouveau")
+        new_button.clicked.connect(self._clear_form)
+        save_button = QPushButton("Ajouter / modifier")
+        save_button.clicked.connect(self._save_mapping)
+        disable_button = QPushButton("Desactiver")
+        disable_button.clicked.connect(self._disable_mapping)
+        restore_button = QPushButton("Restaurer defauts")
+        restore_button.clicked.connect(self._restore_defaults)
+        close_button = QPushButton("Fermer")
+        close_button.clicked.connect(self.accept)
+        actions.addWidget(new_button)
+        actions.addWidget(save_button)
+        actions.addWidget(disable_button)
+        actions.addStretch(1)
+        actions.addWidget(restore_button)
+        actions.addWidget(close_button)
+        layout.addLayout(actions)
+
+        self.table = QTableWidget(0, len(MAPPING_HEADERS))
+        self.table.setHorizontalHeaderLabels(MAPPING_HEADERS)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.table.setAlternatingRowColors(True)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table.itemSelectionChanged.connect(self._load_selected_mapping)
+        layout.addWidget(self.table, 1)
+        self._refresh()
+
+    def _refresh(self) -> None:
+        mappings = self.db.list_mappings(active_only=False)
+        self.table.setRowCount(len(mappings))
+        for row, mapping in enumerate(mappings):
+            values = [mapping.microstore_type, mapping.sage_code, "Oui" if mapping.is_active else "Non"]
+            for col, value in enumerate(values):
+                self.table.setItem(row, col, QTableWidgetItem(value))
+        self.table.resizeRowsToContents()
+
+    def _clear_form(self) -> None:
+        self.table.clearSelection()
+        self.mapping_type.clear()
+        self.mapping_code.clear()
+
+    def _save_mapping(self) -> None:
+        mapping = SageMapping(
+            microstore_type=self.mapping_type.text().strip(),
+            sage_code=self.mapping_code.text().strip(),
+            sage_label=self.mapping_code.text().strip().upper(),
+        )
+        if not mapping.microstore_type or not mapping.sage_code:
+            QMessageBox.warning(self, APP_NAME, "Categorie et code Sage sont obligatoires.")
+            return
+        self.db.upsert_mapping(mapping)
+        self._refresh()
+
+    def _disable_mapping(self) -> None:
+        rows = sorted({item.row() for item in self.table.selectedItems()})
+        if not rows:
+            QMessageBox.information(self, APP_NAME, "Selectionne un mapping a desactiver.")
+            return
+        self.db.deactivate_mapping(self.table.item(rows[0], 0).text())
+        self._clear_form()
+        self._refresh()
+
+    def _restore_defaults(self) -> None:
+        restored = self.db.restore_default_mappings()
+        self._refresh()
+        QMessageBox.information(self, APP_NAME, f"{restored} mapping(s) par defaut restaure(s).")
+
+    def _load_selected_mapping(self) -> None:
+        rows = sorted({item.row() for item in self.table.selectedItems()})
+        if not rows:
+            return
+        row = rows[0]
+        self.mapping_type.setText(self.table.item(row, 0).text())
+        self.mapping_code.setText(self.table.item(row, 1).text())
+
+
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
@@ -397,10 +495,8 @@ class MainWindow(QMainWindow):
         actions = QHBoxLayout()
         import_order_button = QPushButton("Importer fichier...")
         import_order_button.clicked.connect(self._import_order)
-        refresh_orders = QPushButton("Rafraichir")
-        refresh_orders.clicked.connect(self._refresh_orders)
-        sync_portals = QPushButton("Synchroniser portails")
-        sync_portals.clicked.connect(self._sync_portal_orders)
+        sync_orders = QPushButton("Synchroniser")
+        sync_orders.clicked.connect(self._sync_all_sources)
         detail_button = QPushButton("Ouvrir détails")
         detail_button.clicked.connect(self._open_selected_order_detail)
         inject_selected = QPushButton("Injecter dans Sage")
@@ -409,8 +505,7 @@ class MainWindow(QMainWindow):
         mark_done.clicked.connect(self._mark_selected_order_done)
         actions.addWidget(import_order_button)
         actions.addStretch(1)
-        actions.addWidget(refresh_orders)
-        actions.addWidget(sync_portals)
+        actions.addWidget(sync_orders)
         actions.addWidget(detail_button)
         actions.addWidget(inject_selected)
         actions.addWidget(mark_done)
@@ -421,10 +516,9 @@ class MainWindow(QMainWindow):
         page = QWidget()
         layout = QVBoxLayout(page)
 
-        layout.addWidget(self._build_folders_section())
         layout.addWidget(self._build_portals_section())
         layout.addWidget(self._build_sage_section())
-        layout.addWidget(self._build_mappings_section(), 1)
+        layout.addWidget(self._build_mappings_section())
         layout.addWidget(self._build_injection_section())
         layout.addWidget(self._build_database_section())
 
@@ -438,10 +532,10 @@ class MainWindow(QMainWindow):
         return page
 
     def _build_portals_section(self) -> QGroupBox:
-        box = QGroupBox("Portails")
+        box = QGroupBox("Synchronisation")
         layout = QVBoxLayout(box)
 
-        credentials = QHBoxLayout()
+        microstore_row = QHBoxLayout()
         self.microstore_token = QLineEdit(self.settings.microstore_api_token)
         self.microstore_token.setPlaceholderText("Token admin_token Microstore")
         self.microstore_token.setEchoMode(QLineEdit.Password)
@@ -449,45 +543,52 @@ class MainWindow(QMainWindow):
         self.microstore_days.setRange(1, 365)
         self.microstore_days.setSuffix(" jours")
         self.microstore_days.setValue(self.settings.microstore_sync_days)
-        self.portal_email = QLineEdit(self.settings.portal_email)
-        self.portal_email.setPlaceholderText("Email portail")
-        self.portal_password = QLineEdit()
-        self.portal_password.setPlaceholderText("Mot de passe non sauvegarde")
-        self.portal_password.setEchoMode(QLineEdit.Password)
-        credentials.addWidget(QLabel("Token Microstore"))
-        credentials.addWidget(self.microstore_token, 2)
-        credentials.addWidget(QLabel("Historique"))
-        credentials.addWidget(self.microstore_days)
-        layout.addLayout(credentials)
+        self.portal_order_limit = QSpinBox()
+        self.portal_order_limit.setRange(1, 1000)
+        self.portal_order_limit.setValue(self.settings.portal_order_limit)
+        self.portal_order_limit.setSuffix(" commandes")
+        microstore_row.addWidget(QLabel("Token Microstore"))
+        microstore_row.addWidget(self.microstore_token, 2)
+        microstore_row.addWidget(QLabel("Historique Microstore"))
+        microstore_row.addWidget(self.microstore_days)
+        microstore_row.addWidget(QLabel("Limite eFashion/PFS"))
+        microstore_row.addWidget(self.portal_order_limit)
+        layout.addLayout(microstore_row)
 
-        credentials = QHBoxLayout()
-        credentials.addWidget(QLabel("Email PFS/eFashion"))
-        credentials.addWidget(self.portal_email, 1)
-        credentials.addWidget(QLabel("Mot de passe"))
-        credentials.addWidget(self.portal_password, 1)
-        layout.addLayout(credentials)
+        efashion_row = QHBoxLayout()
+        self.efashion_email = QLineEdit(self.settings.efashion_email or self.settings.portal_email)
+        self.efashion_password = QLineEdit(self.settings.efashion_password)
+        self.efashion_password.setEchoMode(QLineEdit.Password)
+        efashion_row.addWidget(QLabel("Email eFashion"))
+        efashion_row.addWidget(self.efashion_email, 1)
+        efashion_row.addWidget(QLabel("Mot de passe eFashion"))
+        efashion_row.addWidget(self.efashion_password, 1)
+        layout.addLayout(efashion_row)
+
+        pfs_row = QHBoxLayout()
+        self.pfs_email = QLineEdit(self.settings.pfs_email or self.settings.portal_email)
+        self.pfs_password = QLineEdit(self.settings.pfs_password)
+        self.pfs_password.setEchoMode(QLineEdit.Password)
+        pfs_row.addWidget(QLabel("Email PFS"))
+        pfs_row.addWidget(self.pfs_email, 1)
+        pfs_row.addWidget(QLabel("Mot de passe PFS"))
+        pfs_row.addWidget(self.pfs_password, 1)
+        layout.addLayout(pfs_row)
 
         actions = QHBoxLayout()
         self.microstore_status = QLabel("Microstore API: non configure")
         self.efashion_status = QLabel("eFashion: non connecte")
         self.pfs_status = QLabel("PFS: non connecte")
-        sync_microstore = QPushButton("Synchroniser Microstore")
-        sync_microstore.clicked.connect(self._sync_microstore_api)
-        connect_efashion = QPushButton("Connexion eFashion")
-        connect_efashion.clicked.connect(self._login_efashion)
-        connect_pfs = QPushButton("Connexion PFS")
-        connect_pfs.clicked.connect(self._login_pfs)
-        sync_portals = QPushButton("Synchroniser commandes")
-        sync_portals.clicked.connect(self._sync_portal_orders)
+        sync_button = QPushButton("Synchroniser")
+        sync_button.clicked.connect(self._sync_all_sources)
         actions.addWidget(self.microstore_status)
         actions.addWidget(self.efashion_status)
         actions.addWidget(self.pfs_status)
         actions.addStretch(1)
-        actions.addWidget(sync_microstore)
-        actions.addWidget(connect_efashion)
-        actions.addWidget(connect_pfs)
-        actions.addWidget(sync_portals)
+        actions.addWidget(sync_button)
         layout.addLayout(actions)
+        self.sync_summary = QLabel("")
+        layout.addWidget(self.sync_summary)
         return box
 
     def _build_folders_section(self) -> QGroupBox:
@@ -550,42 +651,12 @@ class MainWindow(QMainWindow):
 
     def _build_mappings_section(self) -> QGroupBox:
         box = QGroupBox("Mappings Sage")
-        layout = QVBoxLayout(box)
-        form = QHBoxLayout()
-        self.mapping_type = QLineEdit()
-        self.mapping_type.setPlaceholderText("Categorie fournisseur")
-        self.mapping_code = QLineEdit()
-        self.mapping_code.setPlaceholderText("Code Sage")
-        form.addWidget(self.mapping_type, 2)
-        form.addWidget(self.mapping_code)
-        layout.addLayout(form)
-
-        actions = QHBoxLayout()
-        new_button = QPushButton("Nouveau")
-        new_button.clicked.connect(self._clear_mapping_form)
-        save_button = QPushButton("Ajouter / modifier")
-        save_button.clicked.connect(self._save_mapping)
-        disable_button = QPushButton("Desactiver")
-        disable_button.clicked.connect(self._delete_mapping)
-        restore_button = QPushButton("Restaurer defauts")
-        restore_button.clicked.connect(self._restore_default_mappings)
-        actions.addWidget(new_button)
-        actions.addWidget(save_button)
-        actions.addWidget(disable_button)
-        actions.addStretch(1)
-        actions.addWidget(restore_button)
-        layout.addLayout(actions)
-
-        self.mapping_table = QTableWidget(0, len(MAPPING_HEADERS))
-        self.mapping_table.setHorizontalHeaderLabels(MAPPING_HEADERS)
-        self.mapping_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.mapping_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        self.mapping_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        self.mapping_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.mapping_table.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.mapping_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.mapping_table.itemSelectionChanged.connect(self._load_selected_mapping)
-        layout.addWidget(self.mapping_table, 1)
+        layout = QHBoxLayout(box)
+        mappings_button = QPushButton("Mappings Sage")
+        mappings_button.clicked.connect(self._open_mappings_dialog)
+        layout.addWidget(QLabel("Configurer les associations categorie fournisseur -> code Sage."))
+        layout.addStretch(1)
+        layout.addWidget(mappings_button)
         return box
 
     def _build_injection_section(self) -> QGroupBox:
@@ -655,43 +726,52 @@ class MainWindow(QMainWindow):
         else:
             self.missing_types.setText("Tous les types produits connus ont un mapping.")
 
-    def _portal_credentials(self) -> tuple[str, str] | None:
-        email = self.portal_email.text().strip()
-        password = self.portal_password.text()
+    def _portal_credentials(self, source: str) -> tuple[str, str] | None:
+        if source == "eFashion":
+            email = self.efashion_email.text().strip()
+            password = self.efashion_password.text()
+        elif source == "PFS":
+            email = self.pfs_email.text().strip()
+            password = self.pfs_password.text()
+        else:
+            raise ValueError(f"Source inconnue: {source}")
         if not email or not password:
-            QMessageBox.warning(self, APP_NAME, "Email et mot de passe portail sont obligatoires.")
             return None
-        self.settings.portal_email = email
-        save_settings(self.settings)
         return email, password
 
-    def _login_efashion(self) -> None:
-        credentials = self._portal_credentials()
+    def _login_efashion(self, show_error: bool = True) -> bool:
+        credentials = self._portal_credentials("eFashion")
         if not credentials:
-            return
+            self.efashion_status.setText("eFashion: identifiants absents")
+            return False
         email, password = credentials
         try:
             session = self.efashion_connector.login(email, password)
         except Exception as exc:
-            self.efashion_status.setText("eFashion: erreur")
-            QMessageBox.critical(self, APP_NAME, f"Connexion eFashion impossible: {exc}")
-            return
+            self.efashion_status.setText(f"eFashion: erreur connexion ({exc})")
+            if show_error:
+                QMessageBox.critical(self, APP_NAME, f"Connexion eFashion impossible: {exc}")
+            return False
         self.efashion_status.setText(f"eFashion: connecte ({session.user_label})")
         self.db.log("portal_login", "Connexion eFashion OK")
+        return True
 
-    def _login_pfs(self) -> None:
-        credentials = self._portal_credentials()
+    def _login_pfs(self, show_error: bool = True) -> bool:
+        credentials = self._portal_credentials("PFS")
         if not credentials:
-            return
+            self.pfs_status.setText("PFS: identifiants absents")
+            return False
         email, password = credentials
         try:
             session = self.pfs_connector.login(email, password)
         except Exception as exc:
-            self.pfs_status.setText("PFS: erreur")
-            QMessageBox.critical(self, APP_NAME, f"Connexion PFS impossible: {exc}")
-            return
+            self.pfs_status.setText(f"PFS: erreur connexion ({exc})")
+            if show_error:
+                QMessageBox.critical(self, APP_NAME, f"Connexion PFS impossible: {exc}")
+            return False
         self.pfs_status.setText(f"PFS: connecte ({session.user_label})")
         self.db.log("portal_login", "Connexion PFS OK")
+        return True
 
     def _sync_microstore_api_silent(self) -> None:
         try:
@@ -699,12 +779,17 @@ class MainWindow(QMainWindow):
         except Exception:
             pass
 
-    def _sync_microstore_api(self, show_message: bool = True) -> None:
+    def _sync_microstore_api(self, show_message: bool = True) -> int | None:
         token = self.microstore_token.text().strip()
         if not token:
+            self.microstore_status.setText("Microstore API: token absent")
             if show_message:
-                QMessageBox.warning(self, APP_NAME, "Renseigne le token Microstore avant de synchroniser.")
-            return
+                QMessageBox.warning(
+                    self,
+                    APP_NAME,
+                    "Token Microstore absent.\n\nCopie la valeur localStorage admin_token depuis Chrome connecte a web.mc.app, puis colle-la dans Reglages > Synchronisation.",
+                )
+            return None
         self.settings.microstore_api_token = token
         self.settings.microstore_sync_days = self.microstore_days.value()
         self.microstore_connector.set_token(token)
@@ -715,50 +800,75 @@ class MainWindow(QMainWindow):
             summaries = self.microstore_connector.list_orders(days=self.settings.microstore_sync_days)
             order_count = self._sync_source_orders("Microstore", summaries)
         except Exception as exc:
-            self.microstore_status.setText("Microstore API: erreur")
+            self.microstore_status.setText(f"Microstore API: erreur ({exc})")
             if show_message:
                 QMessageBox.critical(self, APP_NAME, f"Synchronisation Microstore impossible: {exc}")
-            return
+            return None
         self.microstore_status.setText(f"Microstore API: {order_count} commandes, {product_count} produits")
         self._refresh_status()
         self._refresh_missing_types()
         self._apply_order_filters()
         if show_message:
             QMessageBox.information(self, APP_NAME, f"Microstore synchronise: {product_count} produits, {order_count} commandes.")
+        return order_count
 
     def _refresh_orders(self) -> None:
+        self._sync_all_sources()
+
+    def _sync_all_sources(self) -> None:
+        self._save_app_settings_silent()
+        results: list[str] = []
         if self.microstore_token.text().strip():
-            self._sync_microstore_api(show_message=True)
+            try:
+                count = self._sync_microstore_api(show_message=False)
+                if count is None:
+                    results.append("Microstore: erreur ou token invalide")
+                else:
+                    results.append(f"Microstore: {count} commandes")
+            except Exception as exc:
+                self.microstore_status.setText(f"Microstore API: erreur ({exc})")
+                results.append(f"Microstore: erreur {exc}")
         else:
-            self._refresh_order_folder()
+            self.microstore_status.setText("Microstore API: token absent")
+            results.append("Microstore: ignore, token absent")
+
+        limit = self.portal_order_limit.value()
+        if self._portal_credentials("eFashion"):
+            try:
+                if self.efashion_connector.session is None:
+                    self._login_efashion(show_error=False)
+                summaries = self.efashion_connector.list_orders(page=1, limit=limit)
+                count = self._sync_source_orders("eFashion", summaries)
+                self.efashion_status.setText(f"eFashion: {count} commandes")
+                results.append(f"eFashion: {count} commandes")
+            except Exception as exc:
+                self.efashion_status.setText(f"eFashion: erreur ({exc})")
+                results.append(f"eFashion: erreur {exc}")
+        else:
+            self.efashion_status.setText("eFashion: identifiants absents")
+            results.append("eFashion: ignore, identifiants absents")
+
+        if self._portal_credentials("PFS"):
+            try:
+                if self.pfs_connector.session is None:
+                    self._login_pfs(show_error=False)
+                summaries = self.pfs_connector.list_orders(page=1, per_page=limit)
+                count = self._sync_source_orders("PFS", summaries)
+                self.pfs_status.setText(f"PFS: {count} commandes")
+                results.append(f"PFS: {count} commandes")
+            except Exception as exc:
+                self.pfs_status.setText(f"PFS: erreur ({exc})")
+                results.append(f"PFS: erreur {exc}")
+        else:
+            self.pfs_status.setText("PFS: identifiants absents")
+            results.append("PFS: ignore, identifiants absents")
+
+        self._apply_order_filters()
+        if hasattr(self, "sync_summary"):
+            self.sync_summary.setText(" | ".join(results))
 
     def _sync_portal_orders(self) -> None:
-        synced = 0
-        errors: list[str] = []
-        if self.microstore_token.text().strip():
-            try:
-                self._sync_microstore_api(show_message=False)
-                synced += len([1 for source, _key in self.portal_summaries if source == "Microstore"])
-            except Exception as exc:
-                errors.append(f"Microstore: {exc}")
-        if self.efashion_connector.session:
-            try:
-                synced += self._sync_source_orders("eFashion", self.efashion_connector.list_orders(page=1, limit=25))
-            except Exception as exc:
-                errors.append(f"eFashion: {exc}")
-        if self.pfs_connector.session:
-            try:
-                synced += self._sync_source_orders("PFS", self.pfs_connector.list_orders(page=1, per_page=25))
-            except Exception as exc:
-                errors.append(f"PFS: {exc}")
-        if not self.microstore_token.text().strip() and not self.efashion_connector.session and not self.pfs_connector.session:
-            QMessageBox.information(self, APP_NAME, "Configure Microstore ou connecte au moins un portail avant de synchroniser.")
-            return
-        self._apply_order_filters()
-        message = f"{synced} commande(s) portail synchronisee(s)."
-        if errors:
-            message += "\n\n" + "\n".join(errors)
-        QMessageBox.information(self, APP_NAME, message)
+        self._sync_all_sources()
 
     def _sync_source_orders(self, source: str, summaries: list[PortalOrderSummary]) -> int:
         count = 0
@@ -816,7 +926,7 @@ class MainWindow(QMainWindow):
             return False
         try:
             path = write_injection_queue(self.lines, self.settings)
-            self.db.log("injection_prepare", f"{len(self.lines)}/{len(self.lines)} lignes preparees: {path}")
+            self.db.log("injection_prepare", f"{len(self.lines)}/{len(self.lines)} lignes preparees dans fichier temporaire: {path}")
         except Exception as exc:
             QMessageBox.critical(self, APP_NAME, str(exc))
             return False
@@ -824,12 +934,12 @@ class MainWindow(QMainWindow):
             try:
                 launch_autohotkey(self.settings, path)
             except Exception as exc:
-                QMessageBox.warning(self, APP_NAME, f"File creee, mais lancement AHK impossible: {exc}")
+                QMessageBox.warning(self, APP_NAME, f"Lancement AutoHotkey impossible:\n\n{exc}\n\nFile temporaire creee:\n{path}")
                 return False
         if self.current_order_source and self.current_order_key:
             self.db.set_order_status(self.current_order_source, self.current_order_key, STATUS_INJECTED)
             self._refresh_order_folder()
-        QMessageBox.information(self, APP_NAME, f"File injection prete:\n{path}")
+        QMessageBox.information(self, APP_NAME, "Injection lancee dans Sage." if is_windows() else f"File temporaire d'injection creee:\n{path}")
         return True
 
     def _import_products(self) -> None:
@@ -1057,7 +1167,7 @@ class MainWindow(QMainWindow):
     def _refresh_order_folder(self) -> None:
         if not hasattr(self, "order_table"):
             return
-        folder = self.order_folder_input.text().strip()
+        folder = self.order_folder_input.text().strip() if hasattr(self, "order_folder_input") else self.settings.order_folder_path
         self.settings.order_folder_path = folder
         self.detected_order_files = [] if self.microstore_token.text().strip() else (list_order_files(folder) if folder else [])
         self.order_status_cache = {}
@@ -1217,6 +1327,12 @@ class MainWindow(QMainWindow):
         filename, _ = QFileDialog.getOpenFileName(self, title, "", "Excel (*.xlsx *.xlsm *.xls)")
         return Path(filename) if filename else None
 
+    def _open_mappings_dialog(self) -> None:
+        dialog = SageMappingsDialog(self.db, self)
+        dialog.exec()
+        self._refresh_missing_types()
+        self._apply_order_filters()
+
     def _refresh_mappings_table(self) -> None:
         if not hasattr(self, "mapping_table"):
             return
@@ -1287,9 +1403,16 @@ class MainWindow(QMainWindow):
         self.settings.sage_executable_path = self.sage_path.text().strip()
         self.settings.microstore_api_token = self.microstore_token.text().strip()
         self.settings.microstore_sync_days = self.microstore_days.value()
-        self.settings.product_folder_path = self.product_folder_input.text().strip()
-        self.settings.order_folder_path = self.order_folder_input.text().strip()
-        self.settings.portal_email = self.portal_email.text().strip()
+        self.settings.portal_order_limit = self.portal_order_limit.value()
+        self.settings.efashion_email = self.efashion_email.text().strip()
+        self.settings.efashion_password = self.efashion_password.text()
+        self.settings.pfs_email = self.pfs_email.text().strip()
+        self.settings.pfs_password = self.pfs_password.text()
+        if hasattr(self, "product_folder_input"):
+            self.settings.product_folder_path = self.product_folder_input.text().strip()
+        if hasattr(self, "order_folder_input"):
+            self.settings.order_folder_path = self.order_folder_input.text().strip()
+        self.settings.portal_email = self.settings.efashion_email or self.settings.pfs_email
         self.settings.sage_profile.injection_mode = REAL_SAGE_ONE_LINE_MODE
         self.settings.sage_profile.window_title_contains = self.window_title.text().strip() or SAGE_50_WINDOW_TITLE
         self.settings.sage_profile.delay_ms = self.delay_ms.value()
