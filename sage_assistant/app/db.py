@@ -40,6 +40,15 @@ CREATE TABLE IF NOT EXISTS activity_log (
     event_type TEXT NOT NULL,
     message TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS order_statuses (
+    source TEXT NOT NULL,
+    order_key TEXT NOT NULL,
+    status TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    note TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY(source, order_key)
+);
 """
 
 
@@ -191,6 +200,55 @@ class Database:
                 )
                 count += cursor.rowcount
         return count
+
+    def restore_default_mappings(self) -> int:
+        count = 0
+        with self.conn:
+            for mapping in DEFAULT_SAGE_MAPPINGS:
+                row = self.conn.execute(
+                    "SELECT is_active FROM sage_type_mappings WHERE microstore_type = ?",
+                    (mapping.microstore_type,),
+                ).fetchone()
+                if row is None:
+                    self.conn.execute(
+                        """
+                        INSERT INTO sage_type_mappings(microstore_type, sage_code, sage_label, is_active)
+                        VALUES (?, ?, ?, 1)
+                        """,
+                        (mapping.microstore_type, mapping.sage_code, mapping.sage_label),
+                    )
+                    count += 1
+                elif not bool(row["is_active"]):
+                    self.conn.execute(
+                        "UPDATE sage_type_mappings SET is_active = 1 WHERE microstore_type = ?",
+                        (mapping.microstore_type,),
+                    )
+                    count += 1
+        if count:
+            self.log("mapping_restore_defaults", f"{count} mapping(s) par defaut restaure(s)")
+        return count
+
+    def get_order_status(self, source: str, order_key: str) -> str | None:
+        row = self.conn.execute(
+            "SELECT status FROM order_statuses WHERE source = ? AND order_key = ?",
+            (source.strip(), order_key.strip()),
+        ).fetchone()
+        return row["status"] if row else None
+
+    def set_order_status(self, source: str, order_key: str, status: str, note: str = "") -> None:
+        with self.conn:
+            self.conn.execute(
+                """
+                INSERT INTO order_statuses(source, order_key, status, updated_at, note)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(source, order_key) DO UPDATE SET
+                    status = excluded.status,
+                    updated_at = excluded.updated_at,
+                    note = excluded.note
+                """,
+                (source.strip(), order_key.strip(), status.strip(), utc_now_iso(), note.strip()),
+            )
+        self.log("order_status", f"{source.strip()} {order_key.strip()} -> {status.strip()}")
 
     def latest_product_import(self) -> str | None:
         row = self.conn.execute("SELECT MAX(last_imported_at) AS latest FROM products").fetchone()

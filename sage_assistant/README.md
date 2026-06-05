@@ -8,6 +8,7 @@ Le MVP est une application desktop Python/PySide6 qui :
 - garde un cache SQLite local pour resoudre les references commandes ;
 - maintient les correspondances type Microstore -> code article Sage/libelle Sage ;
 - affiche les commandes Microstore deposees dans un dossier ;
+- synchronise les commandes eFashion/PFS par API apres connexion dans l'app ;
 - injecte la commande selectionnee dans une facture Sage deja ouverte via AutoHotkey v2.
 
 ## Demarrage developpement
@@ -40,6 +41,13 @@ pytest
 6. Double-cliquer si besoin pour verifier ou supprimer une ligne.
 7. Cliquer `Injecter dans Sage`.
 8. Confirmer les controles AHK, puis verifier visuellement les lignes dans Sage.
+
+## Portails eFashion / PFS
+
+Dans `Reglages > Portails`, saisir l'email et le mot de passe du portail, puis cliquer `Connexion eFashion` et/ou `Connexion PFS`.
+Le mot de passe n'est pas sauvegarde dans les reglages. Seul l'email peut etre conserve pour eviter de le retaper.
+
+Apres connexion, cliquer `Synchroniser commandes`. Les commandes recuperees par API apparaissent dans la page `Commandes` avec les commandes Microstore et utilisent le meme flux de detail, validation et injection Sage.
 
 ## Important
 

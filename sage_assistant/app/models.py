@@ -45,7 +45,10 @@ class InvoiceLine:
 
     def validate(self) -> None:
         errors: list[str] = []
-        if not self.product_id:
+        external_sources = {"PFS", "eFashion"}
+        if not self.description and self.ref:
+            self.description = self.ref
+        if self.product_id is None and self.source not in external_sources:
             errors.append("reference non resolue")
         if not self.sage_code:
             errors.append("code Sage absent")

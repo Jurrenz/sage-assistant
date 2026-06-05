@@ -61,6 +61,35 @@ def test_default_sage_mappings_are_seeded_and_do_not_overwrite_user_edits(tmp_pa
     db.close()
 
 
+def test_restore_default_mappings_reactivates_without_overwriting_user_edits(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+
+    db.upsert_mapping(SageMapping("CROCHETS", "PU", "Pull / Gilet"))
+    db.deactivate_mapping("CROCHETS")
+    restored = db.restore_default_mappings()
+    restored_mapping = db.get_mapping("CROCHETS")
+
+    assert restored == 1
+    assert restored_mapping is not None
+    assert restored_mapping.is_active is True
+    assert restored_mapping.sage_code == "PU"
+    assert restored_mapping.sage_label == "Pull / Gilet"
+    db.close()
+
+
+def test_order_statuses_are_persistent(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+
+    assert db.get_order_status("Microstore", "1001627") is None
+
+    db.set_order_status("Microstore", "1001627", "Injecté")
+    assert db.get_order_status("Microstore", "1001627") == "Injecté"
+
+    db.set_order_status("Microstore", "1001627", "Traité")
+    assert db.get_order_status("Microstore", "1001627") == "Traité"
+    db.close()
+
+
 def test_deactivate_mapping_hides_it_and_blocks_resolution(tmp_path):
     db = Database(tmp_path / "app.sqlite")
     db.upsert_mapping(SageMapping("ROBES TEST", "RO", "Robe"))

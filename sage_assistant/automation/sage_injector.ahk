@@ -12,6 +12,8 @@ CoordMode("Mouse", "Screen")
 global StopRequested := false
 global Paused := false
 global NextRequested := false
+global LogEnabled := true
+global CaptureEnabled := true
 
 ^!p:: {
     global Paused
@@ -60,6 +62,8 @@ validateKey := profile.Has("validate_key") ? profile["validate_key"] : "Enter"
 focusGuard := profile.Has("focus_guard") ? ToBool(profile["focus_guard"]) : true
 stepMode := false
 logPath := profile.Has("log_path") ? profile["log_path"] : A_ScriptDir "\sage_injection.log"
+LogEnabled := profile.Has("log_enabled") ? ToBool(profile["log_enabled"]) : true
+CaptureEnabled := profile.Has("capture_before_after") ? ToBool(profile["capture_before_after"]) : true
 
 LogLine(logPath, "START queue=" queuePath " lines=" lines.Length)
 
@@ -325,6 +329,10 @@ GetWindowRect(hwnd) {
 }
 
 CaptureWindow(hwnd, logPath, label) {
+    global CaptureEnabled
+    if !CaptureEnabled {
+        return ""
+    }
     SplitPath(logPath, , &dir)
     if !dir {
         dir := A_ScriptDir
@@ -387,6 +395,10 @@ EnsureSageActive(windowTitle, focusGuard, logPath, index, ref) {
 }
 
 LogLine(logPath, message) {
+    global LogEnabled
+    if !LogEnabled {
+        return
+    }
     SplitPath(logPath, , &dir)
     if dir && !DirExist(dir) {
         DirCreate(dir)

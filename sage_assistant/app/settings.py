@@ -61,6 +61,8 @@ class SageProfile:
     line_start_y: int = 0
     focus_guard: bool = True
     step_mode: bool = False
+    capture_before_after: bool = True
+    log_enabled: bool = True
     log_path: str = ""
     diagnostics_path: str = ""
 
@@ -71,9 +73,12 @@ class AppSettings:
     auto_close_with_sage: bool = True
     autohotkey_path: str = "AutoHotkey64.exe"
     sage_executable_path: str = ""
+    microstore_api_token: str = ""
+    microstore_sync_days: int = 45
     product_folder_path: str = ""
     last_product_file_path: str = ""
     order_folder_path: str = ""
+    portal_email: str = ""
     injection_line_limit: int = 0
     sage_profile: SageProfile = field(default_factory=SageProfile)
 
