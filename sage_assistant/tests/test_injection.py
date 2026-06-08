@@ -84,12 +84,11 @@ def test_write_injection_queue_refuses_any_blocked_line(tmp_path):
     ok_line.validate()
     blocked_line = InvoiceLine(
         ref="FL96-9",
-        sage_code="RO",
+        sage_code="",
         description="FL96-9",
         quantity_pieces=12,
         unit_price_ht=Decimal("4.00"),
         product_id=2,
-        price_confirmed=False,
     )
     blocked_line.validate()
 

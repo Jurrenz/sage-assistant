@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import QObject, QThread, QTimer, Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -77,6 +77,9 @@ LINE_HEADERS = [
     "Colisage",
     "Pieces",
     "Prix retenu",
+    "Prix plateforme",
+    "Prix catalogue",
+    "Ecart",
     "Statut",
 ]
 MAPPING_HEADERS = ["Categorie fournisseur", "Code Sage", "Actif"]
@@ -141,6 +144,9 @@ def populate_lines_table(table: QTableWidget, lines: list[InvoiceLine], editable
     table.setRowCount(len(lines))
     for row, line in enumerate(lines):
         status = line.validation_status if line.validation_status == "ok" else line.validation_message
+        price_delta = ""
+        if line.order_unit_price_ht is not None and line.catalog_unit_price_ht is not None:
+            price_delta = str(line.order_unit_price_ht - line.catalog_unit_price_ht)
         values = [
             line.ref,
             line.type_label,
@@ -150,6 +156,9 @@ def populate_lines_table(table: QTableWidget, lines: list[InvoiceLine], editable
             str(line.package_size or ""),
             str(line.quantity_pieces),
             str(line.unit_price_ht or ""),
+            str(line.order_unit_price_ht or ""),
+            str(line.catalog_unit_price_ht or ""),
+            price_delta,
             status,
         ]
         for col, value in enumerate(values):
@@ -363,6 +372,62 @@ class SageMappingsDialog(QDialog):
         self.mapping_code.setText(self.table.item(row, 1).text())
 
 
+class SyncWorker(QObject):
+    finished = Signal(object)
+
+    def __init__(
+        self,
+        sources: list[str],
+        microstore_token: str,
+        microstore_days: int,
+        portal_limit: int,
+        efashion_email: str,
+        efashion_password: str,
+        pfs_email: str,
+        pfs_password: str,
+    ) -> None:
+        super().__init__()
+        self.sources = sources
+        self.microstore_token = microstore_token
+        self.microstore_days = microstore_days
+        self.portal_limit = portal_limit
+        self.efashion_email = efashion_email
+        self.efashion_password = efashion_password
+        self.pfs_email = pfs_email
+        self.pfs_password = pfs_password
+
+    def run(self) -> None:
+        result = {"sources": {}, "errors": {}}
+        if "Microstore" in self.sources:
+            try:
+                connector = MicrostoreConnector(self.microstore_token)
+                products = connector.list_products()
+                summaries = connector.list_orders(days=self.microstore_days)
+                orders = [(summary, connector.get_order(summary.order_id)) for summary in summaries]
+                result["sources"]["Microstore"] = {"products": products, "orders": orders}
+            except Exception as exc:
+                result["errors"]["Microstore"] = str(exc)
+        if "eFashion" in self.sources:
+            try:
+                connector = EfashionConnector()
+                connector.login(self.efashion_email, self.efashion_password)
+                summaries = connector.list_orders(page=1, limit=self.portal_limit)
+                orders = [(summary, connector.get_order(summary.order_id)) for summary in summaries]
+                result["sources"]["eFashion"] = {"products": [], "orders": orders}
+            except Exception as exc:
+                result["errors"]["eFashion"] = str(exc)
+        if "PFS" in self.sources:
+            try:
+                connector = PfsConnector()
+                connector.login(self.pfs_email, self.pfs_password)
+                summaries = connector.list_orders(page=1, per_page=self.portal_limit)
+                orders = [(summary, connector.get_order(summary.order_id)) for summary in summaries]
+                result["sources"]["PFS"] = {"products": [], "orders": orders}
+            except Exception as exc:
+                result["errors"]["PFS"] = str(exc)
+        self.finished.emit(result)
+
+
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
@@ -382,32 +447,29 @@ class MainWindow(QMainWindow):
         self.portal_summaries: dict[tuple[str, str], PortalOrderSummary] = {}
         self.portal_details: dict[tuple[str, str], PortalOrder] = {}
         self.portal_status_cache: dict[tuple[str, str], str] = {}
+        self.sync_threads: list[QThread] = []
+        self.sync_buttons: dict[str, QPushButton] = {}
 
         self.setWindowTitle(APP_NAME)
         self.resize(1320, 760)
         self._build_ui()
+        self._load_cached_orders()
         self._apply_window_flags()
         self._refresh_status()
         self._refresh_missing_types()
         self._refresh_product_folder()
         self._refresh_order_folder()
         self._refresh_mappings_table()
-        if self.settings.microstore_api_token:
-            QTimer.singleShot(300, self._sync_microstore_api_silent)
 
         self.sage_watch_timer = QTimer(self)
         self.sage_watch_timer.timeout.connect(self._watch_sage_process)
         self.sage_watch_timer.start(3000)
 
-        self.order_folder_timer = QTimer(self)
-        self.order_folder_timer.timeout.connect(self._refresh_order_folder)
-        self.order_folder_timer.start(5000)
-
-        self.product_folder_timer = QTimer(self)
-        self.product_folder_timer.timeout.connect(self._refresh_product_folder)
-        self.product_folder_timer.start(30000)
-
     def closeEvent(self, event) -> None:  # type: ignore[override]
+        for thread in list(self.sync_threads):
+            if thread.isRunning():
+                thread.quit()
+                thread.wait(1500)
         save_settings(self.settings)
         self.db.close()
         super().closeEvent(event)
@@ -486,6 +548,8 @@ class MainWindow(QMainWindow):
         self.order_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
         self.order_table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeToContents)
         self.order_table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeToContents)
+        self.order_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.order_table.verticalHeader().setDefaultSectionSize(28)
         self.order_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.order_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.order_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -496,7 +560,7 @@ class MainWindow(QMainWindow):
         import_order_button = QPushButton("Importer fichier...")
         import_order_button.clicked.connect(self._import_order)
         sync_orders = QPushButton("Synchroniser")
-        sync_orders.clicked.connect(self._sync_all_sources)
+        sync_orders.clicked.connect(lambda: self._start_sync(["Microstore", "eFashion", "PFS"]))
         detail_button = QPushButton("Ouvrir détails")
         detail_button.clicked.connect(self._open_selected_order_detail)
         inject_selected = QPushButton("Injecter dans Sage")
@@ -576,15 +640,30 @@ class MainWindow(QMainWindow):
         layout.addLayout(pfs_row)
 
         actions = QHBoxLayout()
-        self.microstore_status = QLabel("Microstore API: non configure")
+        self.microstore_status = QLabel("Microstore: non configure")
         self.efashion_status = QLabel("eFashion: non connecte")
         self.pfs_status = QLabel("PFS: non connecte")
-        sync_button = QPushButton("Synchroniser")
-        sync_button.clicked.connect(self._sync_all_sources)
+        sync_microstore = QPushButton("Synchroniser Microstore")
+        sync_efashion = QPushButton("Synchroniser eFashion")
+        sync_pfs = QPushButton("Synchroniser PFS")
+        sync_button = QPushButton("Synchroniser tout")
+        sync_microstore.clicked.connect(lambda: self._start_sync(["Microstore"]))
+        sync_efashion.clicked.connect(lambda: self._start_sync(["eFashion"]))
+        sync_pfs.clicked.connect(lambda: self._start_sync(["PFS"]))
+        sync_button.clicked.connect(lambda: self._start_sync(["Microstore", "eFashion", "PFS"]))
+        self.sync_buttons = {
+            "Microstore": sync_microstore,
+            "eFashion": sync_efashion,
+            "PFS": sync_pfs,
+            "all": sync_button,
+        }
         actions.addWidget(self.microstore_status)
         actions.addWidget(self.efashion_status)
         actions.addWidget(self.pfs_status)
         actions.addStretch(1)
+        actions.addWidget(sync_microstore)
+        actions.addWidget(sync_efashion)
+        actions.addWidget(sync_pfs)
         actions.addWidget(sync_button)
         layout.addLayout(actions)
         self.sync_summary = QLabel("")
@@ -713,9 +792,16 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(flags)
 
     def _refresh_status(self) -> None:
-        latest = self.db.latest_product_import()
-        source = "Microstore API" if self.settings.microstore_api_token else "import produits"
-        self.status_label.setText(f"Derniere mise a jour produits ({source}): {_display_date(latest) if latest else 'aucune'}")
+        product_latest = self.db.latest_product_import()
+        commands_latest = self.db.latest_cached_order_sync()
+        parts = [
+            f"Microstore : {self.db.count_cached_orders('Microstore')} commandes, {self.db.count_products()} produits",
+            f"eFashion : {self.db.count_cached_orders('eFashion')} commandes",
+            f"PFS : {self.db.count_cached_orders('PFS')} commandes",
+            f"Produits Microstore : {_display_date(product_latest) if product_latest else 'aucune synchro'}",
+            f"Cache commandes : {_display_date(commands_latest) if commands_latest else 'vide'}",
+        ]
+        self.status_label.setText(" | ".join(parts))
 
     def _refresh_missing_types(self) -> None:
         if not hasattr(self, "missing_types"):
@@ -773,16 +859,120 @@ class MainWindow(QMainWindow):
         self.db.log("portal_login", "Connexion PFS OK")
         return True
 
+    def _load_cached_orders(self) -> None:
+        self.portal_summaries.clear()
+        self.portal_details.clear()
+        self.portal_status_cache = self.db.list_cached_order_statuses()
+        for summary in self.db.list_cached_order_summaries():
+            key = summary.order_number or summary.order_id
+            cache_key = (summary.source, key)
+            self.portal_summaries[cache_key] = summary
+            detail = self.db.get_cached_order(summary.source, key)
+            if detail:
+                self.portal_details[cache_key] = detail
+        self._apply_order_filters()
+
+    def _start_sync(self, sources: list[str]) -> None:
+        self._save_app_settings_silent()
+        runnable_sources: list[str] = []
+        if "Microstore" in sources:
+            if self.microstore_token.text().strip():
+                runnable_sources.append("Microstore")
+                self.microstore_status.setText("Microstore: en cours...")
+            else:
+                self.microstore_status.setText("Microstore: token absent")
+        if "eFashion" in sources:
+            if self._portal_credentials("eFashion"):
+                runnable_sources.append("eFashion")
+                self.efashion_status.setText("eFashion: en cours...")
+            else:
+                self.efashion_status.setText("eFashion: identifiants absents")
+        if "PFS" in sources:
+            if self._portal_credentials("PFS"):
+                runnable_sources.append("PFS")
+                self.pfs_status.setText("PFS: en cours...")
+            else:
+                self.pfs_status.setText("PFS: identifiants absents")
+        if not runnable_sources:
+            if hasattr(self, "sync_summary"):
+                self.sync_summary.setText("Aucune source configuree a synchroniser.")
+            return
+
+        for source in runnable_sources:
+            button = self.sync_buttons.get(source)
+            if button:
+                button.setEnabled(False)
+        if set(sources) == {"Microstore", "eFashion", "PFS"} and "all" in self.sync_buttons:
+            self.sync_buttons["all"].setEnabled(False)
+
+        thread = QThread(self)
+        worker = SyncWorker(
+            runnable_sources,
+            self.microstore_token.text().strip(),
+            self.microstore_days.value(),
+            self.portal_order_limit.value(),
+            self.efashion_email.text().strip(),
+            self.efashion_password.text(),
+            self.pfs_email.text().strip(),
+            self.pfs_password.text(),
+        )
+        worker.moveToThread(thread)
+        thread.started.connect(worker.run)
+        worker.finished.connect(lambda result, t=thread, w=worker, s=runnable_sources: self._on_sync_finished(result, t, w, s))
+        worker.finished.connect(thread.quit)
+        worker.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        self.sync_threads.append(thread)
+        thread.start()
+
+    def _on_sync_finished(self, result: dict, thread: QThread, _worker: SyncWorker, sources: list[str]) -> None:
+        results: list[str] = []
+        for source, message in result.get("errors", {}).items():
+            if source == "Microstore":
+                self.microstore_status.setText(f"Microstore: erreur ({message})")
+            elif source == "eFashion":
+                self.efashion_status.setText(f"eFashion: erreur ({message})")
+            elif source == "PFS":
+                self.pfs_status.setText(f"PFS: erreur ({message})")
+            results.append(f"{source}: erreur")
+
+        for source, payload in result.get("sources", {}).items():
+            products = payload.get("products") or []
+            orders = payload.get("orders") or []
+            product_count = self.db.upsert_products(products) if products else 0
+            for summary, detail in orders:
+                lines = self._lines_from_portal_order(detail)
+                self.db.upsert_cached_order(summary, detail, _status_from_lines(lines))
+            if source == "Microstore":
+                self.microstore_status.setText(f"Microstore: {len(orders)} commandes, {product_count} produits")
+                results.append(f"Microstore: {len(orders)} commandes")
+            elif source == "eFashion":
+                self.efashion_status.setText(f"eFashion: {len(orders)} commandes")
+                results.append(f"eFashion: {len(orders)} commandes")
+            elif source == "PFS":
+                self.pfs_status.setText(f"PFS: {len(orders)} commandes")
+                results.append(f"PFS: {len(orders)} commandes")
+
+        for source in sources:
+            button = self.sync_buttons.get(source)
+            if button:
+                button.setEnabled(True)
+        if "all" in self.sync_buttons:
+            self.sync_buttons["all"].setEnabled(True)
+        self.sync_threads = [item for item in self.sync_threads if item is not thread]
+        self._load_cached_orders()
+        self._refresh_status()
+        self._refresh_missing_types()
+        if hasattr(self, "sync_summary"):
+            self.sync_summary.setText(" | ".join(results) if results else "Synchronisation terminee.")
+
     def _sync_microstore_api_silent(self) -> None:
-        try:
-            self._sync_microstore_api(show_message=False)
-        except Exception:
-            pass
+        self._start_sync(["Microstore"])
 
     def _sync_microstore_api(self, show_message: bool = True) -> int | None:
         token = self.microstore_token.text().strip()
         if not token:
-            self.microstore_status.setText("Microstore API: token absent")
+            self.microstore_status.setText("Microstore: token absent")
             if show_message:
                 QMessageBox.warning(
                     self,
@@ -790,82 +980,14 @@ class MainWindow(QMainWindow):
                     "Token Microstore absent.\n\nCopie la valeur localStorage admin_token depuis Chrome connecte a web.mc.app, puis colle-la dans Reglages > Synchronisation.",
                 )
             return None
-        self.settings.microstore_api_token = token
-        self.settings.microstore_sync_days = self.microstore_days.value()
-        self.microstore_connector.set_token(token)
-        save_settings(self.settings)
-        try:
-            products = self.microstore_connector.list_products()
-            product_count = self.db.upsert_products(products)
-            summaries = self.microstore_connector.list_orders(days=self.settings.microstore_sync_days)
-            order_count = self._sync_source_orders("Microstore", summaries)
-        except Exception as exc:
-            self.microstore_status.setText(f"Microstore API: erreur ({exc})")
-            if show_message:
-                QMessageBox.critical(self, APP_NAME, f"Synchronisation Microstore impossible: {exc}")
-            return None
-        self.microstore_status.setText(f"Microstore API: {order_count} commandes, {product_count} produits")
-        self._refresh_status()
-        self._refresh_missing_types()
-        self._apply_order_filters()
-        if show_message:
-            QMessageBox.information(self, APP_NAME, f"Microstore synchronise: {product_count} produits, {order_count} commandes.")
-        return order_count
+        self._start_sync(["Microstore"])
+        return None
 
     def _refresh_orders(self) -> None:
-        self._sync_all_sources()
+        self._start_sync(["Microstore", "eFashion", "PFS"])
 
     def _sync_all_sources(self) -> None:
-        self._save_app_settings_silent()
-        results: list[str] = []
-        if self.microstore_token.text().strip():
-            try:
-                count = self._sync_microstore_api(show_message=False)
-                if count is None:
-                    results.append("Microstore: erreur ou token invalide")
-                else:
-                    results.append(f"Microstore: {count} commandes")
-            except Exception as exc:
-                self.microstore_status.setText(f"Microstore API: erreur ({exc})")
-                results.append(f"Microstore: erreur {exc}")
-        else:
-            self.microstore_status.setText("Microstore API: token absent")
-            results.append("Microstore: ignore, token absent")
-
-        limit = self.portal_order_limit.value()
-        if self._portal_credentials("eFashion"):
-            try:
-                if self.efashion_connector.session is None:
-                    self._login_efashion(show_error=False)
-                summaries = self.efashion_connector.list_orders(page=1, limit=limit)
-                count = self._sync_source_orders("eFashion", summaries)
-                self.efashion_status.setText(f"eFashion: {count} commandes")
-                results.append(f"eFashion: {count} commandes")
-            except Exception as exc:
-                self.efashion_status.setText(f"eFashion: erreur ({exc})")
-                results.append(f"eFashion: erreur {exc}")
-        else:
-            self.efashion_status.setText("eFashion: identifiants absents")
-            results.append("eFashion: ignore, identifiants absents")
-
-        if self._portal_credentials("PFS"):
-            try:
-                if self.pfs_connector.session is None:
-                    self._login_pfs(show_error=False)
-                summaries = self.pfs_connector.list_orders(page=1, per_page=limit)
-                count = self._sync_source_orders("PFS", summaries)
-                self.pfs_status.setText(f"PFS: {count} commandes")
-                results.append(f"PFS: {count} commandes")
-            except Exception as exc:
-                self.pfs_status.setText(f"PFS: erreur ({exc})")
-                results.append(f"PFS: erreur {exc}")
-        else:
-            self.pfs_status.setText("PFS: identifiants absents")
-            results.append("PFS: ignore, identifiants absents")
-
-        self._apply_order_filters()
-        if hasattr(self, "sync_summary"):
-            self.sync_summary.setText(" | ".join(results))
+        self._start_sync(["Microstore", "eFashion", "PFS"])
 
     def _sync_portal_orders(self) -> None:
         self._sync_all_sources()
@@ -1180,6 +1302,8 @@ class MainWindow(QMainWindow):
     def _apply_order_filters(self) -> None:
         if not hasattr(self, "order_table"):
             return
+        self.order_table.setUpdatesEnabled(False)
+        self.order_table.blockSignals(True)
         search = self.order_search.text().strip().lower()
         source_filter = self.source_filter.currentText()
         status_filter = self.status_filter.currentText()
@@ -1224,53 +1348,56 @@ class MainWindow(QMainWindow):
                 continue
             portal_rows.append(summary)
 
-        portal_rows.sort(key=lambda item: _timestamp_from_iso(item.created_at), reverse=True)
-        self.order_table.setRowCount(len(file_rows) + len(portal_rows))
-        row = 0
-        for order_file in file_rows:
-            source = "Microstore"
-            key = _order_key(order_file)
-            status = self.order_status_cache.get(order_file.path, STATUS_ERROR if order_file.error else STATUS_READY)
-            values = [
-                source,
-                key,
-                self._customer_label(order_file),
-                _display_date(order_file.order_date) or order_file.modified_at_label,
-                str(order_file.line_count) if not order_file.error else "Erreur",
-                order_file.total_amount_label if not order_file.error else "",
-                status,
-            ]
-            for col, value in enumerate(values):
-                item = QTableWidgetItem(value)
-                item.setData(ROLE_KIND, "file")
-                item.setData(ROLE_SOURCE, source)
-                item.setData(ROLE_KEY, key)
-                item.setData(ROLE_PAYLOAD, str(order_file.path))
-                self.order_table.setItem(row, col, item)
-            row += 1
-        for summary in portal_rows:
-            key = summary.order_number or summary.order_id
-            detail = self.portal_details.get((summary.source, key))
-            line_count = len(detail.lines) if detail else ""
-            status = self._status_for_portal_order(summary.source, key, detail)
-            values = [
-                summary.source,
-                key,
-                summary.customer,
-                _display_date(summary.created_at),
-                str(line_count),
-                _money_label(summary.total_amount),
-                status,
-            ]
-            for col, value in enumerate(values):
-                item = QTableWidgetItem(value)
-                item.setData(ROLE_KIND, "portal")
-                item.setData(ROLE_SOURCE, summary.source)
-                item.setData(ROLE_KEY, key)
-                item.setData(ROLE_PAYLOAD, summary.order_id)
-                self.order_table.setItem(row, col, item)
-            row += 1
-        self.order_table.resizeRowsToContents()
+        try:
+            portal_rows.sort(key=lambda item: _timestamp_from_iso(item.created_at), reverse=True)
+            self.order_table.setRowCount(len(file_rows) + len(portal_rows))
+            row = 0
+            for order_file in file_rows:
+                source = "Microstore"
+                key = _order_key(order_file)
+                status = self.order_status_cache.get(order_file.path, STATUS_ERROR if order_file.error else STATUS_READY)
+                values = [
+                    source,
+                    key,
+                    self._customer_label(order_file),
+                    _display_date(order_file.order_date) or order_file.modified_at_label,
+                    str(order_file.line_count) if not order_file.error else "Erreur",
+                    order_file.total_amount_label if not order_file.error else "",
+                    status,
+                ]
+                for col, value in enumerate(values):
+                    item = QTableWidgetItem(value)
+                    item.setData(ROLE_KIND, "file")
+                    item.setData(ROLE_SOURCE, source)
+                    item.setData(ROLE_KEY, key)
+                    item.setData(ROLE_PAYLOAD, str(order_file.path))
+                    self.order_table.setItem(row, col, item)
+                row += 1
+            for summary in portal_rows:
+                key = summary.order_number or summary.order_id
+                detail = self.portal_details.get((summary.source, key))
+                line_count = len(detail.lines) if detail else ""
+                status = self._status_for_portal_order(summary.source, key, detail)
+                values = [
+                    summary.source,
+                    key,
+                    summary.customer,
+                    _display_date(summary.created_at),
+                    str(line_count),
+                    _money_label(summary.total_amount),
+                    status,
+                ]
+                for col, value in enumerate(values):
+                    item = QTableWidgetItem(value)
+                    item.setData(ROLE_KIND, "portal")
+                    item.setData(ROLE_SOURCE, summary.source)
+                    item.setData(ROLE_KEY, key)
+                    item.setData(ROLE_PAYLOAD, summary.order_id)
+                    self.order_table.setItem(row, col, item)
+                row += 1
+        finally:
+            self.order_table.blockSignals(False)
+            self.order_table.setUpdatesEnabled(True)
 
     def _matches_date_filter(self, modified_at: float, date_filter: str) -> bool:
         if date_filter == "Toutes":

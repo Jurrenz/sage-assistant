@@ -87,7 +87,7 @@ for index, ctrlHwnd in controlHwnds {
 
 text .= "`nVisible invoice dialogs:`n"
 for index, ctrlHwnd in controlHwnds {
-    if SafeClass(ctrlHwnd) = "CamDialog" && IsWindowVisible(ctrlHwnd) && RegExMatch(SafeTitle(ctrlHwnd), "^Facture") {
+    if SafeClass(ctrlHwnd) = "CamDialog" && IsWindowVisible(ctrlHwnd) && RegExMatch(SafeTitle(ctrlHwnd), "^(Facture|Nouvelle facture)") {
         text .= DescribeControl(index, ctrlHwnd, hwnd, wx, wy) "`n"
     }
 }

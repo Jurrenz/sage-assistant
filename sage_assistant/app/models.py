@@ -58,8 +58,6 @@ class InvoiceLine:
             errors.append("quantite invalide")
         if self.unit_price_ht is None:
             errors.append("prix absent")
-        if not self.price_confirmed:
-            errors.append("ecart prix a confirmer")
         self.validation_status = "ok" if not errors else "blocked"
         self.validation_message = "; ".join(errors)
 

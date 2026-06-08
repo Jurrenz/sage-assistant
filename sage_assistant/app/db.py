@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import sqlite3
+import json
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Iterable
 
 from .models import Product, SageMapping, utc_now_iso
+from .portal_orders import PortalOrder, PortalOrderLine, PortalOrderSummary
 from .settings import default_db_path
 from .default_mappings import DEFAULT_SAGE_MAPPINGS
 
@@ -49,6 +51,28 @@ CREATE TABLE IF NOT EXISTS order_statuses (
     note TEXT NOT NULL DEFAULT '',
     PRIMARY KEY(source, order_key)
 );
+
+CREATE TABLE IF NOT EXISTS cached_orders (
+    source TEXT NOT NULL,
+    order_key TEXT NOT NULL,
+    order_id TEXT NOT NULL,
+    order_number TEXT NOT NULL,
+    customer TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT '',
+    source_status TEXT NOT NULL DEFAULT '',
+    total_amount TEXT,
+    line_count INTEGER NOT NULL DEFAULT 0,
+    package_count INTEGER NOT NULL DEFAULT 0,
+    piece_count INTEGER NOT NULL DEFAULT 0,
+    computed_status TEXT NOT NULL DEFAULT '',
+    summary_json TEXT NOT NULL DEFAULT '{}',
+    detail_json TEXT NOT NULL DEFAULT '{}',
+    synced_at TEXT NOT NULL,
+    PRIMARY KEY(source, order_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cached_orders_created_at ON cached_orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_cached_orders_source ON cached_orders(source);
 """
 
 
@@ -59,6 +83,22 @@ def _decimal_or_none(value: str | None) -> Decimal | None:
         return Decimal(str(value))
     except InvalidOperation:
         return None
+
+
+def _json_default(value):
+    if isinstance(value, Decimal):
+        return str(value)
+    raise TypeError(f"Type JSON non supporte: {type(value)!r}")
+
+
+def _json_loads(text: str | None) -> dict:
+    if not text:
+        return {}
+    try:
+        value = json.loads(text)
+    except json.JSONDecodeError:
+        return {}
+    return value if isinstance(value, dict) else {}
 
 
 class Database:
@@ -250,6 +290,88 @@ class Database:
             )
         self.log("order_status", f"{source.strip()} {order_key.strip()} -> {status.strip()}")
 
+    def upsert_cached_order(self, summary: PortalOrderSummary, detail: PortalOrder | None, computed_status: str) -> None:
+        key = summary.order_number or summary.order_id
+        detail_payload = self._order_to_payload(detail) if detail else {}
+        lines = detail.lines if detail else []
+        package_count = sum(line.package_count or 0 for line in lines)
+        piece_count = sum(line.quantity_pieces or 0 for line in lines)
+        with self.conn:
+            self.conn.execute(
+                """
+                INSERT INTO cached_orders(
+                    source, order_key, order_id, order_number, customer, created_at, source_status,
+                    total_amount, line_count, package_count, piece_count, computed_status,
+                    summary_json, detail_json, synced_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(source, order_key) DO UPDATE SET
+                    order_id = excluded.order_id,
+                    order_number = excluded.order_number,
+                    customer = excluded.customer,
+                    created_at = excluded.created_at,
+                    source_status = excluded.source_status,
+                    total_amount = excluded.total_amount,
+                    line_count = excluded.line_count,
+                    package_count = excluded.package_count,
+                    piece_count = excluded.piece_count,
+                    computed_status = excluded.computed_status,
+                    summary_json = excluded.summary_json,
+                    detail_json = excluded.detail_json,
+                    synced_at = excluded.synced_at
+                """,
+                (
+                    summary.source,
+                    key,
+                    summary.order_id,
+                    summary.order_number,
+                    summary.customer,
+                    summary.created_at,
+                    summary.status,
+                    str(summary.total_amount) if summary.total_amount is not None else None,
+                    len(lines),
+                    package_count,
+                    piece_count,
+                    computed_status,
+                    json.dumps(summary.raw, ensure_ascii=False, default=_json_default),
+                    json.dumps(detail_payload, ensure_ascii=False, default=_json_default),
+                    utc_now_iso(),
+                ),
+            )
+
+    def list_cached_order_summaries(self) -> list[PortalOrderSummary]:
+        rows = self.conn.execute("SELECT * FROM cached_orders ORDER BY created_at DESC, order_key DESC").fetchall()
+        return [self._row_to_cached_summary(row) for row in rows]
+
+    def list_cached_order_statuses(self) -> dict[tuple[str, str], str]:
+        rows = self.conn.execute("SELECT source, order_key, computed_status FROM cached_orders").fetchall()
+        return {(row["source"], row["order_key"]): row["computed_status"] for row in rows}
+
+    def get_cached_order(self, source: str, order_key: str) -> PortalOrder | None:
+        row = self.conn.execute(
+            "SELECT * FROM cached_orders WHERE source = ? AND order_key = ?",
+            (source.strip(), order_key.strip()),
+        ).fetchone()
+        return self._row_to_cached_order(row) if row else None
+
+    def latest_cached_order_sync(self, source: str | None = None) -> str | None:
+        if source:
+            row = self.conn.execute("SELECT MAX(synced_at) AS latest FROM cached_orders WHERE source = ?", (source,)).fetchone()
+        else:
+            row = self.conn.execute("SELECT MAX(synced_at) AS latest FROM cached_orders").fetchone()
+        return row["latest"] if row else None
+
+    def count_products(self) -> int:
+        row = self.conn.execute("SELECT COUNT(*) AS count FROM products WHERE active = 1").fetchone()
+        return int(row["count"] or 0)
+
+    def count_cached_orders(self, source: str | None = None) -> int:
+        if source:
+            row = self.conn.execute("SELECT COUNT(*) AS count FROM cached_orders WHERE source = ?", (source,)).fetchone()
+        else:
+            row = self.conn.execute("SELECT COUNT(*) AS count FROM cached_orders").fetchone()
+        return int(row["count"] or 0)
+
     def latest_product_import(self) -> str | None:
         row = self.conn.execute("SELECT MAX(last_imported_at) AS latest FROM products").fetchone()
         return row["latest"] if row else None
@@ -273,3 +395,63 @@ class Database:
             sage_label=row["sage_label"],
             is_active=bool(row["is_active"]),
         )
+
+    def _row_to_cached_summary(self, row: sqlite3.Row) -> PortalOrderSummary:
+        return PortalOrderSummary(
+            source=row["source"],
+            order_id=row["order_id"],
+            order_number=row["order_number"],
+            customer=row["customer"],
+            created_at=row["created_at"],
+            status=row["source_status"],
+            total_amount=_decimal_or_none(row["total_amount"]),
+            raw=_json_loads(row["summary_json"]),
+        )
+
+    def _row_to_cached_order(self, row: sqlite3.Row) -> PortalOrder:
+        payload = _json_loads(row["detail_json"])
+        lines = [
+            PortalOrderLine(
+                ref=str(line.get("ref") or ""),
+                category=str(line.get("category") or ""),
+                description=str(line.get("description") or ""),
+                package_count=int(line.get("package_count") or 0),
+                package_size=int(line["package_size"]) if line.get("package_size") not in (None, "") else None,
+                quantity_pieces=int(line["quantity_pieces"]) if line.get("quantity_pieces") not in (None, "") else None,
+                unit_price_ht=_decimal_or_none(line.get("unit_price_ht")),
+                raw=line.get("raw") if isinstance(line.get("raw"), dict) else {},
+            )
+            for line in payload.get("lines", [])
+            if isinstance(line, dict)
+        ]
+        return PortalOrder(
+            source=row["source"],
+            order_id=row["order_id"],
+            order_number=row["order_number"],
+            customer=row["customer"],
+            created_at=row["created_at"],
+            status=row["source_status"],
+            total_amount=_decimal_or_none(row["total_amount"]),
+            lines=lines,
+            raw=payload.get("raw") if isinstance(payload.get("raw"), dict) else {},
+        )
+
+    def _order_to_payload(self, order: PortalOrder | None) -> dict:
+        if order is None:
+            return {}
+        return {
+            "raw": order.raw,
+            "lines": [
+                {
+                    "ref": line.ref,
+                    "category": line.category,
+                    "description": line.description,
+                    "package_count": line.package_count,
+                    "package_size": line.package_size,
+                    "quantity_pieces": line.quantity_pieces,
+                    "unit_price_ht": str(line.unit_price_ht) if line.unit_price_ht is not None else None,
+                    "raw": line.raw,
+                }
+                for line in order.lines
+            ],
+        }

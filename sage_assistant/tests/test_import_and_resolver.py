@@ -9,6 +9,7 @@ import pytest
 from app.db import Database
 from app.excel_import import OrderRow, import_order, import_products
 from app.models import Product, SageMapping
+from app.portal_orders import PortalOrder, PortalOrderLine, PortalOrderSummary
 from app.resolver import Resolver
 
 
@@ -170,12 +171,13 @@ def test_real_microstore_xls_resolves_against_real_product_export_when_available
     fl96 = [line for line in lines if line.ref == "FL96-9"][0]
     assert fl96.unit_price_ht == Decimal("4.0")
     assert fl96.catalog_unit_price_ht == Decimal("5.0")
-    assert fl96.validation_status == "blocked"
-    assert "ecart prix" in fl96.validation_message
+    assert fl96.price_confirmed is False
+    assert fl96.validation_status == "ok"
+    assert "ecart prix" not in fl96.validation_message
     db.close()
 
 
-def test_order_line_price_mismatch_requires_confirmation(tmp_path):
+def test_order_line_price_mismatch_is_informational(tmp_path):
     db = Database(tmp_path / "app.sqlite")
     db.upsert_products(
         [
@@ -204,6 +206,58 @@ def test_order_line_price_mismatch_requires_confirmation(tmp_path):
     assert line.unit_price_ht == Decimal("4.20")
     assert line.catalog_unit_price_ht == Decimal("5.00")
     assert line.order_unit_price_ht == Decimal("4.20")
-    assert line.validation_status == "blocked"
-    assert "ecart prix" in line.validation_message
+    assert line.price_confirmed is False
+    assert line.validation_status == "ok"
+    assert "ecart prix" not in line.validation_message
     db.close()
+
+
+def test_cached_portal_orders_are_persistent(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    summary = PortalOrderSummary(
+        source="eFashion",
+        order_id="42",
+        order_number="EF42",
+        customer="Client test",
+        created_at="2026-06-05T16:48:37Z",
+        status="validated",
+        total_amount=Decimal("78.00"),
+        raw={"id": 42},
+    )
+    detail = PortalOrder(
+        source="eFashion",
+        order_id="42",
+        order_number="EF42",
+        customer="Client test",
+        created_at="2026-06-05T16:48:37Z",
+        status="validated",
+        total_amount=Decimal("78.00"),
+        lines=[
+            PortalOrderLine(
+                ref="FL530-1",
+                category="ROBES COURTES",
+                package_count=1,
+                package_size=12,
+                quantity_pieces=12,
+                unit_price_ht=Decimal("6.50"),
+                raw={"reference": "FL530-1"},
+            )
+        ],
+        raw={"detail": True},
+    )
+
+    db.upsert_cached_order(summary, detail, "Prêt")
+    db.close()
+
+    reopened = Database(tmp_path / "app.sqlite")
+    summaries = reopened.list_cached_order_summaries()
+    cached = reopened.get_cached_order("eFashion", "EF42")
+
+    assert len(summaries) == 1
+    assert summaries[0].customer == "Client test"
+    assert reopened.list_cached_order_statuses()[("eFashion", "EF42")] == "Prêt"
+    assert reopened.count_cached_orders("eFashion") == 1
+    assert cached is not None
+    assert cached.lines[0].ref == "FL530-1"
+    assert cached.lines[0].unit_price_ht == Decimal("6.50")
+    reopened.close()
