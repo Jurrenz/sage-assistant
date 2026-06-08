@@ -205,10 +205,22 @@ def normalize_pfs_order_detail(raw: dict[str, Any]) -> PortalOrder:
             package_count = _int(product.get("total_validated_qty")) or _int(product.get("total_ordered_qty")) or 0
             validated = product.get("validated") or {}
             quantity_pieces = _int(validated.get("pieces"))
-            if quantity_pieces is None:
-                quantity_pieces = _int(product.get("total_validated_qty"))
+            if quantity_pieces is not None and quantity_pieces <= 0:
+                quantity_pieces = None
             first_item = (product.get("items") or [{}])[0]
             package_size = _int(first_item.get("pieces"))
+            if quantity_pieces is None:
+                quantity_pieces = package_count * package_size if package_count and package_size else None
+            if quantity_pieces is None:
+                item_piece_total = 0
+                for item in product.get("items") or []:
+                    ordered_qty = _int(item.get("qty_ordered"))
+                    item_pack_size = _int(item.get("pieces")) or package_size
+                    if ordered_qty is not None and item_pack_size:
+                        item_piece_total += ordered_qty * item_pack_size
+                quantity_pieces = item_piece_total or None
+            if quantity_pieces is None:
+                quantity_pieces = _int(product.get("total_validated_qty")) or _int(product.get("total_ordered_qty"))
             if package_size is None and package_count and quantity_pieces:
                 package_size = quantity_pieces // package_count
             unit_price = _decimal((first_item.get("price_sale") or {}).get("unit", {}).get("value"))
@@ -247,6 +259,14 @@ def _microstore_unix_to_iso(value: Any) -> str:
     return datetime.fromtimestamp(seconds, UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def _first_text(raw: dict[str, Any], *keys: str) -> str:
+    for key in keys:
+        value = raw.get(key)
+        if value not in (None, ""):
+            return str(value).strip()
+    return ""
+
+
 def normalize_microstore_product(raw: dict[str, Any]) -> Product | None:
     ref = normalize_ref(raw.get("item_ref"))
     if not ref:
@@ -263,6 +283,13 @@ def normalize_microstore_product(raw: dict[str, Any]) -> Product | None:
                     unit_price = _decimal(item.get("price_1"))
                     if unit_price is not None:
                         break
+    disabled_at = _int(raw.get("disable"))
+    microstore_status = "disabled" if disabled_at and disabled_at > 0 else "active"
+    stock_snapshot = _int(raw.get("stock")) or _int(raw.get("total_stock")) or _int(raw.get("stock_total"))
+    created_at = _microstore_unix_to_iso(raw.get("ctime") or raw.get("created_at") or raw.get("create_time"))
+    modified_at = _microstore_unix_to_iso(
+        raw.get("utime") or raw.get("mtime") or raw.get("updated_at") or raw.get("update_time") or raw.get("modify_time") or raw.get("ctime")
+    )
     return Product(
         id=None,
         ref=ref,
@@ -270,6 +297,24 @@ def normalize_microstore_product(raw: dict[str, Any]) -> Product | None:
         name=str(raw.get("name") or "").strip(),
         unit_price_ht=unit_price,
         package_size=_int(raw.get("unit_number")),
+        active=True,
+        microstore_status=microstore_status,
+        content_label=str(raw.get("package_content") or raw.get("content") or raw.get("content_label") or raw.get("unit_content") or "").strip(),
+        composition=str(raw.get("material") or raw.get("composition") or raw.get("remark_material") or "").strip(),
+        color=str(raw.get("color") or raw.get("color_name") or raw.get("color_list") or "").strip(),
+        stock_snapshot=stock_snapshot,
+        brand=_first_text(raw, "brand", "brand_name", "marque"),
+        year=_first_text(raw, "year", "annee"),
+        season=_first_text(raw, "season", "saison"),
+        pieces_outside_package=_int(raw.get("pieces_outside_package") or raw.get("piece_num")),
+        weight_grams=_int(raw.get("weight") or raw.get("weight_grams")),
+        origin_country=_first_text(raw, "origin_country", "country_origin", "made_in"),
+        created_at=created_at or None,
+        promo=_first_text(raw, "promo", "promotion"),
+        remark=_first_text(raw, "remark", "remarks", "note"),
+        workflow_status="synced",
+        last_microstore_modified_at=modified_at or None,
+        raw=raw,
     )
 
 
@@ -426,7 +471,16 @@ class MicrostoreConnector:
             raise PortalApiError("Token Microstore absent.")
         return {"key": self.token, "pid": 5, "lang": "fr", **(params or {})}
 
-    def list_products(self, page_size: int = 200) -> list[Product]:
+    def list_products(self, page_size: int = 200, include_disabled: bool = True) -> list[Product]:
+        products_by_ref: dict[str, Product] = {}
+        status_options = ["disable=0", "disable=1"] if include_disabled else ["disable=0"]
+        for status_option in status_options:
+            for product in self._list_products_by_status(status_option, page_size):
+                if product.ref not in products_by_ref or product.microstore_status == "active":
+                    products_by_ref[product.ref] = product
+        return list(products_by_ref.values())
+
+    def _list_products_by_status(self, status_option: str, page_size: int) -> list[Product]:
         products: list[Product] = []
         page = 1
         while True:
@@ -441,7 +495,7 @@ class MicrostoreConnector:
                         "isasc": 0,
                         "page": page,
                         "page_num": page_size,
-                        "goods_status": json.dumps({"options": ["disable=0"], "allSelected": 0}, separators=(",", ":")),
+                        "goods_status": json.dumps({"options": [status_option], "allSelected": 0}, separators=(",", ":")),
                         "dimension": json.dumps({"options": ["goods"], "allSelected": 0}, separators=(",", ":")),
                     }
                 ),

@@ -239,6 +239,35 @@ def test_normalize_microstore_product_summary_and_detail_1001627():
     assert order.lines[1].unit_price_ht == Decimal("4.00")
 
 
+def test_normalize_microstore_disabled_product_remains_resolvable():
+    product = normalize_microstore_product(
+        {
+            "item_ref": "JY96",
+            "name": "",
+            "unit_number": "12",
+            "disable": "1780912911",
+            "cate_info": {"name": "ROBES LONGUES"},
+            "price_range": {"range": ["7.50"]},
+            "brand": "SZ",
+            "season": "ETE",
+            "origin_country": "China",
+            "utime": "1780913000",
+        }
+    )
+
+    assert product is not None
+    assert product.ref == "JY96"
+    assert product.type_label == "ROBES LONGUES"
+    assert product.package_size == 12
+    assert product.unit_price_ht == Decimal("7.50")
+    assert product.active is True
+    assert product.microstore_status == "disabled"
+    assert product.brand == "SZ"
+    assert product.season == "ETE"
+    assert product.origin_country == "China"
+    assert product.last_microstore_modified_at == "2026-06-08T10:03:20Z"
+
+
 class FakeHttp:
     def __init__(self) -> None:
         self.calls = []
@@ -325,6 +354,87 @@ def test_connectors_call_expected_endpoints():
     assert ("POST", "https://wapi.efashion-paris.com/graphql") in methods_urls
     assert ("GET", "https://wholesaler-api.parisfashionshops.com/api/v1/orders/listOrders") in methods_urls
     assert ("GET", "https://wholesaler-api.parisfashionshops.com/api/v1/orders/ord_1") in methods_urls
+
+
+def test_microstore_connector_fetches_active_and_disabled_products():
+    fake = FakeHttp()
+
+    MicrostoreConnector("micro-token", fake).list_products()
+
+    product_calls = [payload for method, url, payload in fake.calls if method == "GET" and url.endswith("/goods/get_by_order")]
+    statuses = [payload["goods_status"] for payload in product_calls]
+
+    assert any("disable=0" in status for status in statuses)
+    assert any("disable=1" in status for status in statuses)
+
+
+def test_pfs_unvalidated_order_uses_ordered_quantity():
+    order = normalize_pfs_order_detail(
+        {
+            "success": True,
+            "data": {
+                "id": "ord_2",
+                "order_no": "PO#2",
+                "customer": {"shop": "Client test"},
+                "items_by_brand": [
+                    {
+                        "products": [
+                            {
+                                "reference": "JY96",
+                                "category": {"labels": {"fr": "Robes"}},
+                                "total_ordered_qty": 1,
+                                "total_validated_qty": None,
+                                "validated": {"pieces": None, "packs": None},
+                                "items": [
+                                    {
+                                        "name": "Robe test",
+                                        "pieces": 12,
+                                        "qty_ordered": 1,
+                                        "qty_validated": None,
+                                        "price_sale": {"unit": {"value": 7.5}},
+                                    }
+                                ],
+                            }
+                        ]
+                    }
+                ],
+            },
+        }
+    )
+
+    assert order.lines[0].package_count == 1
+    assert order.lines[0].package_size == 12
+    assert order.lines[0].quantity_pieces == 12
+    assert order.lines[0].unit_price_ht == Decimal("7.5")
+
+
+def test_pfs_zero_validated_pieces_falls_back_to_ordered_quantity():
+    order = normalize_pfs_order_detail(
+        {
+            "success": True,
+            "data": {
+                "id": "ord_3",
+                "order_no": "PO#3",
+                "items_by_brand": [
+                    {
+                        "products": [
+                            {
+                                "reference": "FL329-2",
+                                "category": {"labels": {"fr": "Robes"}},
+                                "total_ordered_qty": 1,
+                                "total_validated_qty": 0,
+                                "validated": {"pieces": 0, "packs": 0},
+                                "items": [{"name": "Robe", "pieces": 12, "qty_ordered": 1, "price_sale": {"unit": {"value": 4}}}],
+                            }
+                        ]
+                    }
+                ],
+            },
+        }
+    )
+
+    assert order.lines[0].package_count == 1
+    assert order.lines[0].quantity_pieces == 12
 
 
 def test_portal_api_logins_prepare_sessions_without_storing_passwords():

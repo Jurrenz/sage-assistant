@@ -126,9 +126,9 @@ class Resolver:
         package_size = row.package_size
         if product and product.package_size:
             package_size = product.package_size
-        if quantity_pieces is None and row.package_count > 0 and package_size:
+        if (quantity_pieces is None or quantity_pieces <= 0) and row.package_count > 0 and package_size:
             quantity_pieces = row.package_count * package_size
-        if quantity_pieces is None:
+        if quantity_pieces is None or quantity_pieces <= 0:
             quantity_pieces = row.package_count
         if not product:
             line = InvoiceLine(
@@ -159,9 +159,9 @@ class Resolver:
         package_size = row.package_size
         if product and product.package_size:
             package_size = product.package_size
-        if quantity_pieces is None and row.package_count > 0 and package_size:
+        if (quantity_pieces is None or quantity_pieces <= 0) and row.package_count > 0 and package_size:
             quantity_pieces = row.package_count * package_size
-        if quantity_pieces is None:
+        if quantity_pieces is None or quantity_pieces <= 0:
             quantity_pieces = row.package_count
         if product:
             line = self.line_from_product(

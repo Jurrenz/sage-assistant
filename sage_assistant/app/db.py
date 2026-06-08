@@ -23,6 +23,41 @@ CREATE TABLE IF NOT EXISTS products (
     unit_price_ht TEXT,
     package_size INTEGER,
     active INTEGER NOT NULL DEFAULT 1,
+    microstore_status TEXT NOT NULL DEFAULT '',
+    content_label TEXT NOT NULL DEFAULT '',
+    composition TEXT NOT NULL DEFAULT '',
+    color TEXT NOT NULL DEFAULT '',
+    stock_snapshot INTEGER,
+    brand TEXT NOT NULL DEFAULT '',
+    year TEXT NOT NULL DEFAULT '',
+    season TEXT NOT NULL DEFAULT '',
+    pieces_outside_package INTEGER,
+    weight_grams INTEGER,
+    origin_country TEXT NOT NULL DEFAULT '',
+    created_at TEXT,
+    promo TEXT NOT NULL DEFAULT '',
+    discount_percent TEXT,
+    remark TEXT NOT NULL DEFAULT '',
+    colors TEXT NOT NULL DEFAULT '',
+    color_distribution_1 TEXT NOT NULL DEFAULT '',
+    color_1 TEXT NOT NULL DEFAULT '',
+    color_distribution_2 TEXT NOT NULL DEFAULT '',
+    color_2 TEXT NOT NULL DEFAULT '',
+    color_distribution_3 TEXT NOT NULL DEFAULT '',
+    color_3 TEXT NOT NULL DEFAULT '',
+    color_distribution_4 TEXT NOT NULL DEFAULT '',
+    color_4 TEXT NOT NULL DEFAULT '',
+    color_distribution_5 TEXT NOT NULL DEFAULT '',
+    color_5 TEXT NOT NULL DEFAULT '',
+    color_distribution_6 TEXT NOT NULL DEFAULT '',
+    color_6 TEXT NOT NULL DEFAULT '',
+    platform_price_ht TEXT,
+    platform_promo TEXT NOT NULL DEFAULT '',
+    workflow_status TEXT NOT NULL DEFAULT 'synced',
+    last_seen_at TEXT,
+    last_microstore_modified_at TEXT,
+    last_local_modified_at TEXT,
+    source_json TEXT NOT NULL DEFAULT '{}',
     last_imported_at TEXT NOT NULL
 );
 
@@ -108,11 +143,55 @@ class Database:
         self.conn = sqlite3.connect(self.path)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
+        self._migrate()
         self.conn.commit()
         self.seed_default_mappings()
 
     def close(self) -> None:
         self.conn.close()
+
+    def _migrate(self) -> None:
+        product_columns = {row["name"] for row in self.conn.execute("PRAGMA table_info(products)").fetchall()}
+        migrations = {
+            "microstore_status": "ALTER TABLE products ADD COLUMN microstore_status TEXT NOT NULL DEFAULT ''",
+            "content_label": "ALTER TABLE products ADD COLUMN content_label TEXT NOT NULL DEFAULT ''",
+            "composition": "ALTER TABLE products ADD COLUMN composition TEXT NOT NULL DEFAULT ''",
+            "color": "ALTER TABLE products ADD COLUMN color TEXT NOT NULL DEFAULT ''",
+            "stock_snapshot": "ALTER TABLE products ADD COLUMN stock_snapshot INTEGER",
+            "brand": "ALTER TABLE products ADD COLUMN brand TEXT NOT NULL DEFAULT ''",
+            "year": "ALTER TABLE products ADD COLUMN year TEXT NOT NULL DEFAULT ''",
+            "season": "ALTER TABLE products ADD COLUMN season TEXT NOT NULL DEFAULT ''",
+            "pieces_outside_package": "ALTER TABLE products ADD COLUMN pieces_outside_package INTEGER",
+            "weight_grams": "ALTER TABLE products ADD COLUMN weight_grams INTEGER",
+            "origin_country": "ALTER TABLE products ADD COLUMN origin_country TEXT NOT NULL DEFAULT ''",
+            "created_at": "ALTER TABLE products ADD COLUMN created_at TEXT",
+            "promo": "ALTER TABLE products ADD COLUMN promo TEXT NOT NULL DEFAULT ''",
+            "discount_percent": "ALTER TABLE products ADD COLUMN discount_percent TEXT",
+            "remark": "ALTER TABLE products ADD COLUMN remark TEXT NOT NULL DEFAULT ''",
+            "colors": "ALTER TABLE products ADD COLUMN colors TEXT NOT NULL DEFAULT ''",
+            "color_distribution_1": "ALTER TABLE products ADD COLUMN color_distribution_1 TEXT NOT NULL DEFAULT ''",
+            "color_1": "ALTER TABLE products ADD COLUMN color_1 TEXT NOT NULL DEFAULT ''",
+            "color_distribution_2": "ALTER TABLE products ADD COLUMN color_distribution_2 TEXT NOT NULL DEFAULT ''",
+            "color_2": "ALTER TABLE products ADD COLUMN color_2 TEXT NOT NULL DEFAULT ''",
+            "color_distribution_3": "ALTER TABLE products ADD COLUMN color_distribution_3 TEXT NOT NULL DEFAULT ''",
+            "color_3": "ALTER TABLE products ADD COLUMN color_3 TEXT NOT NULL DEFAULT ''",
+            "color_distribution_4": "ALTER TABLE products ADD COLUMN color_distribution_4 TEXT NOT NULL DEFAULT ''",
+            "color_4": "ALTER TABLE products ADD COLUMN color_4 TEXT NOT NULL DEFAULT ''",
+            "color_distribution_5": "ALTER TABLE products ADD COLUMN color_distribution_5 TEXT NOT NULL DEFAULT ''",
+            "color_5": "ALTER TABLE products ADD COLUMN color_5 TEXT NOT NULL DEFAULT ''",
+            "color_distribution_6": "ALTER TABLE products ADD COLUMN color_distribution_6 TEXT NOT NULL DEFAULT ''",
+            "color_6": "ALTER TABLE products ADD COLUMN color_6 TEXT NOT NULL DEFAULT ''",
+            "platform_price_ht": "ALTER TABLE products ADD COLUMN platform_price_ht TEXT",
+            "platform_promo": "ALTER TABLE products ADD COLUMN platform_promo TEXT NOT NULL DEFAULT ''",
+            "workflow_status": "ALTER TABLE products ADD COLUMN workflow_status TEXT NOT NULL DEFAULT 'synced'",
+            "last_seen_at": "ALTER TABLE products ADD COLUMN last_seen_at TEXT",
+            "last_microstore_modified_at": "ALTER TABLE products ADD COLUMN last_microstore_modified_at TEXT",
+            "last_local_modified_at": "ALTER TABLE products ADD COLUMN last_local_modified_at TEXT",
+            "source_json": "ALTER TABLE products ADD COLUMN source_json TEXT NOT NULL DEFAULT '{}'",
+        }
+        for column, statement in migrations.items():
+            if column not in product_columns:
+                self.conn.execute(statement)
 
     def log(self, event_type: str, message: str) -> None:
         self.conn.execute(
@@ -121,33 +200,139 @@ class Database:
         )
         self.conn.commit()
 
-    def upsert_products(self, products: Iterable[Product]) -> int:
+    def upsert_products(self, products: Iterable[Product], mark_missing: bool = False) -> int:
         imported_at = utc_now_iso()
+        product_rows = list(products)
+        seen_refs: list[str] = []
         count = 0
         with self.conn:
-            for product in products:
+            for product in product_rows:
+                ref = product.ref.strip().upper()
+                seen_refs.append(ref)
                 self.conn.execute(
                     """
-                    INSERT INTO products(ref, type_label, name, unit_price_ht, package_size, active, last_imported_at)
-                    VALUES (?, ?, ?, ?, ?, 1, ?)
+                    INSERT INTO products(
+                        ref, type_label, name, unit_price_ht, package_size, active, microstore_status,
+                        content_label, composition, color, stock_snapshot,
+                        brand, year, season, pieces_outside_package, weight_grams, origin_country,
+                        created_at, promo, discount_percent, remark,
+                        colors, color_distribution_1, color_1, color_distribution_2, color_2,
+                        color_distribution_3, color_3, color_distribution_4, color_4,
+                        color_distribution_5, color_5, color_distribution_6, color_6,
+                        platform_price_ht, platform_promo, workflow_status,
+                        last_seen_at, last_microstore_modified_at, source_json, last_imported_at
+                    )
+                    VALUES (
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    )
                     ON CONFLICT(ref) DO UPDATE SET
                         type_label = excluded.type_label,
                         name = excluded.name,
                         unit_price_ht = excluded.unit_price_ht,
                         package_size = excluded.package_size,
                         active = 1,
+                        microstore_status = excluded.microstore_status,
+                        content_label = excluded.content_label,
+                        composition = excluded.composition,
+                        color = excluded.color,
+                        stock_snapshot = excluded.stock_snapshot,
+                        brand = excluded.brand,
+                        year = excluded.year,
+                        season = excluded.season,
+                        pieces_outside_package = excluded.pieces_outside_package,
+                        weight_grams = excluded.weight_grams,
+                        origin_country = excluded.origin_country,
+                        created_at = excluded.created_at,
+                        promo = excluded.promo,
+                        discount_percent = excluded.discount_percent,
+                        remark = excluded.remark,
+                        colors = excluded.colors,
+                        color_distribution_1 = excluded.color_distribution_1,
+                        color_1 = excluded.color_1,
+                        color_distribution_2 = excluded.color_distribution_2,
+                        color_2 = excluded.color_2,
+                        color_distribution_3 = excluded.color_distribution_3,
+                        color_3 = excluded.color_3,
+                        color_distribution_4 = excluded.color_distribution_4,
+                        color_4 = excluded.color_4,
+                        color_distribution_5 = excluded.color_distribution_5,
+                        color_5 = excluded.color_5,
+                        color_distribution_6 = excluded.color_distribution_6,
+                        color_6 = excluded.color_6,
+                        platform_price_ht = excluded.platform_price_ht,
+                        platform_promo = excluded.platform_promo,
+                        workflow_status = 'synced',
+                        last_seen_at = excluded.last_seen_at,
+                        last_microstore_modified_at = excluded.last_microstore_modified_at,
+                        source_json = excluded.source_json,
                         last_imported_at = excluded.last_imported_at
                     """,
                     (
-                        product.ref.strip().upper(),
+                        ref,
                         product.type_label.strip(),
                         product.name.strip(),
                         str(product.unit_price_ht) if product.unit_price_ht is not None else None,
                         product.package_size,
+                        1,
+                        product.microstore_status.strip(),
+                        product.content_label.strip(),
+                        product.composition.strip(),
+                        product.color.strip(),
+                        product.stock_snapshot,
+                        product.brand.strip(),
+                        product.year.strip(),
+                        product.season.strip(),
+                        product.pieces_outside_package,
+                        product.weight_grams,
+                        product.origin_country.strip(),
+                        product.created_at,
+                        product.promo.strip(),
+                        str(product.discount_percent) if product.discount_percent is not None else None,
+                        product.remark.strip(),
+                        product.colors.strip(),
+                        product.color_distribution_1.strip(),
+                        product.color_1.strip(),
+                        product.color_distribution_2.strip(),
+                        product.color_2.strip(),
+                        product.color_distribution_3.strip(),
+                        product.color_3.strip(),
+                        product.color_distribution_4.strip(),
+                        product.color_4.strip(),
+                        product.color_distribution_5.strip(),
+                        product.color_5.strip(),
+                        product.color_distribution_6.strip(),
+                        product.color_6.strip(),
+                        str(product.platform_price_ht) if product.platform_price_ht is not None else None,
+                        product.platform_promo.strip(),
+                        "synced",
+                        imported_at,
+                        product.last_microstore_modified_at or imported_at,
+                        json.dumps(product.raw, ensure_ascii=False, default=_json_default),
                         imported_at,
                     ),
                 )
                 count += 1
+            if mark_missing and seen_refs:
+                placeholders = ",".join("?" for _ in seen_refs)
+                self.conn.execute(
+                    f"""
+                    UPDATE products
+                    SET
+                        microstore_status = CASE
+                            WHEN microstore_status IN ('active', 'disabled') THEN 'absent'
+                            ELSE microstore_status
+                        END,
+                        workflow_status = 'historical',
+                        last_imported_at = ?
+                    WHERE active = 1
+                        AND ref NOT IN ({placeholders})
+                        AND workflow_status NOT IN ('draft', 'to_create', 'modified')
+                    """,
+                    (imported_at, *seen_refs),
+                )
         self.log("product_import", f"{count} produits importes")
         return count
 
@@ -167,6 +352,216 @@ class Database:
             (f"%{query}%", f"%{query}%", query, f"{query}%", limit),
         ).fetchall()
         return [self._row_to_product(row) for row in rows]
+
+    def list_products(
+        self,
+        search: str = "",
+        type_filter: str = "Tous",
+        status_filter: str = "Tous",
+        limit: int = 500,
+    ) -> list[Product]:
+        clauses = ["active = 1"]
+        params: list[object] = []
+        query = search.strip().upper()
+        if query:
+            clauses.append("(ref LIKE ? OR UPPER(name) LIKE ? OR UPPER(type_label) LIKE ?)")
+            params.extend([f"%{query}%", f"%{query}%", f"%{query}%"])
+        if type_filter and type_filter != "Tous":
+            clauses.append("type_label = ?")
+            params.append(type_filter)
+        if status_filter and status_filter != "Tous":
+            if status_filter == "Actif Microstore":
+                clauses.append("microstore_status = 'active' AND workflow_status <> 'draft'")
+            elif status_filter == "Désactivé Microstore":
+                clauses.append("microstore_status = 'disabled' AND workflow_status <> 'draft'")
+            elif status_filter == "Brouillon":
+                clauses.append("workflow_status = 'draft'")
+            elif status_filter == "À créer":
+                clauses.append("workflow_status = 'to_create'")
+            elif status_filter == "Modifié localement":
+                clauses.append("workflow_status = 'modified'")
+            elif status_filter == "Historique local":
+                clauses.append("workflow_status = 'historical'")
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM products
+            WHERE {' AND '.join(clauses)}
+            ORDER BY
+                CASE workflow_status
+                    WHEN 'to_create' THEN 0
+                    WHEN 'modified' THEN 1
+                    WHEN 'draft' THEN 2
+                    ELSE 3
+                END,
+                MAX(COALESCE(last_microstore_modified_at, ''), COALESCE(last_local_modified_at, ''), COALESCE(last_seen_at, ''), COALESCE(last_imported_at, '')) DESC,
+                ref
+            LIMIT ?
+            """,
+            (*params, limit),
+        ).fetchall()
+        return [self._row_to_product(row) for row in rows]
+
+    def list_product_types(self) -> list[str]:
+        rows = self.conn.execute(
+            "SELECT DISTINCT type_label FROM products WHERE active = 1 AND type_label <> '' ORDER BY type_label"
+        ).fetchall()
+        return [row["type_label"] for row in rows]
+
+    def upsert_product_draft(self, product: Product) -> Product:
+        now = utc_now_iso()
+        ref = product.ref.strip().upper()
+        existing = self.get_product_by_ref(ref)
+        workflow_status = "modified" if existing and existing.workflow_status not in {"draft", "to_create"} else product.workflow_status
+        if not existing and workflow_status == "draft":
+            workflow_status = "to_create"
+        with self.conn:
+            self.conn.execute(
+                """
+                INSERT INTO products(
+                    ref, type_label, name, unit_price_ht, package_size, active, microstore_status,
+                    content_label, composition, color, stock_snapshot,
+                    brand, year, season, pieces_outside_package, weight_grams, origin_country,
+                    created_at, promo, discount_percent, remark,
+                    colors, color_distribution_1, color_1, color_distribution_2, color_2,
+                    color_distribution_3, color_3, color_distribution_4, color_4,
+                    color_distribution_5, color_5, color_distribution_6, color_6,
+                    platform_price_ht, platform_promo, workflow_status,
+                    last_seen_at, last_microstore_modified_at, last_local_modified_at, source_json, last_imported_at
+                )
+                VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                )
+                ON CONFLICT(ref) DO UPDATE SET
+                    type_label = excluded.type_label,
+                    name = excluded.name,
+                    unit_price_ht = excluded.unit_price_ht,
+                    package_size = excluded.package_size,
+                    active = 1,
+                    content_label = excluded.content_label,
+                    composition = excluded.composition,
+                    color = excluded.color,
+                    stock_snapshot = excluded.stock_snapshot,
+                    brand = excluded.brand,
+                    year = excluded.year,
+                    season = excluded.season,
+                    pieces_outside_package = excluded.pieces_outside_package,
+                    weight_grams = excluded.weight_grams,
+                    origin_country = excluded.origin_country,
+                    created_at = excluded.created_at,
+                    promo = excluded.promo,
+                    discount_percent = excluded.discount_percent,
+                    remark = excluded.remark,
+                    colors = excluded.colors,
+                    color_distribution_1 = excluded.color_distribution_1,
+                    color_1 = excluded.color_1,
+                    color_distribution_2 = excluded.color_distribution_2,
+                    color_2 = excluded.color_2,
+                    color_distribution_3 = excluded.color_distribution_3,
+                    color_3 = excluded.color_3,
+                    color_distribution_4 = excluded.color_distribution_4,
+                    color_4 = excluded.color_4,
+                    color_distribution_5 = excluded.color_distribution_5,
+                    color_5 = excluded.color_5,
+                    color_distribution_6 = excluded.color_distribution_6,
+                    color_6 = excluded.color_6,
+                    platform_price_ht = excluded.platform_price_ht,
+                    platform_promo = excluded.platform_promo,
+                    workflow_status = excluded.workflow_status,
+                    last_local_modified_at = excluded.last_local_modified_at,
+                    last_imported_at = excluded.last_imported_at
+                """,
+                (
+                    ref,
+                    product.type_label.strip(),
+                    product.name.strip(),
+                    str(product.unit_price_ht) if product.unit_price_ht is not None else None,
+                    product.package_size,
+                    1,
+                    product.microstore_status.strip(),
+                    product.content_label.strip(),
+                    product.composition.strip(),
+                    product.color.strip(),
+                    product.stock_snapshot,
+                    product.brand.strip(),
+                    product.year.strip(),
+                    product.season.strip(),
+                    product.pieces_outside_package,
+                    product.weight_grams,
+                    product.origin_country.strip(),
+                    product.created_at,
+                    product.promo.strip(),
+                    str(product.discount_percent) if product.discount_percent is not None else None,
+                    product.remark.strip(),
+                    product.colors.strip(),
+                    product.color_distribution_1.strip(),
+                    product.color_1.strip(),
+                    product.color_distribution_2.strip(),
+                    product.color_2.strip(),
+                    product.color_distribution_3.strip(),
+                    product.color_3.strip(),
+                    product.color_distribution_4.strip(),
+                    product.color_4.strip(),
+                    product.color_distribution_5.strip(),
+                    product.color_5.strip(),
+                    product.color_distribution_6.strip(),
+                    product.color_6.strip(),
+                    str(product.platform_price_ht) if product.platform_price_ht is not None else None,
+                    product.platform_promo.strip(),
+                    workflow_status,
+                    product.last_seen_at,
+                    product.last_microstore_modified_at,
+                    now,
+                    json.dumps(product.raw, ensure_ascii=False, default=_json_default),
+                    now,
+                ),
+            )
+        self.log("product_draft", f"Brouillon produit sauvegarde: {ref}")
+        saved = self.get_product_by_ref(ref)
+        if saved is None:
+            raise ValueError(f"Produit introuvable apres sauvegarde: {ref}")
+        return saved
+
+    def product_change_preview(self, product: Product) -> list[str]:
+        existing = self.get_product_by_ref(product.ref)
+        if not existing:
+            return [f"Créer {product.ref} dans Microstore (simulation)"]
+        if existing.workflow_status == "to_create":
+            return [
+                f"Créer {existing.ref} dans Microstore (simulation)",
+                f"Catégorie: {existing.type_label or 'vide'}",
+                f"Prix: {existing.unit_price_ht or 'vide'}",
+                f"Colisage: {existing.package_size or 'vide'}",
+            ]
+        if existing.workflow_status == "modified":
+            return [
+                f"Mettre à jour {existing.ref} dans Microstore (simulation)",
+                f"Catégorie: {existing.type_label or 'vide'}",
+                f"Nom: {existing.name or 'vide'}",
+                f"Prix: {existing.unit_price_ht or 'vide'}",
+                f"Colisage: {existing.package_size or 'vide'}",
+            ]
+        if existing.workflow_status == "historical":
+            return [f"{existing.ref} est conservé en historique local, sans écriture Microstore prévue."]
+        changes: list[str] = []
+        fields = [
+            ("Catégorie", existing.type_label, product.type_label),
+            ("Nom", existing.name, product.name),
+            ("Prix", str(existing.unit_price_ht or ""), str(product.unit_price_ht or "")),
+            ("Colisage", str(existing.package_size or ""), str(product.package_size or "")),
+            ("Contenu colis", existing.content_label, product.content_label),
+            ("Composition", existing.composition, product.composition),
+            ("Couleur", existing.color, product.color),
+            ("Stock connu", str(existing.stock_snapshot or ""), str(product.stock_snapshot or "")),
+            ("Remarque", existing.remark, product.remark),
+            ("Prix plateformes", str(existing.platform_price_ht or ""), str(product.platform_price_ht or "")),
+        ]
+        for label, old, new in fields:
+            if old != new:
+                changes.append(f"{label}: {old or 'vide'} -> {new or 'vide'}")
+        return changes or ["Aucun changement détecté"]
 
     def get_product_by_ref(self, ref: str) -> Product | None:
         row = self.conn.execute(
@@ -376,6 +771,20 @@ class Database:
         row = self.conn.execute("SELECT MAX(last_imported_at) AS latest FROM products").fetchone()
         return row["latest"] if row else None
 
+    def count_products_by_microstore_status(self, status: str) -> int:
+        row = self.conn.execute(
+            "SELECT COUNT(*) AS count FROM products WHERE active = 1 AND microstore_status = ?",
+            (status,),
+        ).fetchone()
+        return int(row["count"] or 0)
+
+    def count_products_by_workflow_status(self, status: str) -> int:
+        row = self.conn.execute(
+            "SELECT COUNT(*) AS count FROM products WHERE active = 1 AND workflow_status = ?",
+            (status,),
+        ).fetchone()
+        return int(row["count"] or 0)
+
     def _row_to_product(self, row: sqlite3.Row) -> Product:
         return Product(
             id=row["id"],
@@ -385,6 +794,41 @@ class Database:
             unit_price_ht=_decimal_or_none(row["unit_price_ht"]),
             package_size=row["package_size"],
             active=bool(row["active"]),
+            microstore_status=row["microstore_status"] if "microstore_status" in row.keys() else "",
+            content_label=row["content_label"] if "content_label" in row.keys() else "",
+            composition=row["composition"] if "composition" in row.keys() else "",
+            color=row["color"] if "color" in row.keys() else "",
+            stock_snapshot=row["stock_snapshot"] if "stock_snapshot" in row.keys() else None,
+            brand=row["brand"] if "brand" in row.keys() else "",
+            year=row["year"] if "year" in row.keys() else "",
+            season=row["season"] if "season" in row.keys() else "",
+            pieces_outside_package=row["pieces_outside_package"] if "pieces_outside_package" in row.keys() else None,
+            weight_grams=row["weight_grams"] if "weight_grams" in row.keys() else None,
+            origin_country=row["origin_country"] if "origin_country" in row.keys() else "",
+            created_at=row["created_at"] if "created_at" in row.keys() else None,
+            promo=row["promo"] if "promo" in row.keys() else "",
+            discount_percent=_decimal_or_none(row["discount_percent"]) if "discount_percent" in row.keys() else None,
+            remark=row["remark"] if "remark" in row.keys() else "",
+            colors=row["colors"] if "colors" in row.keys() else "",
+            color_distribution_1=row["color_distribution_1"] if "color_distribution_1" in row.keys() else "",
+            color_1=row["color_1"] if "color_1" in row.keys() else "",
+            color_distribution_2=row["color_distribution_2"] if "color_distribution_2" in row.keys() else "",
+            color_2=row["color_2"] if "color_2" in row.keys() else "",
+            color_distribution_3=row["color_distribution_3"] if "color_distribution_3" in row.keys() else "",
+            color_3=row["color_3"] if "color_3" in row.keys() else "",
+            color_distribution_4=row["color_distribution_4"] if "color_distribution_4" in row.keys() else "",
+            color_4=row["color_4"] if "color_4" in row.keys() else "",
+            color_distribution_5=row["color_distribution_5"] if "color_distribution_5" in row.keys() else "",
+            color_5=row["color_5"] if "color_5" in row.keys() else "",
+            color_distribution_6=row["color_distribution_6"] if "color_distribution_6" in row.keys() else "",
+            color_6=row["color_6"] if "color_6" in row.keys() else "",
+            platform_price_ht=_decimal_or_none(row["platform_price_ht"]) if "platform_price_ht" in row.keys() else None,
+            platform_promo=row["platform_promo"] if "platform_promo" in row.keys() else "",
+            workflow_status=row["workflow_status"] if "workflow_status" in row.keys() else "synced",
+            last_seen_at=row["last_seen_at"] if "last_seen_at" in row.keys() else None,
+            last_microstore_modified_at=row["last_microstore_modified_at"] if "last_microstore_modified_at" in row.keys() else None,
+            last_local_modified_at=row["last_local_modified_at"] if "last_local_modified_at" in row.keys() else None,
+            raw=_json_loads(row["source_json"]) if "source_json" in row.keys() else {},
             last_imported_at=row["last_imported_at"],
         )
 

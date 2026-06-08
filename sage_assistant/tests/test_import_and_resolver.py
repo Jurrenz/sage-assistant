@@ -8,6 +8,7 @@ import pytest
 
 from app.db import Database
 from app.excel_import import OrderRow, import_order, import_products
+from app.microstore_product_writer import MicrostoreProductWriter, MicrostoreWriteNotEnabled
 from app.models import Product, SageMapping
 from app.portal_orders import PortalOrder, PortalOrderLine, PortalOrderSummary
 from app.resolver import Resolver
@@ -209,6 +210,195 @@ def test_order_line_price_mismatch_is_informational(tmp_path):
     assert line.price_confirmed is False
     assert line.validation_status == "ok"
     assert "ecart prix" not in line.validation_message
+    db.close()
+
+
+def test_disabled_microstore_product_can_resolve_for_sage(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    db.upsert_products(
+        [
+            Product(
+                id=None,
+                ref="JY96",
+                type_label="ROBES LONGUES",
+                name="",
+                unit_price_ht=Decimal("7.50"),
+                package_size=12,
+                microstore_status="disabled",
+            )
+        ]
+    )
+    db.upsert_mapping(SageMapping("ROBES LONGUES", "RO", "ROBE / TUNIC"))
+
+    product = db.get_product_by_ref("JY96")
+    line = Resolver(db).line_from_ref("JY96", quantity_pieces=12, unit_price_ht=Decimal("7.50"))
+
+    assert product is not None
+    assert product.microstore_status == "disabled"
+    assert line.validation_status == "ok"
+    assert line.sage_code == "RO"
+    assert line.package_size == 12
+    db.close()
+
+
+def test_microstore_sync_marks_missing_products_as_historical_without_deleting(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    db.upsert_products(
+        [
+            Product(
+                id=None,
+                ref="JY96",
+                type_label="ROBES LONGUES",
+                name="Ancienne ref",
+                unit_price_ht=Decimal("7.50"),
+                package_size=12,
+                microstore_status="active",
+            ),
+            Product(
+                id=None,
+                ref="FL530-1",
+                type_label="ROBES COURTES",
+                name="Robe active",
+                unit_price_ht=Decimal("6.80"),
+                package_size=12,
+                microstore_status="active",
+            ),
+        ]
+    )
+
+    db.upsert_products(
+        [
+            Product(
+                id=None,
+                ref="FL530-1",
+                type_label="ROBES COURTES",
+                name="Robe active",
+                unit_price_ht=Decimal("6.80"),
+                package_size=12,
+                microstore_status="active",
+            )
+        ],
+        mark_missing=True,
+    )
+
+    missing = db.get_product_by_ref("JY96")
+    active = db.get_product_by_ref("FL530-1")
+
+    assert missing is not None
+    assert missing.microstore_status == "absent"
+    assert missing.workflow_status == "historical"
+    assert active is not None
+    assert active.microstore_status == "active"
+    assert active.workflow_status == "synced"
+    db.close()
+
+
+def test_product_draft_does_not_get_marked_missing_by_microstore_sync(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    draft = db.upsert_product_draft(
+        Product(
+            id=None,
+            ref="NEW123",
+            type_label="ROBES COURTES",
+            name="Nouveau produit",
+            unit_price_ht=Decimal("8.00"),
+            package_size=12,
+            workflow_status="draft",
+        )
+    )
+
+    db.upsert_products([], mark_missing=True)
+    reloaded = db.get_product_by_ref("NEW123")
+    preview = db.product_change_preview(draft)
+
+    assert reloaded is not None
+    assert reloaded.workflow_status == "to_create"
+    assert reloaded.microstore_status == ""
+    assert preview[0] == "Créer NEW123 dans Microstore (simulation)"
+    db.close()
+
+
+def test_product_activity_dates_and_sheet_fields_are_persisted(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    db.upsert_products(
+        [
+            Product(
+                id=None,
+                ref="FL999",
+                type_label="ROBES COURTES",
+                name="Produit test",
+                unit_price_ht=Decimal("9.50"),
+                package_size=12,
+                microstore_status="active",
+                brand="SZ",
+                year="2026",
+                season="ETE",
+                origin_country="China",
+                stock_snapshot=24,
+                promo="PROMO",
+                discount_percent=Decimal("10"),
+                remark="Note produit",
+                platform_price_ht=Decimal("10.00"),
+                last_microstore_modified_at="2026-06-01T10:00:00Z",
+            )
+        ]
+    )
+
+    product = db.get_product_by_ref("FL999")
+
+    assert product is not None
+    assert product.brand == "SZ"
+    assert product.year == "2026"
+    assert product.season == "ETE"
+    assert product.origin_country == "China"
+    assert product.stock_snapshot == 24
+    assert product.discount_percent == Decimal("10")
+    assert product.platform_price_ht == Decimal("10.00")
+    assert product.last_microstore_modified_at == "2026-06-01T10:00:00Z"
+    db.close()
+
+
+def test_microstore_product_writer_is_diagnostic_only():
+    product = Product(
+        id=None,
+        ref="NEW123",
+        type_label="ROBES COURTES",
+        name="Produit test",
+        unit_price_ht=Decimal("8.00"),
+        package_size=12,
+        workflow_status="to_create",
+    )
+    writer = MicrostoreProductWriter()
+    payload = writer.build_payload(product)
+
+    assert payload.endpoint == "/goods/add"
+    assert payload.payload["item_ref"] == "NEW123"
+    try:
+        writer.apply(product)
+    except MicrostoreWriteNotEnabled:
+        pass
+    else:
+        raise AssertionError("writer.apply doit rester bloque tant que l'API ecriture n'est pas validee")
+
+
+def test_cached_portal_line_with_zero_quantity_is_repaired(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    db.upsert_mapping(SageMapping("ROBES COURTES", "RO", "ROBE / TUNIC"))
+
+    line = Resolver(db).line_from_portal_line(
+        PortalOrderLine(
+            ref="FL329-2",
+            category="Robes",
+            package_count=1,
+            package_size=12,
+            quantity_pieces=0,
+            unit_price_ht=Decimal("4"),
+        ),
+        source="PFS",
+    )
+
+    assert line.quantity_pieces == 12
+    assert line.validation_status == "ok"
     db.close()
 
 

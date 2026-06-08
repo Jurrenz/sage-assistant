@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QThread, QTimer, Qt, Signal
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, QObject, QSortFilterProxyModel, QThread, QTimer, Qt, QUrl, Signal
+from PySide6.QtGui import QDesktopServices, QFont
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -16,6 +18,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QFormLayout,
     QFrame,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
@@ -24,10 +27,16 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QProgressBar,
+    QScrollArea,
+    QSizePolicy,
     QSpinBox,
     QStackedWidget,
+    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QTableView,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -35,7 +44,8 @@ from PySide6.QtWidgets import (
 from .db import Database
 from .excel_import import import_order, import_products
 from .injection import launch_ahk_tool, launch_autohotkey, write_injection_queue
-from .models import InvoiceLine, SageMapping
+from .models import InvoiceLine, Product, SageMapping
+from .microstore_product_writer import MicrostoreProductWriter, MicrostoreWriteNotEnabled
 from .order_folder import OrderFile, list_order_files
 from .portal_orders import EfashionConnector, MicrostoreConnector, PfsConnector, PortalOrder, PortalOrderSummary
 from .product_folder import latest_product_export
@@ -66,8 +76,19 @@ ROLE_KIND = Qt.UserRole
 ROLE_SOURCE = Qt.UserRole + 1
 ROLE_KEY = Qt.UserRole + 2
 ROLE_PAYLOAD = Qt.UserRole + 3
+ROLE_PRODUCT_REF = Qt.UserRole + 4
 
 COMMAND_HEADERS = ["Source", "N commande", "Client", "Date", "Lignes", "Total", "Statut"]
+PRODUCT_HEADERS = ["Référence", "Nom", "Catégorie", "Statut", "Prix", "Colisage", "Dernière activité"]
+PRODUCT_STATUSES = (
+    "Tous",
+    "Actif Microstore",
+    "Désactivé Microstore",
+    "Brouillon",
+    "À créer",
+    "Modifié localement",
+    "Historique local",
+)
 LINE_HEADERS = [
     "Reference",
     "Categorie",
@@ -76,10 +97,8 @@ LINE_HEADERS = [
     "Paquets",
     "Colisage",
     "Pieces",
-    "Prix retenu",
-    "Prix plateforme",
-    "Prix catalogue",
-    "Ecart",
+    "Prix commande",
+    "Prix Microstore",
     "Statut",
 ]
 MAPPING_HEADERS = ["Categorie fournisseur", "Code Sage", "Actif"]
@@ -89,6 +108,32 @@ def _money_label(value: Decimal | None) -> str:
     if value is None:
         return ""
     return f"{value:.2f} EUR"
+
+
+def _decimal_from_text(value: str) -> Decimal | None:
+    text = value.strip().replace(",", ".")
+    if not text:
+        return None
+    try:
+        return Decimal(text)
+    except InvalidOperation as exc:
+        raise ValueError(f"Prix invalide: {value}") from exc
+
+
+def _product_status_label(product: Product) -> str:
+    if product.workflow_status == "draft":
+        return "Brouillon"
+    if product.workflow_status == "to_create":
+        return "À créer"
+    if product.workflow_status == "modified":
+        return "Modifié localement"
+    if product.workflow_status == "historical":
+        return "Historique local"
+    if product.microstore_status == "disabled":
+        return "Désactivé Microstore"
+    if product.microstore_status == "active":
+        return "Actif Microstore"
+    return "Synchronisé"
 
 
 def _order_key(order_file: OrderFile | Path) -> str:
@@ -139,14 +184,139 @@ def _display_date(value: str) -> str:
     return parsed.strftime("%d/%m/%Y %H:%M")
 
 
+def _product_activity_iso(product: Product) -> str:
+    return max(
+        product.last_microstore_modified_at or "",
+        product.last_local_modified_at or "",
+        product.last_seen_at or "",
+        product.last_imported_at or "",
+    )
+
+
+class ProductTableModel(QAbstractTableModel):
+    def __init__(self, products: list[Product] | None = None) -> None:
+        super().__init__()
+        self.products = products or []
+
+    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
+        return 0 if parent.isValid() else len(self.products)
+
+    def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:
+        return 0 if parent.isValid() else len(PRODUCT_HEADERS)
+
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole):
+        if role == Qt.DisplayRole and orientation == Qt.Horizontal and 0 <= section < len(PRODUCT_HEADERS):
+            return PRODUCT_HEADERS[section]
+        return None
+
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole):
+        if not index.isValid() or not (0 <= index.row() < len(self.products)):
+            return None
+        product = self.products[index.row()]
+        column = index.column()
+        if role in (Qt.DisplayRole, Qt.EditRole):
+            values = (
+                product.ref,
+                product.name,
+                product.type_label,
+                _product_status_label(product),
+                str(product.unit_price_ht or ""),
+                str(product.package_size or ""),
+                _display_date(_product_activity_iso(product)),
+            )
+            return values[column] if 0 <= column < len(values) else ""
+        if role == Qt.UserRole:
+            return product.ref
+        if role == Qt.UserRole + 1:
+            values = (
+                product.ref,
+                product.name,
+                product.type_label,
+                _product_status_label(product),
+                product.unit_price_ht or Decimal("0"),
+                product.package_size or 0,
+                _timestamp_from_iso(_product_activity_iso(product)),
+            )
+            return values[column] if 0 <= column < len(values) else None
+        return None
+
+    def set_products(self, products: list[Product]) -> None:
+        self.beginResetModel()
+        self.products = products
+        self.endResetModel()
+
+    def product_at(self, row: int) -> Product | None:
+        if 0 <= row < len(self.products):
+            return self.products[row]
+        return None
+
+
+class ProductFilterProxyModel(QSortFilterProxyModel):
+    def __init__(self) -> None:
+        super().__init__()
+        self.search_text = ""
+        self.type_filter = "Tous"
+        self.status_filter = "Tous"
+        self.setDynamicSortFilter(True)
+
+    def set_filters(self, search: str, type_filter: str, status_filter: str) -> None:
+        self.search_text = search.strip().upper()
+        self.type_filter = type_filter or "Tous"
+        self.status_filter = status_filter or "Tous"
+        self.invalidateFilter()
+
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
+        model = self.sourceModel()
+        if not isinstance(model, ProductTableModel):
+            return True
+        product = model.product_at(source_row)
+        if product is None:
+            return False
+        if self.type_filter != "Tous" and product.type_label != self.type_filter:
+            return False
+        if self.status_filter != "Tous" and _product_status_label(product) != self.status_filter:
+            return False
+        if self.search_text:
+            haystack = " ".join([product.ref, product.name, product.type_label, product.remark]).upper()
+            if self.search_text not in haystack:
+                return False
+        return True
+
+    def lessThan(self, left: QModelIndex, right: QModelIndex) -> bool:
+        left_value = left.data(Qt.UserRole + 1)
+        right_value = right.data(Qt.UserRole + 1)
+        return left_value < right_value
+
+
+def _order_web_url(source: str, order_id: str, order_number: str = "", microstore_token: str = "") -> str:
+    identifier = order_id or order_number
+    if source == "eFashion" and identifier:
+        return f"https://wholesaler.efashion-paris.com/orderdetails/{identifier}?page=1&limit=25"
+    if source == "PFS" and identifier:
+        return f"https://wholesaler.parisfashionshops.com/orders/{identifier}/details"
+    if source == "Microstore" and identifier and microstore_token:
+        return f"https://mc2-h5.dokkr.net/order-detail.html?doc_id={identifier}&lang=fr&key={microstore_token}"
+    if source == "Microstore":
+        return "https://web.mc.app/#/mc/bill"
+    return ""
+
+
+def line_headers_for_source(source: str = "") -> list[str]:
+    headers = list(LINE_HEADERS)
+    if source == "eFashion":
+        headers[7] = "Prix eFashion"
+    elif source == "PFS":
+        headers[7] = "Prix PFS"
+    elif source == "Microstore":
+        headers[7] = "Prix Microstore commande"
+    return headers
+
+
 def populate_lines_table(table: QTableWidget, lines: list[InvoiceLine], editable: bool = False) -> None:
     table.blockSignals(True)
     table.setRowCount(len(lines))
     for row, line in enumerate(lines):
         status = line.validation_status if line.validation_status == "ok" else line.validation_message
-        price_delta = ""
-        if line.order_unit_price_ht is not None and line.catalog_unit_price_ht is not None:
-            price_delta = str(line.order_unit_price_ht - line.catalog_unit_price_ht)
         values = [
             line.ref,
             line.type_label,
@@ -155,16 +325,18 @@ def populate_lines_table(table: QTableWidget, lines: list[InvoiceLine], editable
             str(line.package_count or ""),
             str(line.package_size or ""),
             str(line.quantity_pieces),
-            str(line.unit_price_ht or ""),
-            str(line.order_unit_price_ht or ""),
+            str(line.order_unit_price_ht or line.unit_price_ht or ""),
             str(line.catalog_unit_price_ht or ""),
-            price_delta,
             status,
         ]
         for col, value in enumerate(values):
             item = QTableWidgetItem(value)
             if not editable or col not in {2, 6, 7}:
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            if col == 7:
+                font = QFont(item.font())
+                font.setBold(True)
+                item.setFont(font)
             table.setItem(row, col, item)
     table.blockSignals(False)
     table.resizeRowsToContents()
@@ -180,6 +352,8 @@ class OrderDetailDialog(QDialog):
         super().__init__(parent)
         self.lines = list(lines)
         self.inject_requested = False
+        self.source = summary.get("source", "")
+        self.web_url = summary.get("web_url", "")
         self.setWindowTitle(f"Détail commande {summary.get('number', '')}".strip())
         self.resize(1180, 620)
 
@@ -199,7 +373,7 @@ class OrderDetailDialog(QDialog):
         layout.addWidget(self.message_label)
 
         self.table = QTableWidget(0, len(LINE_HEADERS))
-        self.table.setHorizontalHeaderLabels(LINE_HEADERS)
+        self.table.setHorizontalHeaderLabels(line_headers_for_source(self.source))
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
@@ -215,10 +389,18 @@ class OrderDetailDialog(QDialog):
         save_button.clicked.connect(self._save_corrections)
         inject_button = QPushButton("Injecter dans Sage")
         inject_button.clicked.connect(self._accept_for_injection)
+        open_web_button = QPushButton("Ouvrir sur le site")
+        open_web_button.clicked.connect(self._open_web_page)
+        open_web_button.setEnabled(bool(self.web_url))
+        copy_link_button = QPushButton("Copier lien")
+        copy_link_button.clicked.connect(self._copy_web_link)
+        copy_link_button.setEnabled(bool(self.web_url))
         close_button = QPushButton("Fermer")
         close_button.clicked.connect(self.accept)
         actions.addWidget(remove_button)
         actions.addWidget(save_button)
+        actions.addWidget(open_web_button)
+        actions.addWidget(copy_link_button)
         actions.addStretch(1)
         actions.addWidget(inject_button)
         actions.addWidget(close_button)
@@ -230,6 +412,15 @@ class OrderDetailDialog(QDialog):
         self._save_corrections(show_message=False)
         self.inject_requested = True
         self.accept()
+
+    def _open_web_page(self) -> None:
+        if self.web_url:
+            QDesktopServices.openUrl(QUrl(self.web_url))
+
+    def _copy_web_link(self) -> None:
+        if self.web_url:
+            QApplication.clipboard().setText(self.web_url)
+            self.message_label.setText("Lien copie dans le presse-papiers.")
 
     def _remove_selected_lines(self) -> None:
         rows = sorted({item.row() for item in self.table.selectedItems()}, reverse=True)
@@ -266,6 +457,7 @@ class OrderDetailDialog(QDialog):
             line.quantity_pieces = int(self.table.item(row, 6).text().strip())
             price_text = self.table.item(row, 7).text().strip().replace(",", ".")
             line.unit_price_ht = Decimal(price_text) if price_text else None
+            line.order_unit_price_ht = line.unit_price_ht
             line.price_confirmed = True
         except Exception as exc:
             line.validation_status = "blocked"
@@ -372,8 +564,189 @@ class SageMappingsDialog(QDialog):
         self.mapping_code.setText(self.table.item(row, 1).text())
 
 
+class ProductDraftDialog(QDialog):
+    def __init__(self, product: Product | None = None, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.product = product
+        self.saved_product: Product | None = None
+        self.setWindowTitle("Fiche produit")
+        self.resize(760, 640)
+
+        layout = QVBoxLayout(self)
+        self.ref_input = QLineEdit(product.ref if product else "")
+        self.type_input = QLineEdit(product.type_label if product else "")
+        self.name_input = QLineEdit(product.name if product else "")
+        self.price_input = QLineEdit(str(product.unit_price_ht or "") if product else "")
+        self.package_input = QSpinBox()
+        self.package_input.setRange(0, 10000)
+        self.package_input.setSpecialValueText("vide")
+        self.package_input.setValue((product.package_size or 0) if product else 0)
+        self.content_input = QLineEdit(product.content_label if product else "")
+        self.composition_input = QLineEdit(product.composition if product else "")
+        self.color_input = QLineEdit(product.color if product else "MIX")
+        self.stock_input = QSpinBox()
+        self.stock_input.setRange(-1, 10_000_000)
+        self.stock_input.setSpecialValueText("vide")
+        self.stock_input.setValue(product.stock_snapshot if product and product.stock_snapshot is not None else -1)
+        self.brand_input = QLineEdit(product.brand if product else "")
+        self.year_input = QLineEdit(product.year if product else "")
+        self.season_input = QLineEdit(product.season if product else "")
+        self.pieces_outside_package_input = QSpinBox()
+        self.pieces_outside_package_input.setRange(0, 10000)
+        self.pieces_outside_package_input.setSpecialValueText("vide")
+        self.pieces_outside_package_input.setValue((product.pieces_outside_package or 0) if product else 0)
+        self.weight_input = QSpinBox()
+        self.weight_input.setRange(0, 1_000_000)
+        self.weight_input.setSpecialValueText("vide")
+        self.weight_input.setValue((product.weight_grams or 0) if product else 0)
+        self.origin_input = QLineEdit(product.origin_country if product else "")
+        self.created_at_input = QLineEdit(_display_date(product.created_at or "") if product else "")
+        self.promo_input = QLineEdit(product.promo if product else "")
+        self.discount_input = QLineEdit(str(product.discount_percent or "") if product else "")
+        self.remark_input = QTextEdit(product.remark if product else "")
+        self.remark_input.setFixedHeight(80)
+        self.colors_input = QLineEdit(product.colors if product else "")
+        self.color_distribution_inputs: list[QLineEdit] = []
+        self.color_value_inputs: list[QLineEdit] = []
+        for index in range(1, 7):
+            distribution = getattr(product, f"color_distribution_{index}", "") if product else ""
+            color_value = getattr(product, f"color_{index}", "") if product else ""
+            self.color_distribution_inputs.append(QLineEdit(distribution))
+            self.color_value_inputs.append(QLineEdit(color_value))
+        self.platform_price_input = QLineEdit(str(product.platform_price_ht or "") if product else "")
+        self.platform_promo_input = QLineEdit(product.platform_promo if product else "")
+        self.status_label = QLabel(_product_status_label(product) if product else "Brouillon")
+        self.ms_last_seen_label = QLabel(_display_date(product.last_seen_at or "") if product else "")
+        self.microstore_modified_label = QLabel(_display_date(product.last_microstore_modified_at or "") if product else "")
+        self.local_modified_label = QLabel(_display_date(product.last_local_modified_at or "") if product else "")
+
+        tabs = QTabWidget()
+        general = QWidget()
+        general_form = QFormLayout(general)
+        general_form.addRow("Référence", self.ref_input)
+        general_form.addRow("Nom", self.name_input)
+        general_form.addRow("Catégorie", self.type_input)
+        general_form.addRow("Prix HT", self.price_input)
+        general_form.addRow("Colisage", self.package_input)
+        general_form.addRow("Marque", self.brand_input)
+        general_form.addRow("Année", self.year_input)
+        general_form.addRow("Saison", self.season_input)
+        general_form.addRow("Pièces hors colisage", self.pieces_outside_package_input)
+        general_form.addRow("Poids (g)", self.weight_input)
+        general_form.addRow("Pays d'origine", self.origin_input)
+        general_form.addRow("Date de création", self.created_at_input)
+        general_form.addRow("Stock connu", self.stock_input)
+        general_form.addRow("Promo", self.promo_input)
+        general_form.addRow("Remise (%)", self.discount_input)
+        general_form.addRow("Remarque", self.remark_input)
+
+        microstore = QWidget()
+        microstore_form = QFormLayout(microstore)
+        microstore_form.addRow("Statut actuel", self.status_label)
+        microstore_form.addRow("Dernière vue Microstore", self.ms_last_seen_label)
+        microstore_form.addRow("Dernière modification Microstore", self.microstore_modified_label)
+        microstore_form.addRow("Dernière modification locale", self.local_modified_label)
+
+        platforms = QWidget()
+        platform_form = QFormLayout(platforms)
+        platform_form.addRow("Contenu colis", self.content_input)
+        platform_form.addRow("Composition matérielle", self.composition_input)
+        platform_form.addRow("Couleur", self.color_input)
+        platform_form.addRow("Couleurs", self.colors_input)
+        for index in range(6):
+            platform_form.addRow(f"Répartition {index + 1}", self.color_distribution_inputs[index])
+            platform_form.addRow(f"Couleur {index + 1}", self.color_value_inputs[index])
+        platform_form.addRow("Prix plateformes", self.platform_price_input)
+        platform_form.addRow("Promo plateformes", self.platform_promo_input)
+
+        tabs.addTab(general, "Général")
+        tabs.addTab(microstore, "Microstore")
+        tabs.addTab(platforms, "Plateformes")
+        layout.addWidget(tabs, 1)
+
+        self.message_label = QLabel("")
+        self.message_label.setWordWrap(True)
+        layout.addWidget(self.message_label)
+
+        actions = QHBoxLayout()
+        save_button = QPushButton("Sauver")
+        save_button.clicked.connect(self._save)
+        cancel_button = QPushButton("Annuler")
+        cancel_button.clicked.connect(self.reject)
+        actions.addStretch(1)
+        actions.addWidget(save_button)
+        actions.addWidget(cancel_button)
+        layout.addLayout(actions)
+
+    def _save(self) -> None:
+        try:
+            ref = self.ref_input.text().strip().upper()
+            if not ref:
+                raise ValueError("Référence obligatoire.")
+            price = _decimal_from_text(self.price_input.text())
+            platform_price = _decimal_from_text(self.platform_price_input.text())
+            discount = _decimal_from_text(self.discount_input.text())
+            package_size = self.package_input.value() or None
+            stock_value = self.stock_input.value()
+            pieces_outside_package = self.pieces_outside_package_input.value() or None
+            weight = self.weight_input.value() or None
+            workflow_status = "modified" if self.product and self.product.workflow_status not in {"draft", "to_create"} else "draft"
+            self.saved_product = Product(
+                id=self.product.id if self.product else None,
+                ref=ref,
+                type_label=self.type_input.text().strip(),
+                name=self.name_input.text().strip(),
+                unit_price_ht=price,
+                package_size=package_size,
+                active=True,
+                microstore_status=self.product.microstore_status if self.product else "",
+                content_label=self.content_input.text().strip(),
+                composition=self.composition_input.text().strip(),
+                color=self.color_input.text().strip(),
+                stock_snapshot=stock_value if stock_value >= 0 else None,
+                brand=self.brand_input.text().strip(),
+                year=self.year_input.text().strip(),
+                season=self.season_input.text().strip(),
+                pieces_outside_package=pieces_outside_package,
+                weight_grams=weight,
+                origin_country=self.origin_input.text().strip(),
+                created_at=self.product.created_at if self.product else None,
+                promo=self.promo_input.text().strip(),
+                discount_percent=discount,
+                remark=self.remark_input.toPlainText().strip(),
+                colors=self.colors_input.text().strip(),
+                color_distribution_1=self.color_distribution_inputs[0].text().strip(),
+                color_1=self.color_value_inputs[0].text().strip(),
+                color_distribution_2=self.color_distribution_inputs[1].text().strip(),
+                color_2=self.color_value_inputs[1].text().strip(),
+                color_distribution_3=self.color_distribution_inputs[2].text().strip(),
+                color_3=self.color_value_inputs[2].text().strip(),
+                color_distribution_4=self.color_distribution_inputs[3].text().strip(),
+                color_4=self.color_value_inputs[3].text().strip(),
+                color_distribution_5=self.color_distribution_inputs[4].text().strip(),
+                color_5=self.color_value_inputs[4].text().strip(),
+                color_distribution_6=self.color_distribution_inputs[5].text().strip(),
+                color_6=self.color_value_inputs[5].text().strip(),
+                platform_price_ht=platform_price,
+                platform_promo=self.platform_promo_input.text().strip(),
+                workflow_status=workflow_status,
+                last_seen_at=self.product.last_seen_at if self.product else None,
+                last_microstore_modified_at=self.product.last_microstore_modified_at if self.product else None,
+                last_local_modified_at=self.product.last_local_modified_at if self.product else None,
+                raw=self.product.raw if self.product else {},
+                last_imported_at=self.product.last_imported_at if self.product else None,
+            )
+        except Exception as exc:
+            self.message_label.setText(str(exc))
+            return
+        self.accept()
+
+
 class SyncWorker(QObject):
-    finished = Signal(object)
+    progress = Signal(str, int, str)
+    source_finished = Signal(str, object)
+    source_error = Signal(str, str)
+    all_finished = Signal(object)
 
     def __init__(
         self,
@@ -395,37 +768,149 @@ class SyncWorker(QObject):
         self.efashion_password = efashion_password
         self.pfs_email = pfs_email
         self.pfs_password = pfs_password
+        self.cancel_requested = False
+
+    def cancel(self) -> None:
+        self.cancel_requested = True
 
     def run(self) -> None:
-        result = {"sources": {}, "errors": {}}
-        if "Microstore" in self.sources:
-            try:
-                connector = MicrostoreConnector(self.microstore_token)
-                products = connector.list_products()
-                summaries = connector.list_orders(days=self.microstore_days)
-                orders = [(summary, connector.get_order(summary.order_id)) for summary in summaries]
-                result["sources"]["Microstore"] = {"products": products, "orders": orders}
-            except Exception as exc:
-                result["errors"]["Microstore"] = str(exc)
-        if "eFashion" in self.sources:
-            try:
-                connector = EfashionConnector()
-                connector.login(self.efashion_email, self.efashion_password)
-                summaries = connector.list_orders(page=1, limit=self.portal_limit)
-                orders = [(summary, connector.get_order(summary.order_id)) for summary in summaries]
-                result["sources"]["eFashion"] = {"products": [], "orders": orders}
-            except Exception as exc:
-                result["errors"]["eFashion"] = str(exc)
-        if "PFS" in self.sources:
-            try:
-                connector = PfsConnector()
-                connector.login(self.pfs_email, self.pfs_password)
-                summaries = connector.list_orders(page=1, per_page=self.portal_limit)
-                orders = [(summary, connector.get_order(summary.order_id)) for summary in summaries]
-                result["sources"]["PFS"] = {"products": [], "orders": orders}
-            except Exception as exc:
-                result["errors"]["PFS"] = str(exc)
-        self.finished.emit(result)
+        result = {"sources": {}, "errors": {}, "cancelled": False}
+        db = Database(default_db_path())
+        resolver = Resolver(db)
+        try:
+            if "Microstore" in self.sources and not self.cancel_requested:
+                self._run_microstore(db, resolver, result)
+            if "eFashion" in self.sources and not self.cancel_requested:
+                self._run_efashion(db, resolver, result)
+            if "PFS" in self.sources and not self.cancel_requested:
+                self._run_pfs(db, resolver, result)
+        finally:
+            db.close()
+            self.all_finished.emit(result)
+
+    def _run_microstore(self, db: Database, resolver: Resolver, result: dict) -> None:
+        source = "Microstore"
+        saved_orders = 0
+        product_count = 0
+        try:
+            self._raise_if_cancelled()
+            self._emit_progress(source, 1, "connexion API")
+            connector = MicrostoreConnector(self.microstore_token)
+            self._raise_if_cancelled()
+            self._emit_progress(source, 8, "recuperation produits")
+            products = connector.list_products()
+            product_count = db.upsert_products(products, mark_missing=True)
+            self._raise_if_cancelled()
+            self._emit_progress(source, 22, f"{product_count} produits sauvegardes")
+            summaries = connector.list_orders(days=self.microstore_days)
+            total = len(summaries)
+            self._emit_progress(source, 30, f"{total} commandes trouvees")
+            for index, summary in enumerate(summaries, start=1):
+                self._raise_if_cancelled()
+                detail = connector.get_order(summary.order_id)
+                self._persist_order(db, resolver, summary, detail)
+                saved_orders += 1
+                self._emit_detail_progress(source, index, total, saved_orders)
+            summary_payload = {"orders": saved_orders, "products": product_count, "cancelled": False}
+            result["sources"][source] = summary_payload
+            self._emit_progress(source, 100, f"{saved_orders} commandes, {product_count} produits")
+            self.source_finished.emit(source, summary_payload)
+        except InterruptedError:
+            summary_payload = {"orders": saved_orders, "products": product_count, "cancelled": True}
+            result["sources"][source] = summary_payload
+            result["cancelled"] = True
+            self._emit_progress(source, 100, f"annule - {saved_orders} commandes sauvegardees")
+            self.source_finished.emit(source, summary_payload)
+        except Exception as exc:
+            message = str(exc)
+            result["errors"][source] = message
+            self._emit_progress(source, 100, f"erreur - {message}")
+            self.source_error.emit(source, message)
+
+    def _run_efashion(self, db: Database, resolver: Resolver, result: dict) -> None:
+        source = "eFashion"
+        saved_orders = 0
+        try:
+            self._raise_if_cancelled()
+            self._emit_progress(source, 1, "connexion")
+            connector = EfashionConnector()
+            connector.login(self.efashion_email, self.efashion_password)
+            self._raise_if_cancelled()
+            self._emit_progress(source, 20, "recuperation commandes")
+            summaries = connector.list_orders(page=1, limit=self.portal_limit)
+            total = len(summaries)
+            self._emit_progress(source, 30, f"{total} commandes trouvees")
+            for index, summary in enumerate(summaries, start=1):
+                self._raise_if_cancelled()
+                detail = connector.get_order(summary.order_id)
+                self._persist_order(db, resolver, summary, detail)
+                saved_orders += 1
+                self._emit_detail_progress(source, index, total, saved_orders)
+            summary_payload = {"orders": saved_orders, "products": 0, "cancelled": False}
+            result["sources"][source] = summary_payload
+            self._emit_progress(source, 100, f"{saved_orders} commandes sauvegardees")
+            self.source_finished.emit(source, summary_payload)
+        except InterruptedError:
+            summary_payload = {"orders": saved_orders, "products": 0, "cancelled": True}
+            result["sources"][source] = summary_payload
+            result["cancelled"] = True
+            self._emit_progress(source, 100, f"annule - {saved_orders} commandes sauvegardees")
+            self.source_finished.emit(source, summary_payload)
+        except Exception as exc:
+            message = str(exc)
+            result["errors"][source] = message
+            self._emit_progress(source, 100, f"erreur - {message}")
+            self.source_error.emit(source, message)
+
+    def _run_pfs(self, db: Database, resolver: Resolver, result: dict) -> None:
+        source = "PFS"
+        saved_orders = 0
+        try:
+            self._raise_if_cancelled()
+            self._emit_progress(source, 1, "connexion")
+            connector = PfsConnector()
+            connector.login(self.pfs_email, self.pfs_password)
+            self._raise_if_cancelled()
+            self._emit_progress(source, 20, "recuperation commandes")
+            summaries = connector.list_orders(page=1, per_page=self.portal_limit)
+            total = len(summaries)
+            self._emit_progress(source, 30, f"{total} commandes trouvees")
+            for index, summary in enumerate(summaries, start=1):
+                self._raise_if_cancelled()
+                detail = connector.get_order(summary.order_id)
+                self._persist_order(db, resolver, summary, detail)
+                saved_orders += 1
+                self._emit_detail_progress(source, index, total, saved_orders)
+            summary_payload = {"orders": saved_orders, "products": 0, "cancelled": False}
+            result["sources"][source] = summary_payload
+            self._emit_progress(source, 100, f"{saved_orders} commandes sauvegardees")
+            self.source_finished.emit(source, summary_payload)
+        except InterruptedError:
+            summary_payload = {"orders": saved_orders, "products": 0, "cancelled": True}
+            result["sources"][source] = summary_payload
+            result["cancelled"] = True
+            self._emit_progress(source, 100, f"annule - {saved_orders} commandes sauvegardees")
+            self.source_finished.emit(source, summary_payload)
+        except Exception as exc:
+            message = str(exc)
+            result["errors"][source] = message
+            self._emit_progress(source, 100, f"erreur - {message}")
+            self.source_error.emit(source, message)
+
+    def _persist_order(self, db: Database, resolver: Resolver, summary: PortalOrderSummary, detail: PortalOrder) -> None:
+        lines = resolver.lines_from_portal_lines(detail.lines, source=detail.source)
+        db.upsert_cached_order(summary, detail, _status_from_lines(lines))
+
+    def _emit_detail_progress(self, source: str, index: int, total: int, saved_orders: int) -> None:
+        percent = 100 if total <= 0 else 30 + round((index / total) * 65)
+        self._emit_progress(source, min(percent, 95), f"details {index}/{total} - {saved_orders} sauvegardees")
+
+    def _emit_progress(self, source: str, percent: int, message: str) -> None:
+        self.progress.emit(source, max(0, min(100, percent)), message)
+
+    def _raise_if_cancelled(self) -> None:
+        if self.cancel_requested:
+            raise InterruptedError
 
 
 class MainWindow(QMainWindow):
@@ -447,8 +932,16 @@ class MainWindow(QMainWindow):
         self.portal_summaries: dict[tuple[str, str], PortalOrderSummary] = {}
         self.portal_details: dict[tuple[str, str], PortalOrder] = {}
         self.portal_status_cache: dict[tuple[str, str], str] = {}
+        self.product_rows: list[Product] = []
+        self.product_model = ProductTableModel()
+        self.product_proxy = ProductFilterProxyModel()
+        self.product_proxy.setSourceModel(self.product_model)
         self.sync_threads: list[QThread] = []
+        self.sync_workers: list[SyncWorker] = []
         self.sync_buttons: dict[str, QPushButton] = {}
+        self.sync_progress_bars: dict[str, QProgressBar] = {}
+        self.sync_status_labels: dict[str, QLabel] = {}
+        self.sync_active_sources: set[str] = set()
 
         self.setWindowTitle(APP_NAME)
         self.resize(1320, 760)
@@ -458,14 +951,18 @@ class MainWindow(QMainWindow):
         self._refresh_status()
         self._refresh_missing_types()
         self._refresh_product_folder()
+        self._refresh_products_page()
         self._refresh_order_folder()
         self._refresh_mappings_table()
+        self._refresh_products_page()
 
         self.sage_watch_timer = QTimer(self)
         self.sage_watch_timer.timeout.connect(self._watch_sage_process)
         self.sage_watch_timer.start(3000)
 
     def closeEvent(self, event) -> None:  # type: ignore[override]
+        for worker in list(self.sync_workers):
+            worker.cancel()
         for thread in list(self.sync_threads):
             if thread.isRunning():
                 thread.quit()
@@ -488,20 +985,26 @@ class MainWindow(QMainWindow):
         self.commands_nav = QPushButton("Commandes")
         self.commands_nav.setCheckable(True)
         self.commands_nav.setChecked(True)
+        self.products_nav = QPushButton("Produits")
+        self.products_nav.setCheckable(True)
         self.settings_nav = QPushButton("Réglages")
         self.settings_nav.setCheckable(True)
         sidebar_layout.addWidget(title)
         sidebar_layout.addWidget(self.commands_nav)
+        sidebar_layout.addWidget(self.products_nav)
         sidebar_layout.addWidget(self.settings_nav)
         sidebar_layout.addStretch(1)
 
         self.stack = QStackedWidget()
         self.commands_page = self._build_commands_page()
+        self.products_page = self._build_products_page()
         self.settings_page = self._build_settings_page()
         self.stack.addWidget(self.commands_page)
+        self.stack.addWidget(self.products_page)
         self.stack.addWidget(self.settings_page)
         self.commands_nav.clicked.connect(lambda: self._show_page(0))
-        self.settings_nav.clicked.connect(lambda: self._show_page(1))
+        self.products_nav.clicked.connect(lambda: self._show_page(1))
+        self.settings_nav.clicked.connect(lambda: self._show_page(2))
 
         root_layout.addWidget(sidebar)
         root_layout.addWidget(self.stack, 1)
@@ -510,7 +1013,8 @@ class MainWindow(QMainWindow):
     def _show_page(self, index: int) -> None:
         self.stack.setCurrentIndex(index)
         self.commands_nav.setChecked(index == 0)
-        self.settings_nav.setChecked(index == 1)
+        self.products_nav.setChecked(index == 1)
+        self.settings_nav.setChecked(index == 2)
 
     def _build_commands_page(self) -> QWidget:
         page = QWidget()
@@ -563,6 +1067,10 @@ class MainWindow(QMainWindow):
         sync_orders.clicked.connect(lambda: self._start_sync(["Microstore", "eFashion", "PFS"]))
         detail_button = QPushButton("Ouvrir détails")
         detail_button.clicked.connect(self._open_selected_order_detail)
+        open_web_button = QPushButton("Ouvrir sur le site")
+        open_web_button.clicked.connect(self._open_selected_order_web_page)
+        copy_link_button = QPushButton("Copier lien")
+        copy_link_button.clicked.connect(self._copy_selected_order_web_link)
         inject_selected = QPushButton("Injecter dans Sage")
         inject_selected.clicked.connect(self._inject_selected_order_from_folder)
         mark_done = QPushButton("Marquer traité")
@@ -571,13 +1079,80 @@ class MainWindow(QMainWindow):
         actions.addStretch(1)
         actions.addWidget(sync_orders)
         actions.addWidget(detail_button)
+        actions.addWidget(open_web_button)
+        actions.addWidget(copy_link_button)
         actions.addWidget(inject_selected)
         actions.addWidget(mark_done)
         layout.addLayout(actions)
         return page
 
-    def _build_settings_page(self) -> QWidget:
+    def _build_products_page(self) -> QWidget:
         page = QWidget()
+        layout = QVBoxLayout(page)
+
+        self.product_status_label = QLabel("")
+        layout.addWidget(self.product_status_label)
+
+        filters = QHBoxLayout()
+        self.product_search = QLineEdit()
+        self.product_search.setPlaceholderText("Rechercher référence, catégorie, nom...")
+        self.product_search.textChanged.connect(self._apply_product_filters)
+        self.product_type_filter = QComboBox()
+        self.product_type_filter.currentTextChanged.connect(self._apply_product_filters)
+        self.product_status_filter = QComboBox()
+        self.product_status_filter.addItems(PRODUCT_STATUSES)
+        self.product_status_filter.currentTextChanged.connect(self._apply_product_filters)
+        filters.addWidget(self.product_search, 1)
+        filters.addWidget(QLabel("Catégorie"))
+        filters.addWidget(self.product_type_filter)
+        filters.addWidget(QLabel("Statut"))
+        filters.addWidget(self.product_status_filter)
+        layout.addLayout(filters)
+
+        self.product_table = QTableView()
+        self.product_table.setModel(self.product_proxy)
+        self.product_table.setSortingEnabled(True)
+        self.product_table.sortByColumn(6, Qt.DescendingOrder)
+        self.product_table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.product_table.horizontalHeader().setStretchLastSection(False)
+        self.product_table.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
+        self.product_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.product_table.verticalHeader().setDefaultSectionSize(28)
+        self.product_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.product_table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.product_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.product_table.doubleClicked.connect(lambda _index: self._edit_selected_product())
+        layout.addWidget(self.product_table, 1)
+
+        actions = QHBoxLayout()
+        refresh_button = QPushButton("Recharger affichage")
+        refresh_button.clicked.connect(self._refresh_products_page)
+        sync_button = QPushButton("Synchroniser Microstore")
+        sync_button.clicked.connect(lambda: self._start_sync(["Microstore"]))
+        new_button = QPushButton("Nouveau brouillon")
+        new_button.clicked.connect(self._new_product_draft)
+        edit_button = QPushButton("Modifier")
+        edit_button.clicked.connect(self._edit_selected_product)
+        simulate_button = QPushButton("Simulation")
+        simulate_button.clicked.connect(self._simulate_selected_product)
+        apply_button = QPushButton("Appliquer à Microstore")
+        apply_button.clicked.connect(self._apply_selected_product_to_microstore)
+        actions.addWidget(refresh_button)
+        actions.addWidget(sync_button)
+        actions.addStretch(1)
+        actions.addWidget(new_button)
+        actions.addWidget(edit_button)
+        actions.addWidget(simulate_button)
+        actions.addWidget(apply_button)
+        layout.addLayout(actions)
+        return page
+
+    def _build_settings_page(self) -> QWidget:
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        page = QWidget()
+        page.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         layout = QVBoxLayout(page)
 
         layout.addWidget(self._build_portals_section())
@@ -588,12 +1163,15 @@ class MainWindow(QMainWindow):
 
         save_row = QHBoxLayout()
         self.missing_types = QLabel("")
+        self.missing_types.setWordWrap(True)
+        self.missing_types.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         save_settings_button = QPushButton("Sauver reglages")
         save_settings_button.clicked.connect(self._save_app_settings)
         save_row.addWidget(self.missing_types, 1)
         save_row.addWidget(save_settings_button)
         layout.addLayout(save_row)
-        return page
+        scroll.setWidget(page)
+        return scroll
 
     def _build_portals_section(self) -> QGroupBox:
         box = QGroupBox("Synchronisation")
@@ -603,6 +1181,8 @@ class MainWindow(QMainWindow):
         self.microstore_token = QLineEdit(self.settings.microstore_api_token)
         self.microstore_token.setPlaceholderText("Token admin_token Microstore")
         self.microstore_token.setEchoMode(QLineEdit.Password)
+        self.microstore_token.setMinimumWidth(0)
+        self.microstore_token.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.microstore_days = QSpinBox()
         self.microstore_days.setRange(1, 365)
         self.microstore_days.setSuffix(" jours")
@@ -623,6 +1203,8 @@ class MainWindow(QMainWindow):
         self.efashion_email = QLineEdit(self.settings.efashion_email or self.settings.portal_email)
         self.efashion_password = QLineEdit(self.settings.efashion_password)
         self.efashion_password.setEchoMode(QLineEdit.Password)
+        self.efashion_email.setMinimumWidth(0)
+        self.efashion_password.setMinimumWidth(0)
         efashion_row.addWidget(QLabel("Email eFashion"))
         efashion_row.addWidget(self.efashion_email, 1)
         efashion_row.addWidget(QLabel("Mot de passe eFashion"))
@@ -633,6 +1215,8 @@ class MainWindow(QMainWindow):
         self.pfs_email = QLineEdit(self.settings.pfs_email or self.settings.portal_email)
         self.pfs_password = QLineEdit(self.settings.pfs_password)
         self.pfs_password.setEchoMode(QLineEdit.Password)
+        self.pfs_email.setMinimumWidth(0)
+        self.pfs_password.setMinimumWidth(0)
         pfs_row.addWidget(QLabel("Email PFS"))
         pfs_row.addWidget(self.pfs_email, 1)
         pfs_row.addWidget(QLabel("Mot de passe PFS"))
@@ -643,30 +1227,64 @@ class MainWindow(QMainWindow):
         self.microstore_status = QLabel("Microstore: non configure")
         self.efashion_status = QLabel("eFashion: non connecte")
         self.pfs_status = QLabel("PFS: non connecte")
+        for status_label in (self.microstore_status, self.efashion_status, self.pfs_status):
+            status_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
+            status_label.setWordWrap(False)
         sync_microstore = QPushButton("Synchroniser Microstore")
         sync_efashion = QPushButton("Synchroniser eFashion")
         sync_pfs = QPushButton("Synchroniser PFS")
         sync_button = QPushButton("Synchroniser tout")
+        self.cancel_sync_button = QPushButton("Annuler")
+        self.cancel_sync_button.setEnabled(False)
         sync_microstore.clicked.connect(lambda: self._start_sync(["Microstore"]))
         sync_efashion.clicked.connect(lambda: self._start_sync(["eFashion"]))
         sync_pfs.clicked.connect(lambda: self._start_sync(["PFS"]))
         sync_button.clicked.connect(lambda: self._start_sync(["Microstore", "eFashion", "PFS"]))
+        self.cancel_sync_button.clicked.connect(self._cancel_sync)
         self.sync_buttons = {
             "Microstore": sync_microstore,
             "eFashion": sync_efashion,
             "PFS": sync_pfs,
             "all": sync_button,
         }
-        actions.addWidget(self.microstore_status)
-        actions.addWidget(self.efashion_status)
-        actions.addWidget(self.pfs_status)
         actions.addStretch(1)
         actions.addWidget(sync_microstore)
         actions.addWidget(sync_efashion)
         actions.addWidget(sync_pfs)
         actions.addWidget(sync_button)
+        actions.addWidget(self.cancel_sync_button)
         layout.addLayout(actions)
+
+        progress_layout = QGridLayout()
+        progress_layout.setColumnStretch(2, 1)
+        self.sync_progress_bars = {}
+        self.sync_status_labels = {}
+        for row_index, source in enumerate(("Microstore", "eFashion", "PFS")):
+            source_label = QLabel(source)
+            source_label.setFixedWidth(82)
+            bar = QProgressBar()
+            bar.setRange(0, 100)
+            bar.setValue(0)
+            bar.setFormat("%p%")
+            bar.setFixedWidth(220)
+            bar.setFixedHeight(18)
+            bar.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            status_label = {
+                "Microstore": self.microstore_status,
+                "eFashion": self.efashion_status,
+                "PFS": self.pfs_status,
+            }[source]
+            status_label.setText(f"{source}: pret")
+            self.sync_progress_bars[source] = bar
+            self.sync_status_labels[source] = status_label
+            progress_layout.addWidget(source_label, row_index, 0)
+            progress_layout.addWidget(bar, row_index, 1)
+            progress_layout.addWidget(status_label, row_index, 2)
+        layout.addLayout(progress_layout)
+
         self.sync_summary = QLabel("")
+        self.sync_summary.setWordWrap(True)
+        self.sync_summary.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         layout.addWidget(self.sync_summary)
         return box
 
@@ -716,6 +1334,9 @@ class MainWindow(QMainWindow):
         self.ahk_path = QLineEdit(self.settings.autohotkey_path)
         self.sage_path = QLineEdit(self.settings.sage_executable_path)
         self.window_title = QLineEdit(self.settings.sage_profile.window_title_contains)
+        for line_edit in (self.ahk_path, self.sage_path, self.window_title):
+            line_edit.setMinimumWidth(0)
+            line_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.auto_close = QCheckBox("Fermer l'assistant quand Sage se ferme")
         self.auto_close.setChecked(self.settings.auto_close_with_sage)
         self.always_on_top = QCheckBox("Epingler la fenetre")
@@ -768,6 +1389,8 @@ class MainWindow(QMainWindow):
         layout = QHBoxLayout(box)
         db_path = QLineEdit(str(default_db_path()))
         db_path.setReadOnly(True)
+        db_path.setMinimumWidth(0)
+        db_path.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         backup_button = QPushButton("Sauvegarder la base")
         backup_button.setEnabled(False)
         maintenance_button = QPushButton("Maintenance")
@@ -811,6 +1434,121 @@ class MainWindow(QMainWindow):
             self.missing_types.setText("Types sans mapping: " + ", ".join(missing[:20]))
         else:
             self.missing_types.setText("Tous les types produits connus ont un mapping.")
+
+    def _refresh_product_type_filter(self) -> None:
+        if not hasattr(self, "product_type_filter"):
+            return
+        current = self.product_type_filter.currentText() or "Tous"
+        types = ["Tous", *self.db.list_product_types()]
+        self.product_type_filter.blockSignals(True)
+        self.product_type_filter.clear()
+        self.product_type_filter.addItems(types)
+        self.product_type_filter.setCurrentText(current if current in types else "Tous")
+        self.product_type_filter.blockSignals(False)
+
+    def _refresh_products_page(self) -> None:
+        if not hasattr(self, "product_table"):
+            return
+        self._refresh_product_type_filter()
+        self.product_rows = self.db.list_products(limit=10_000)
+        self.product_model.set_products(self.product_rows)
+        self._apply_product_filters()
+        self.product_table.sortByColumn(6, Qt.DescendingOrder)
+        if self.product_table.columnWidth(0) < 90:
+            widths = [110, 190, 180, 150, 90, 80, 150]
+            for col, width in enumerate(widths):
+                self.product_table.setColumnWidth(col, width)
+        active = self.db.count_products_by_microstore_status("active")
+        disabled = self.db.count_products_by_microstore_status("disabled")
+        historical = self.db.count_products_by_workflow_status("historical")
+        self.product_status_label.setText(
+            f"{self.product_proxy.rowCount()} affichés | {active} actifs Microstore | {disabled} désactivés | {historical} historiques locaux | dernière synchro API {_display_date(self.db.latest_product_import() or '') or 'jamais'}"
+        )
+
+    def _apply_product_filters(self) -> None:
+        if not hasattr(self, "product_proxy"):
+            return
+        search = self.product_search.text().strip() if hasattr(self, "product_search") else ""
+        type_filter = self.product_type_filter.currentText() if hasattr(self, "product_type_filter") else "Tous"
+        status_filter = self.product_status_filter.currentText() if hasattr(self, "product_status_filter") else "Tous"
+        self.product_proxy.set_filters(search, type_filter, status_filter)
+        if hasattr(self, "product_status_label"):
+            active = self.db.count_products_by_microstore_status("active")
+            disabled = self.db.count_products_by_microstore_status("disabled")
+            historical = self.db.count_products_by_workflow_status("historical")
+            self.product_status_label.setText(
+                f"{self.product_proxy.rowCount()} affichés | {active} actifs Microstore | {disabled} désactivés | {historical} historiques locaux | dernière synchro API {_display_date(self.db.latest_product_import() or '') or 'jamais'}"
+            )
+
+    def _selected_product(self) -> Product | None:
+        if not hasattr(self, "product_table"):
+            return None
+        indexes = self.product_table.selectionModel().selectedRows()
+        if not indexes:
+            return None
+        source_index = self.product_proxy.mapToSource(indexes[0])
+        ref = self.product_model.data(self.product_model.index(source_index.row(), 0), Qt.UserRole)
+        return self.db.get_product_by_ref(str(ref or ""))
+
+    def _new_product_draft(self) -> None:
+        dialog = ProductDraftDialog(parent=self)
+        if dialog.exec() != QDialog.Accepted or dialog.saved_product is None:
+            return
+        saved = self.db.upsert_product_draft(dialog.saved_product)
+        self._refresh_products_page()
+        QMessageBox.information(self, APP_NAME, f"Produit sauvegardé en local: {saved.ref}")
+
+    def _edit_selected_product(self) -> None:
+        product = self._selected_product()
+        if product is None:
+            QMessageBox.information(self, APP_NAME, "Aucun produit sélectionné.")
+            return
+        dialog = ProductDraftDialog(product, self)
+        if dialog.exec() != QDialog.Accepted or dialog.saved_product is None:
+            return
+        saved = self.db.upsert_product_draft(dialog.saved_product)
+        self._refresh_products_page()
+        QMessageBox.information(self, APP_NAME, f"Produit sauvegardé en local: {saved.ref}")
+
+    def _simulate_selected_product(self) -> None:
+        product = self._selected_product()
+        if product is None:
+            QMessageBox.information(self, APP_NAME, "Aucun produit sélectionné.")
+            return
+        changes = self.db.product_change_preview(product)
+        QMessageBox.information(
+            self,
+            APP_NAME,
+            "Simulation locale uniquement.\n\n"
+            + "\n".join(changes)
+            + "\n\nAucune écriture Microstore ne sera lancée sans validation explicite.",
+        )
+
+    def _apply_selected_product_to_microstore(self) -> None:
+        product = self._selected_product()
+        if product is None:
+            QMessageBox.information(self, APP_NAME, "Aucun produit sélectionné.")
+            return
+        if product.workflow_status not in {"to_create", "modified"}:
+            QMessageBox.information(self, APP_NAME, "Ce produit n'a pas de modification locale à appliquer.")
+            return
+        changes = self.db.product_change_preview(product)
+        writer = MicrostoreProductWriter()
+        payload = writer.build_payload(product)
+        text = (
+            "Simulation Microstore uniquement.\n\n"
+            + "\n".join(changes)
+            + "\n\nEndpoint prévu: "
+            + payload.endpoint
+            + "\n\nPayload prévu:\n"
+            + json.dumps(payload.payload, ensure_ascii=False, indent=2)
+            + "\n\nAucune écriture réelle ne sera lancée tant que le payload goods/add/update n'est pas validé sur une référence test."
+        )
+        QMessageBox.information(self, APP_NAME, text)
+        try:
+            writer.apply(product)
+        except MicrostoreWriteNotEnabled as exc:
+            self.db.log("microstore_write_preview", f"{product.ref}: {exc}")
 
     def _portal_credentials(self, source: str) -> tuple[str, str] | None:
         if source == "eFashion":
@@ -870,27 +1608,32 @@ class MainWindow(QMainWindow):
             detail = self.db.get_cached_order(summary.source, key)
             if detail:
                 self.portal_details[cache_key] = detail
+                self.portal_status_cache[cache_key] = _status_from_lines(self._lines_from_portal_order(detail))
         self._apply_order_filters()
 
     def _start_sync(self, sources: list[str]) -> None:
+        if self.sync_threads:
+            if hasattr(self, "sync_summary"):
+                self.sync_summary.setText("Synchronisation deja en cours.")
+            return
         self._save_app_settings_silent()
         runnable_sources: list[str] = []
         if "Microstore" in sources:
             if self.microstore_token.text().strip():
                 runnable_sources.append("Microstore")
-                self.microstore_status.setText("Microstore: en cours...")
+                self._on_sync_progress("Microstore", 0, "en attente")
             else:
                 self.microstore_status.setText("Microstore: token absent")
         if "eFashion" in sources:
             if self._portal_credentials("eFashion"):
                 runnable_sources.append("eFashion")
-                self.efashion_status.setText("eFashion: en cours...")
+                self._on_sync_progress("eFashion", 0, "en attente")
             else:
                 self.efashion_status.setText("eFashion: identifiants absents")
         if "PFS" in sources:
             if self._portal_credentials("PFS"):
                 runnable_sources.append("PFS")
-                self.pfs_status.setText("PFS: en cours...")
+                self._on_sync_progress("PFS", 0, "en attente")
             else:
                 self.pfs_status.setText("PFS: identifiants absents")
         if not runnable_sources:
@@ -898,12 +1641,17 @@ class MainWindow(QMainWindow):
                 self.sync_summary.setText("Aucune source configuree a synchroniser.")
             return
 
+        self.sync_active_sources = set(runnable_sources)
         for source in runnable_sources:
             button = self.sync_buttons.get(source)
             if button:
                 button.setEnabled(False)
         if set(sources) == {"Microstore", "eFashion", "PFS"} and "all" in self.sync_buttons:
             self.sync_buttons["all"].setEnabled(False)
+        if hasattr(self, "cancel_sync_button"):
+            self.cancel_sync_button.setEnabled(True)
+        if hasattr(self, "sync_summary"):
+            self.sync_summary.setText("Synchronisation lancee.")
 
         thread = QThread(self)
         worker = SyncWorker(
@@ -918,53 +1666,82 @@ class MainWindow(QMainWindow):
         )
         worker.moveToThread(thread)
         thread.started.connect(worker.run)
-        worker.finished.connect(lambda result, t=thread, w=worker, s=runnable_sources: self._on_sync_finished(result, t, w, s))
-        worker.finished.connect(thread.quit)
-        worker.finished.connect(worker.deleteLater)
+        worker.progress.connect(self._on_sync_progress)
+        worker.source_finished.connect(self._on_sync_source_finished)
+        worker.source_error.connect(self._on_sync_source_error)
+        worker.all_finished.connect(self._on_sync_all_finished)
+        worker.all_finished.connect(thread.quit)
+        worker.all_finished.connect(worker.deleteLater)
         thread.finished.connect(thread.deleteLater)
+        thread.finished.connect(lambda t=thread: self._cleanup_sync_thread(t))
         self.sync_threads.append(thread)
+        self.sync_workers.append(worker)
         thread.start()
 
-    def _on_sync_finished(self, result: dict, thread: QThread, _worker: SyncWorker, sources: list[str]) -> None:
-        results: list[str] = []
-        for source, message in result.get("errors", {}).items():
-            if source == "Microstore":
-                self.microstore_status.setText(f"Microstore: erreur ({message})")
-            elif source == "eFashion":
-                self.efashion_status.setText(f"eFashion: erreur ({message})")
-            elif source == "PFS":
-                self.pfs_status.setText(f"PFS: erreur ({message})")
-            results.append(f"{source}: erreur")
+    def _on_sync_progress(self, source: str, percent: int, message: str) -> None:
+        label = f"{source}: {percent}% - {message}"
+        if source == "Microstore":
+            self.microstore_status.setText(label)
+        elif source == "eFashion":
+            self.efashion_status.setText(label)
+        elif source == "PFS":
+            self.pfs_status.setText(label)
+        bar = self.sync_progress_bars.get(source)
+        if bar:
+            bar.setValue(percent)
 
-        for source, payload in result.get("sources", {}).items():
-            products = payload.get("products") or []
-            orders = payload.get("orders") or []
-            product_count = self.db.upsert_products(products) if products else 0
-            for summary, detail in orders:
-                lines = self._lines_from_portal_order(detail)
-                self.db.upsert_cached_order(summary, detail, _status_from_lines(lines))
-            if source == "Microstore":
-                self.microstore_status.setText(f"Microstore: {len(orders)} commandes, {product_count} produits")
-                results.append(f"Microstore: {len(orders)} commandes")
-            elif source == "eFashion":
-                self.efashion_status.setText(f"eFashion: {len(orders)} commandes")
-                results.append(f"eFashion: {len(orders)} commandes")
-            elif source == "PFS":
-                self.pfs_status.setText(f"PFS: {len(orders)} commandes")
-                results.append(f"PFS: {len(orders)} commandes")
+    def _on_sync_source_finished(self, source: str, summary: dict) -> None:
+        orders = int(summary.get("orders") or 0)
+        products = int(summary.get("products") or 0)
+        cancelled = bool(summary.get("cancelled"))
+        if cancelled:
+            message = f"annule - {orders} commandes sauvegardees"
+        elif source == "Microstore":
+            message = f"{orders} commandes, {products} produits"
+        else:
+            message = f"{orders} commandes sauvegardees"
+        self._on_sync_progress(source, 100, message)
 
-        for source in sources:
+    def _on_sync_source_error(self, source: str, message: str) -> None:
+        self._on_sync_progress(source, 100, f"erreur - {message}")
+
+    def _on_sync_all_finished(self, result: dict) -> None:
+        for source in self.sync_active_sources:
             button = self.sync_buttons.get(source)
             if button:
                 button.setEnabled(True)
         if "all" in self.sync_buttons:
             self.sync_buttons["all"].setEnabled(True)
-        self.sync_threads = [item for item in self.sync_threads if item is not thread]
+        if hasattr(self, "cancel_sync_button"):
+            self.cancel_sync_button.setEnabled(False)
         self._load_cached_orders()
         self._refresh_status()
         self._refresh_missing_types()
+        self._refresh_products_page()
         if hasattr(self, "sync_summary"):
-            self.sync_summary.setText(" | ".join(results) if results else "Synchronisation terminee.")
+            parts = []
+            for source, payload in result.get("sources", {}).items():
+                orders = int(payload.get("orders") or 0)
+                if payload.get("cancelled"):
+                    parts.append(f"{source}: annule ({orders} sauvegardees)")
+                else:
+                    parts.append(f"{source}: {orders} commandes")
+            for source, message in result.get("errors", {}).items():
+                parts.append(f"{source}: erreur")
+            self.sync_summary.setText(" | ".join(parts) if parts else "Synchronisation terminee.")
+        self.sync_active_sources.clear()
+        self.sync_workers.clear()
+
+    def _cleanup_sync_thread(self, thread: QThread) -> None:
+        self.sync_threads = [item for item in self.sync_threads if item is not thread]
+
+    def _cancel_sync(self) -> None:
+        for worker in list(self.sync_workers):
+            worker.cancel()
+        if hasattr(self, "sync_summary"):
+            self.sync_summary.setText("Annulation demandee. Fin de l'etape en cours...")
+        if hasattr(self, "cancel_sync_button"):
+            self.cancel_sync_button.setEnabled(False)
 
     def _sync_microstore_api_silent(self) -> None:
         self._start_sync(["Microstore"])
@@ -1132,6 +1909,33 @@ class MainWindow(QMainWindow):
             return ""
         return str(self.order_table.item(rows[0], 0).data(ROLE_KIND) or "")
 
+    def _selected_order_web_url(self) -> str:
+        kind = self._selected_order_kind()
+        if not kind:
+            return ""
+        source, key = self._selected_order_source_key()
+        order_id = ""
+        if kind == "portal":
+            summary = self.portal_summaries.get((source, key))
+            order_id = summary.order_id if summary else ""
+        return _order_web_url(source, order_id, key, self.settings.microstore_api_token)
+
+    def _open_selected_order_web_page(self) -> None:
+        url = self._selected_order_web_url()
+        if not url:
+            QMessageBox.information(self, APP_NAME, "Aucune commande selectionnee.")
+            return
+        QDesktopServices.openUrl(QUrl(url))
+
+    def _copy_selected_order_web_link(self) -> None:
+        url = self._selected_order_web_url()
+        if not url:
+            QMessageBox.information(self, APP_NAME, "Aucune commande selectionnee.")
+            return
+        QApplication.clipboard().setText(url)
+        if hasattr(self, "status_label"):
+            self.status_label.setText("Lien commande copie dans le presse-papiers.")
+
     def _open_selected_order_detail(self) -> None:
         kind = self._selected_order_kind()
         if not kind:
@@ -1163,6 +1967,7 @@ class MainWindow(QMainWindow):
             "date": _display_date(order.created_at),
             "total": _money_label(order.total_amount),
             "status": status,
+            "web_url": _order_web_url(order.source, order.order_id, key, self.settings.microstore_api_token),
         }
         dialog = OrderDetailDialog(lines, summary, self)
         dialog.exec()
@@ -1186,6 +1991,7 @@ class MainWindow(QMainWindow):
             "date": order_file.order_date if order_file else "",
             "total": _money_label(order_file.total_amount) if order_file else "",
             "status": status,
+            "web_url": _order_web_url(source, "", key, self.settings.microstore_api_token),
         }
         dialog = OrderDetailDialog(lines, summary, self)
         dialog.exec()

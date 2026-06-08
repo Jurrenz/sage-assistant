@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -14,6 +14,41 @@ class Product:
     unit_price_ht: Decimal | None
     package_size: int | None
     active: bool = True
+    microstore_status: str = ""
+    content_label: str = ""
+    composition: str = ""
+    color: str = ""
+    stock_snapshot: int | None = None
+    brand: str = ""
+    year: str = ""
+    season: str = ""
+    pieces_outside_package: int | None = None
+    weight_grams: int | None = None
+    origin_country: str = ""
+    created_at: str | None = None
+    promo: str = ""
+    discount_percent: Decimal | None = None
+    remark: str = ""
+    colors: str = ""
+    color_distribution_1: str = ""
+    color_1: str = ""
+    color_distribution_2: str = ""
+    color_2: str = ""
+    color_distribution_3: str = ""
+    color_3: str = ""
+    color_distribution_4: str = ""
+    color_4: str = ""
+    color_distribution_5: str = ""
+    color_5: str = ""
+    color_distribution_6: str = ""
+    color_6: str = ""
+    platform_price_ht: Decimal | None = None
+    platform_promo: str = ""
+    workflow_status: str = "synced"
+    last_seen_at: str | None = None
+    last_microstore_modified_at: str | None = None
+    last_local_modified_at: str | None = None
+    raw: dict = field(default_factory=dict)
     last_imported_at: str | None = None
 
 
