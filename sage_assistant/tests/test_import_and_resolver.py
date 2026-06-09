@@ -8,6 +8,7 @@ import pytest
 
 from app.db import Database
 from app.excel_import import OrderRow, import_order, import_products
+from app.main import parse_quick_ref_text
 from app.microstore_product_writer import MicrostoreProductWriter, MicrostoreWriteNotEnabled
 from app.models import Product, SageMapping
 from app.portal_orders import PortalOrder, PortalOrderLine, PortalOrderSummary
@@ -104,6 +105,40 @@ def test_deactivate_mapping_hides_it_and_blocks_resolution(tmp_path):
     assert all(mapping.microstore_type != "ROBES TEST" for mapping in db.list_mappings())
     inactive = [mapping for mapping in db.list_mappings(active_only=False) if mapping.microstore_type == "ROBES TEST"]
     assert inactive and inactive[0].is_active is False
+    db.close()
+
+
+def test_parse_quick_ref_text_defaults_to_one_package():
+    assert parse_quick_ref_text("FL530-1") == ("FL530-1", 1)
+    assert parse_quick_ref_text("fl530-1 x2") == ("FL530-1", 2)
+    assert parse_quick_ref_text("LA15-9 ×3") == ("LA15-9", 3)
+
+
+def test_quick_invoice_line_uses_one_package_by_default(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    db.upsert_products(
+        [
+            Product(
+                id=None,
+                ref="FL530-1",
+                type_label="ROBES COURTES",
+                name="Robe test",
+                unit_price_ht=Decimal("6.80"),
+                package_size=12,
+            )
+        ]
+    )
+    db.upsert_mapping(SageMapping("ROBES COURTES", "RO", "ROBE / TUNIC"))
+
+    product = db.get_product_by_ref("FL530-1")
+    line = Resolver(db).line_from_product(product, quantity_pieces=product.package_size, package_count=1, source="quick_invoice")
+
+    assert line.validation_status == "ok"
+    assert line.package_count == 1
+    assert line.package_size == 12
+    assert line.quantity_pieces == 12
+    assert line.unit_price_ht == Decimal("6.80")
+    assert line.sage_code == "RO"
     db.close()
 
 

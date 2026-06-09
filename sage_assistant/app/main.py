@@ -24,6 +24,8 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLineEdit,
+    QListWidget,
+    QListWidgetItem,
     QMainWindow,
     QMessageBox,
     QPushButton,
@@ -98,7 +100,6 @@ LINE_HEADERS = [
     "Colisage",
     "Pieces",
     "Prix commande",
-    "Prix Microstore",
     "Statut",
 ]
 MAPPING_HEADERS = ["Categorie fournisseur", "Code Sage", "Actif"]
@@ -191,6 +192,25 @@ def _product_activity_iso(product: Product) -> str:
         product.last_seen_at or "",
         product.last_imported_at or "",
     )
+
+
+def parse_quick_ref_text(text: str) -> tuple[str, int]:
+    cleaned = text.strip().upper().replace("×", "X")
+    if not cleaned:
+        return "", 1
+    parts = cleaned.split()
+    if len(parts) >= 2 and parts[-1].startswith("X"):
+        try:
+            return " ".join(parts[:-1]).strip(), max(1, int(parts[-1][1:]))
+        except ValueError:
+            return cleaned, 1
+    if " X" in cleaned:
+        ref, qty = cleaned.rsplit(" X", 1)
+        try:
+            return ref.strip(), max(1, int(qty.strip()))
+        except ValueError:
+            return cleaned, 1
+    return cleaned, 1
 
 
 class ProductTableModel(QAbstractTableModel):
@@ -308,7 +328,7 @@ def line_headers_for_source(source: str = "") -> list[str]:
     elif source == "PFS":
         headers[7] = "Prix PFS"
     elif source == "Microstore":
-        headers[7] = "Prix Microstore commande"
+        headers[7] = "Prix Microstore"
     return headers
 
 
@@ -326,12 +346,11 @@ def populate_lines_table(table: QTableWidget, lines: list[InvoiceLine], editable
             str(line.package_size or ""),
             str(line.quantity_pieces),
             str(line.order_unit_price_ht or line.unit_price_ht or ""),
-            str(line.catalog_unit_price_ht or ""),
             status,
         ]
         for col, value in enumerate(values):
             item = QTableWidgetItem(value)
-            if not editable or col not in {2, 6, 7}:
+            if not editable or col not in {2, 3, 6, 7}:
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             if col == 7:
                 font = QFont(item.font())
@@ -454,6 +473,7 @@ class OrderDetailDialog(QDialog):
         line = self.lines[row]
         try:
             line.sage_code = self.table.item(row, 2).text().strip().upper()
+            line.description = self.table.item(row, 3).text().strip()
             line.quantity_pieces = int(self.table.item(row, 6).text().strip())
             price_text = self.table.item(row, 7).text().strip().replace(",", ".")
             line.unit_price_ht = Decimal(price_text) if price_text else None
@@ -1045,6 +1065,45 @@ class MainWindow(QMainWindow):
         filters.addWidget(self.date_filter)
         layout.addLayout(filters)
 
+        quick_box = QGroupBox("Facture rapide")
+        quick_layout = QVBoxLayout(quick_box)
+        quick_entry = QHBoxLayout()
+        self.quick_ref_input = QLineEdit()
+        self.quick_ref_input.setPlaceholderText("Référence ou référence x paquets, ex: FL530-1 ou FL530-1 x2")
+        self.quick_ref_input.textChanged.connect(self._refresh_quick_suggestions)
+        self.quick_ref_input.returnPressed.connect(self._add_quick_invoice_line)
+        quick_add = QPushButton("Ajouter")
+        quick_add.clicked.connect(self._add_quick_invoice_line)
+        quick_entry.addWidget(self.quick_ref_input, 1)
+        quick_entry.addWidget(quick_add)
+        quick_layout.addLayout(quick_entry)
+        self.quick_suggestions = QListWidget()
+        self.quick_suggestions.setMaximumHeight(96)
+        self.quick_suggestions.itemDoubleClicked.connect(lambda _item: self._add_quick_invoice_line())
+        quick_layout.addWidget(self.quick_suggestions)
+        self.quick_table = QTableWidget(0, len(LINE_HEADERS))
+        self.quick_table.setHorizontalHeaderLabels(line_headers_for_source("manual"))
+        self.quick_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.quick_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.quick_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.quick_table.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.quick_table.itemChanged.connect(self._on_quick_item_changed)
+        quick_layout.addWidget(self.quick_table)
+        quick_actions = QHBoxLayout()
+        quick_remove = QPushButton("Supprimer ligne")
+        quick_remove.clicked.connect(self._remove_quick_invoice_lines)
+        quick_clear = QPushButton("Vider")
+        quick_clear.clicked.connect(self._clear_quick_invoice_lines)
+        quick_inject = QPushButton("Injecter dans Sage")
+        quick_inject.clicked.connect(self._inject_quick_invoice)
+        self.quick_status = QLabel("Ajoute une référence pour préparer une facture rapide.")
+        quick_actions.addWidget(self.quick_status, 1)
+        quick_actions.addWidget(quick_remove)
+        quick_actions.addWidget(quick_clear)
+        quick_actions.addWidget(quick_inject)
+        quick_layout.addLayout(quick_actions)
+        layout.addWidget(quick_box)
+
         self.order_table = QTableWidget(0, len(COMMAND_HEADERS))
         self.order_table.setHorizontalHeaderLabels(COMMAND_HEADERS)
         self.order_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -1361,27 +1420,39 @@ class MainWindow(QMainWindow):
 
     def _build_injection_section(self) -> QGroupBox:
         box = QGroupBox("Injection")
-        layout = QHBoxLayout(box)
+        layout = QGridLayout(box)
         self.injection_mode_label = QLabel(REAL_SAGE_INJECTION_LABEL)
         self.delay_ms = QSpinBox()
         self.delay_ms.setRange(0, 2000)
         self.delay_ms.setSpecialValueText("0 instant")
         self.delay_ms.setSuffix(" ms")
         self.delay_ms.setValue(self.settings.sage_profile.delay_ms)
+        self.confirmation_mode = QComboBox()
+        self.confirmation_mode.addItem("Direct", "direct")
+        self.confirmation_mode.addItem("Simple", "simple")
+        self.confirmation_mode.addItem("Debug", "debug")
+        self.confirmation_mode.setCurrentIndex(max(0, self.confirmation_mode.findData(self.settings.sage_profile.confirmation_mode or "simple")))
+        self.stable_pause_ms = QSpinBox()
+        self.stable_pause_ms.setRange(0, 2000)
+        self.stable_pause_ms.setSuffix(" ms")
+        self.stable_pause_ms.setValue(self.settings.sage_profile.stable_pause_ms)
         self.auto_capture = QCheckBox("Captures automatiques")
         self.auto_capture.setChecked(self.settings.sage_profile.capture_before_after)
         self.injection_logs = QCheckBox("Logs")
         self.injection_logs.setChecked(self.settings.sage_profile.log_enabled)
         diagnostic_button = QPushButton("Diagnostic Sage")
         diagnostic_button.clicked.connect(self._run_sage_diagnostics)
-        layout.addWidget(QLabel("Mode"))
-        layout.addWidget(self.injection_mode_label)
-        layout.addWidget(QLabel("Delai touches (ms)"))
-        layout.addWidget(self.delay_ms)
-        layout.addWidget(self.auto_capture)
-        layout.addWidget(self.injection_logs)
-        layout.addStretch(1)
-        layout.addWidget(diagnostic_button)
+        layout.addWidget(QLabel("Mode"), 0, 0)
+        layout.addWidget(self.injection_mode_label, 0, 1)
+        layout.addWidget(QLabel("Confirmation"), 0, 2)
+        layout.addWidget(self.confirmation_mode, 0, 3)
+        layout.addWidget(QLabel("Délai touches"), 1, 0)
+        layout.addWidget(self.delay_ms, 1, 1)
+        layout.addWidget(QLabel("Pause stable"), 1, 2)
+        layout.addWidget(self.stable_pause_ms, 1, 3)
+        layout.addWidget(self.auto_capture, 2, 0, 1, 2)
+        layout.addWidget(self.injection_logs, 2, 2)
+        layout.addWidget(diagnostic_button, 2, 3)
         return box
 
     def _build_database_section(self) -> QGroupBox:
@@ -1489,6 +1560,114 @@ class MainWindow(QMainWindow):
         source_index = self.product_proxy.mapToSource(indexes[0])
         ref = self.product_model.data(self.product_model.index(source_index.row(), 0), Qt.UserRole)
         return self.db.get_product_by_ref(str(ref or ""))
+
+    def _parse_quick_ref_text(self, text: str) -> tuple[str, int]:
+        return parse_quick_ref_text(text)
+
+    def _refresh_quick_suggestions(self) -> None:
+        if not hasattr(self, "quick_suggestions"):
+            return
+        ref, _packages = self._parse_quick_ref_text(self.quick_ref_input.text())
+        self.quick_suggestions.clear()
+        if len(ref) < 2:
+            return
+        for product in self.db.search_products(ref, limit=8):
+            label = f"{product.ref} | {product.name or product.type_label} | {product.unit_price_ht or ''} EUR | colisage {product.package_size or '?'}"
+            item = QListWidgetItem(label)
+            item.setData(Qt.UserRole, product.ref)
+            self.quick_suggestions.addItem(item)
+
+    def _quick_selected_ref(self) -> str:
+        selected = self.quick_suggestions.selectedItems() if hasattr(self, "quick_suggestions") else []
+        if selected:
+            return str(selected[0].data(Qt.UserRole) or "")
+        ref, _packages = self._parse_quick_ref_text(self.quick_ref_input.text())
+        return ref
+
+    def _add_quick_invoice_line(self) -> None:
+        if not hasattr(self, "quick_ref_input"):
+            return
+        typed_ref, packages = self._parse_quick_ref_text(self.quick_ref_input.text())
+        ref = self._quick_selected_ref() or typed_ref
+        if not ref:
+            self.quick_status.setText("Tape une référence.")
+            return
+        product = self.db.get_product_by_ref(ref)
+        if product is None:
+            self.quick_status.setText(f"Référence inconnue: {ref}")
+            return
+        package_size = product.package_size or 0
+        quantity_pieces = packages * package_size if package_size else packages
+        line = self.resolver.line_from_product(
+            product,
+            quantity_pieces=quantity_pieces,
+            package_count=packages,
+            source="quick_invoice",
+        )
+        self.lines.append(line)
+        self.current_order_source = "Facture rapide"
+        self.current_order_key = ""
+        self.current_order_path = None
+        self._refresh_quick_invoice_table()
+        self.quick_ref_input.clear()
+        self.quick_suggestions.clear()
+        self.quick_status.setText(f"{line.ref} ajouté: {packages} paquet(s), {line.quantity_pieces} pièce(s).")
+
+    def _refresh_quick_invoice_table(self) -> None:
+        if hasattr(self, "quick_table"):
+            populate_lines_table(self.quick_table, self.lines, editable=True)
+
+    def _on_quick_item_changed(self, item: QTableWidgetItem) -> None:
+        row = item.row()
+        if row >= len(self.lines):
+            return
+        line = self.lines[row]
+        try:
+            line.sage_code = self.quick_table.item(row, 2).text().strip().upper()
+            line.description = self.quick_table.item(row, 3).text().strip()
+            package_text = self.quick_table.item(row, 4).text().strip()
+            line.package_count = int(package_text) if package_text else None
+            package_size_text = self.quick_table.item(row, 5).text().strip()
+            line.package_size = int(package_size_text) if package_size_text else None
+            line.quantity_pieces = int(self.quick_table.item(row, 6).text().strip())
+            price_text = self.quick_table.item(row, 7).text().strip().replace(",", ".")
+            line.unit_price_ht = Decimal(price_text) if price_text else None
+            line.order_unit_price_ht = line.unit_price_ht
+            line.price_confirmed = True
+        except Exception as exc:
+            line.validation_status = "blocked"
+            line.validation_message = f"valeur invalide: {exc}"
+        else:
+            line.validate()
+        if hasattr(self, "quick_status"):
+            self.quick_status.setText(_status_from_lines(self.lines) if self.lines else "Aucune ligne.")
+
+    def _remove_quick_invoice_lines(self) -> None:
+        if not hasattr(self, "quick_table"):
+            return
+        rows = sorted({item.row() for item in self.quick_table.selectedItems()}, reverse=True)
+        for row in rows:
+            if row < len(self.lines):
+                del self.lines[row]
+        self._refresh_quick_invoice_table()
+        self.quick_status.setText(f"{len(self.lines)} ligne(s) dans la facture rapide.")
+
+    def _clear_quick_invoice_lines(self) -> None:
+        self.lines.clear()
+        self.current_order_source = ""
+        self.current_order_key = ""
+        self.current_order_path = None
+        self._refresh_quick_invoice_table()
+        self.quick_status.setText("Facture rapide vidée.")
+
+    def _inject_quick_invoice(self) -> None:
+        if not self.lines:
+            self.quick_status.setText("Aucune ligne à injecter.")
+            return
+        self.current_order_source = "Facture rapide"
+        self.current_order_key = ""
+        if self._prepare_injection():
+            self.quick_status.setText("Injection envoyée pour la facture rapide.")
 
     def _new_product_draft(self) -> None:
         dialog = ProductDraftDialog(parent=self)
@@ -1838,7 +2017,10 @@ class MainWindow(QMainWindow):
         if self.current_order_source and self.current_order_key:
             self.db.set_order_status(self.current_order_source, self.current_order_key, STATUS_INJECTED)
             self._refresh_order_folder()
-        QMessageBox.information(self, APP_NAME, "Injection lancee dans Sage." if is_windows() else f"File temporaire d'injection creee:\n{path}")
+        if is_windows():
+            self.statusBar().showMessage("Injection envoyée à AutoHotkey. Vérifie Sage visuellement.", 5000)
+        else:
+            QMessageBox.information(self, APP_NAME, f"File temporaire d'injection creee:\n{path}")
         return True
 
     def _import_products(self) -> None:
@@ -2349,6 +2531,10 @@ class MainWindow(QMainWindow):
         self.settings.sage_profile.injection_mode = REAL_SAGE_ONE_LINE_MODE
         self.settings.sage_profile.window_title_contains = self.window_title.text().strip() or SAGE_50_WINDOW_TITLE
         self.settings.sage_profile.delay_ms = self.delay_ms.value()
+        if hasattr(self, "confirmation_mode"):
+            self.settings.sage_profile.confirmation_mode = str(self.confirmation_mode.currentData() or "simple")
+        if hasattr(self, "stable_pause_ms"):
+            self.settings.sage_profile.stable_pause_ms = self.stable_pause_ms.value()
         self.settings.sage_profile.capture_before_after = self.auto_capture.isChecked()
         self.settings.sage_profile.log_enabled = self.injection_logs.isChecked()
         self.settings.injection_line_limit = 0

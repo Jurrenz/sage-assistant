@@ -69,6 +69,8 @@ def test_write_injection_queue_writes_all_valid_lines(tmp_path):
     assert payload["profile"]["step_mode"] is False
     assert payload["profile"]["focus_guard"] is True
     assert payload["profile"]["injection_mode"] == REAL_SAGE_ONE_LINE_MODE
+    assert payload["profile"]["confirmation_mode"] == "simple"
+    assert payload["profile"]["stable_pause_ms"] == 220
     assert "diagnostics_path" in payload["profile"]
 
 
@@ -182,3 +184,31 @@ def test_settings_persist_separate_portal_credentials(tmp_path):
     assert loaded.pfs_email == "pfs@example.com"
     assert loaded.pfs_password == "pfs-secret"
     assert loaded.portal_order_limit == 250
+
+
+def test_injection_confirmation_mode_and_stable_pause_are_persisted(tmp_path):
+    settings = AppSettings()
+    settings.sage_profile.confirmation_mode = "direct"
+    settings.sage_profile.stable_pause_ms = 350
+    settings.sage_profile.capture_before_after = False
+    settings.sage_profile.log_enabled = False
+    path = tmp_path / "settings.json"
+
+    save_settings(settings, path)
+    loaded = load_settings(path)
+
+    assert loaded.sage_profile.confirmation_mode == "direct"
+    assert loaded.sage_profile.stable_pause_ms == 350
+    assert loaded.sage_profile.capture_before_after is False
+    assert loaded.sage_profile.log_enabled is False
+
+
+def test_invalid_confirmation_mode_falls_back_to_simple(tmp_path):
+    settings = AppSettings()
+    settings.sage_profile.confirmation_mode = "old"
+    path = tmp_path / "settings.json"
+
+    save_settings(settings, path)
+    loaded = load_settings(path)
+
+    assert loaded.sage_profile.confirmation_mode == "simple"

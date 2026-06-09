@@ -11,6 +11,7 @@ REAL_SAGE_ONE_LINE_MODE = "real_sage_one_line"
 REAL_SAGE_INJECTION_LABEL = "Injection Sage réelle"
 LEGACY_INJECTION_MODES = {"keyboard_only", "calibrated_clicks", "control_based", REAL_SAGE_ONE_LINE_MODE}
 SAGE_50_WINDOW_TITLE = "Sage 50 : S.Z FASHION"
+CONFIRMATION_MODES = {"direct", "simple", "debug"}
 
 
 def project_root() -> Path:
@@ -65,6 +66,8 @@ class SageProfile:
     log_enabled: bool = True
     log_path: str = ""
     diagnostics_path: str = ""
+    confirmation_mode: str = "simple"
+    stable_pause_ms: int = 220
 
 
 @dataclass
@@ -127,3 +130,6 @@ def normalize_sage_profile(profile: SageProfile) -> None:
     if not profile.window_title_contains or (legacy_mode and profile.window_title_contains == "Sage"):
         profile.window_title_contains = SAGE_50_WINDOW_TITLE
     profile.step_mode = False
+    if profile.confirmation_mode not in CONFIRMATION_MODES:
+        profile.confirmation_mode = "simple"
+    profile.stable_pause_ms = max(0, int(profile.stable_pause_ms or 0))

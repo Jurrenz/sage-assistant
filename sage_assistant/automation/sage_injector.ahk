@@ -64,10 +64,10 @@ stepMode := false
 logPath := profile.Has("log_path") ? profile["log_path"] : A_ScriptDir "\sage_injection.log"
 LogEnabled := profile.Has("log_enabled") ? ToBool(profile["log_enabled"]) : true
 CaptureEnabled := profile.Has("capture_before_after") ? ToBool(profile["capture_before_after"]) : true
+confirmationMode := profile.Has("confirmation_mode") ? profile["confirmation_mode"] : "simple"
+stablePauseMs := profile.Has("stable_pause_ms") ? Integer(profile["stable_pause_ms"]) : 220
 
 LogLine(logPath, "START queue=" queuePath " lines=" lines.Length)
-
-MsgBox("Prepare Sage sur une facture brouillon, puis clique OK.`nMode: Injection Sage reelle`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S", "Sage Assistant")
 
 if !WinExist(windowTitle) {
     LogLine(logPath, "ERROR Sage window not found: " windowTitle)
@@ -87,10 +87,14 @@ realTarget := FindRealSageOneLineTarget(windowTitle, logPath)
 beforePath := CaptureWindow(realTarget["mainHwnd"], logPath, "before")
 if CaptureEnabled
     LogLine(logPath, "CAPTURE before=" beforePath)
-MsgBox("Controle avant injection:`nFacture: " realTarget["invoiceTitle"] "`nBouton: &Ajouter`nLignes: " lines.Length "`n`nClique OK pour envoyer les lignes dans Sage.", "Sage Assistant")
+if (confirmationMode = "debug") {
+    MsgBox("Controle avant injection:`nFacture: " realTarget["invoiceTitle"] "`nBouton: &Ajouter`nLignes: " lines.Length "`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S`n`nClique OK pour envoyer les lignes dans Sage.", "Sage Assistant")
+} else if (confirmationMode = "simple") {
+    MsgBox("Sage pret: " realTarget["invoiceTitle"] "`nLignes: " lines.Length "`n`nClique OK pour injecter.", "Sage Assistant")
+}
 EnsureSageActive(windowTitle, focusGuard, logPath, 1, lines[1]["ref"])
 Click(realTarget["addCenterX"], realTarget["addCenterY"])
-Sleep(delayMs * 2)
+StableSleep(delayMs * 2, stablePauseMs)
 EnsureSageActive(windowTitle, focusGuard, logPath, 1, lines[1]["ref"])
 afterClickPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_click")
 if CaptureEnabled
@@ -116,82 +120,86 @@ afterPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after")
 if CaptureEnabled
     LogLine(logPath, "CAPTURE after=" afterPath)
 LogLine(logPath, "DONE lines=" lines.Length)
-if CaptureEnabled
+if (confirmationMode = "debug" && CaptureEnabled)
     MsgBox("Injection envoyee.`nVerifie visuellement les lignes dans Sage avant toute autre action.`n`nCapture avant:`n" beforePath "`n`nCapture apres clic:`n" afterClickPath "`n`nCapture apres:`n" afterPath, "Sage Assistant")
-else
+else if (confirmationMode = "simple")
     MsgBox("Injection envoyee.`nVerifie visuellement Sage.", "Sage Assistant")
 ExitApp(0)
 
 SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, logPath, realTarget, index, moveToNextLine, focusAtArticle) {
-    global CaptureEnabled
+    global CaptureEnabled, stablePauseMs
     if !focusAtArticle {
         Send("+{Tab}")
-        Sleep(delayMs * 2)
+        StableSleep(delayMs * 2, stablePauseMs)
         Send("+{Tab}")
-        Sleep(delayMs * 2)
+        StableSleep(delayMs * 2, stablePauseMs)
     }
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
 
     SendText(line["article_code"])
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     Send("{Tab}")
-    Sleep(delayMs * 8)
+    StableSleep(delayMs * 8, stablePauseMs)
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
     afterArticlePath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_article_" index)
     if CaptureEnabled
         LogLine(logPath, "CAPTURE after_article=" afterArticlePath)
+    StableSleep(delayMs, stablePauseMs)
 
     Send("{Up}")
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     Send("{Left}")
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     Send("{Space}")
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     Send("{End}")
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     SendText(" " line["ref"])
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
     afterDescriptionPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_description_" index)
     if CaptureEnabled
         LogLine(logPath, "CAPTURE after_description=" afterDescriptionPath)
+    StableSleep(delayMs, stablePauseMs)
 
     Send("{Tab}")
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     Send("{Tab}")
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     SendText(String(line["quantity"]))
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
     afterQuantityPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_quantity_" index)
     if CaptureEnabled
         LogLine(logPath, "CAPTURE after_quantity=" afterQuantityPath)
+    StableSleep(delayMs, stablePauseMs)
 
     Send("{Tab}")
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     Send("{Tab}")
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     SendText(line["unit_price_ht"])
-    Sleep(delayMs * 2)
+    StableSleep(delayMs * 2, stablePauseMs)
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
     afterPricePath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_price_" index)
     if CaptureEnabled
         LogLine(logPath, "CAPTURE after_price=" afterPricePath)
+    StableSleep(delayMs, stablePauseMs)
 
     if moveToNextLine {
         Send("{" validateKey "}")
-        Sleep(delayMs * 3)
+        StableSleep(delayMs * 3, stablePauseMs)
         Send("{Down}")
-        Sleep(delayMs * 2)
+        StableSleep(delayMs * 2, stablePauseMs)
         Send("{Left}")
-        Sleep(delayMs)
+        StableSleep(delayMs, stablePauseMs)
         Send("{Left}")
-        Sleep(delayMs)
+        StableSleep(delayMs, stablePauseMs)
         Send("{Left}")
-        Sleep(delayMs * 2)
+        StableSleep(delayMs * 2, stablePauseMs)
     } else {
         Send("{" validateKey "}")
-        Sleep(delayMs)
+        StableSleep(delayMs, stablePauseMs)
     }
 }
 
@@ -363,6 +371,10 @@ CaptureWindow(hwnd, logPath, label) {
     ps := "$p='" EscapePowerShell(path) "';$x=" rect.left ";$y=" rect.top ";$w=" (rect.right - rect.left) ";$h=" (rect.bottom - rect.top) ";Add-Type -AssemblyName System.Windows.Forms;Add-Type -AssemblyName System.Drawing;$b=New-Object Drawing.Bitmap $w,$h;$g=[Drawing.Graphics]::FromImage($b);$g.CopyFromScreen($x,$y,0,0,$b.Size);$b.Save($p,[Drawing.Imaging.ImageFormat]::Png);$g.Dispose();$b.Dispose()"
     RunWait("powershell -NoProfile -ExecutionPolicy Bypass -Command " QuoteArg(ps), , "Hide")
     return path
+}
+
+StableSleep(dynamicMs, stableMs) {
+    Sleep(Max(Integer(dynamicMs), Integer(stableMs)))
 }
 
 EscapePowerShell(text) {
