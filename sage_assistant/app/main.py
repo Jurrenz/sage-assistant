@@ -486,6 +486,144 @@ class OrderDetailDialog(QDialog):
             line.validate()
 
 
+class QuickInvoiceDialog(QDialog):
+    def __init__(self, db: Database, resolver: Resolver, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.db = db
+        self.resolver = resolver
+        self.lines: list[InvoiceLine] = []
+        self.inject_requested = False
+        self.setWindowTitle("Facture rapide")
+        self.resize(980, 560)
+
+        layout = QVBoxLayout(self)
+        entry = QHBoxLayout()
+        self.ref_input = QLineEdit()
+        self.ref_input.setPlaceholderText("Référence ou référence x paquets, ex: FL530-1 ou FL530-1 x2")
+        self.ref_input.textChanged.connect(self._refresh_suggestions)
+        self.ref_input.returnPressed.connect(self._add_line)
+        add_button = QPushButton("Ajouter")
+        add_button.clicked.connect(self._add_line)
+        entry.addWidget(self.ref_input, 1)
+        entry.addWidget(add_button)
+        layout.addLayout(entry)
+
+        self.suggestions = QListWidget()
+        self.suggestions.setMaximumHeight(110)
+        self.suggestions.itemDoubleClicked.connect(lambda _item: self._add_line())
+        layout.addWidget(self.suggestions)
+
+        self.table = QTableWidget(0, len(LINE_HEADERS))
+        self.table.setHorizontalHeaderLabels(line_headers_for_source("manual"))
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.table.itemChanged.connect(self._on_item_changed)
+        layout.addWidget(self.table, 1)
+
+        actions = QHBoxLayout()
+        self.status = QLabel("Ajoute une référence pour préparer une facture rapide.")
+        remove_button = QPushButton("Supprimer ligne")
+        remove_button.clicked.connect(self._remove_selected_lines)
+        clear_button = QPushButton("Vider")
+        clear_button.clicked.connect(self._clear)
+        inject_button = QPushButton("Injecter dans Sage")
+        inject_button.clicked.connect(self._accept_for_injection)
+        close_button = QPushButton("Fermer")
+        close_button.clicked.connect(self.accept)
+        actions.addWidget(self.status, 1)
+        actions.addWidget(remove_button)
+        actions.addWidget(clear_button)
+        actions.addWidget(inject_button)
+        actions.addWidget(close_button)
+        layout.addLayout(actions)
+
+    def _refresh_suggestions(self) -> None:
+        ref, _packages = parse_quick_ref_text(self.ref_input.text())
+        self.suggestions.clear()
+        if len(ref) < 2:
+            return
+        for product in self.db.search_products(ref, limit=8):
+            label = f"{product.ref} | {product.name or product.type_label} | {product.unit_price_ht or ''} EUR | colisage {product.package_size or '?'}"
+            item = QListWidgetItem(label)
+            item.setData(Qt.UserRole, product.ref)
+            self.suggestions.addItem(item)
+
+    def _selected_ref(self) -> str:
+        selected = self.suggestions.selectedItems()
+        if selected:
+            return str(selected[0].data(Qt.UserRole) or "")
+        ref, _packages = parse_quick_ref_text(self.ref_input.text())
+        return ref
+
+    def _add_line(self) -> None:
+        typed_ref, packages = parse_quick_ref_text(self.ref_input.text())
+        ref = self._selected_ref() or typed_ref
+        if not ref:
+            self.status.setText("Tape une référence.")
+            return
+        product = self.db.get_product_by_ref(ref)
+        if product is None:
+            self.status.setText(f"Référence inconnue: {ref}")
+            return
+        package_size = product.package_size or 0
+        quantity_pieces = packages * package_size if package_size else packages
+        line = self.resolver.line_from_product(product, quantity_pieces=quantity_pieces, package_count=packages, source="quick_invoice")
+        self.lines.append(line)
+        self._refresh_table()
+        self.ref_input.clear()
+        self.suggestions.clear()
+        self.status.setText(f"{line.ref} ajouté: {packages} paquet(s), {line.quantity_pieces} pièce(s).")
+
+    def _refresh_table(self) -> None:
+        populate_lines_table(self.table, self.lines, editable=True)
+
+    def _on_item_changed(self, item: QTableWidgetItem) -> None:
+        row = item.row()
+        if row >= len(self.lines):
+            return
+        line = self.lines[row]
+        try:
+            line.sage_code = self.table.item(row, 2).text().strip().upper()
+            line.description = self.table.item(row, 3).text().strip()
+            package_text = self.table.item(row, 4).text().strip()
+            line.package_count = int(package_text) if package_text else None
+            package_size_text = self.table.item(row, 5).text().strip()
+            line.package_size = int(package_size_text) if package_size_text else None
+            line.quantity_pieces = int(self.table.item(row, 6).text().strip())
+            price_text = self.table.item(row, 7).text().strip().replace(",", ".")
+            line.unit_price_ht = Decimal(price_text) if price_text else None
+            line.order_unit_price_ht = line.unit_price_ht
+            line.price_confirmed = True
+        except Exception as exc:
+            line.validation_status = "blocked"
+            line.validation_message = f"valeur invalide: {exc}"
+        else:
+            line.validate()
+        self.status.setText(_status_from_lines(self.lines) if self.lines else "Aucune ligne.")
+
+    def _remove_selected_lines(self) -> None:
+        rows = sorted({item.row() for item in self.table.selectedItems()}, reverse=True)
+        for row in rows:
+            if row < len(self.lines):
+                del self.lines[row]
+        self._refresh_table()
+        self.status.setText(f"{len(self.lines)} ligne(s) dans la facture rapide.")
+
+    def _clear(self) -> None:
+        self.lines.clear()
+        self._refresh_table()
+        self.status.setText("Facture rapide vidée.")
+
+    def _accept_for_injection(self) -> None:
+        if not self.lines:
+            self.status.setText("Aucune ligne à injecter.")
+            return
+        self.inject_requested = True
+        self.accept()
+
+
 class SageMappingsDialog(QDialog):
     def __init__(self, db: Database, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -1065,45 +1203,6 @@ class MainWindow(QMainWindow):
         filters.addWidget(self.date_filter)
         layout.addLayout(filters)
 
-        quick_box = QGroupBox("Facture rapide")
-        quick_layout = QVBoxLayout(quick_box)
-        quick_entry = QHBoxLayout()
-        self.quick_ref_input = QLineEdit()
-        self.quick_ref_input.setPlaceholderText("Référence ou référence x paquets, ex: FL530-1 ou FL530-1 x2")
-        self.quick_ref_input.textChanged.connect(self._refresh_quick_suggestions)
-        self.quick_ref_input.returnPressed.connect(self._add_quick_invoice_line)
-        quick_add = QPushButton("Ajouter")
-        quick_add.clicked.connect(self._add_quick_invoice_line)
-        quick_entry.addWidget(self.quick_ref_input, 1)
-        quick_entry.addWidget(quick_add)
-        quick_layout.addLayout(quick_entry)
-        self.quick_suggestions = QListWidget()
-        self.quick_suggestions.setMaximumHeight(96)
-        self.quick_suggestions.itemDoubleClicked.connect(lambda _item: self._add_quick_invoice_line())
-        quick_layout.addWidget(self.quick_suggestions)
-        self.quick_table = QTableWidget(0, len(LINE_HEADERS))
-        self.quick_table.setHorizontalHeaderLabels(line_headers_for_source("manual"))
-        self.quick_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.quick_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.quick_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.quick_table.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.quick_table.itemChanged.connect(self._on_quick_item_changed)
-        quick_layout.addWidget(self.quick_table)
-        quick_actions = QHBoxLayout()
-        quick_remove = QPushButton("Supprimer ligne")
-        quick_remove.clicked.connect(self._remove_quick_invoice_lines)
-        quick_clear = QPushButton("Vider")
-        quick_clear.clicked.connect(self._clear_quick_invoice_lines)
-        quick_inject = QPushButton("Injecter dans Sage")
-        quick_inject.clicked.connect(self._inject_quick_invoice)
-        self.quick_status = QLabel("Ajoute une référence pour préparer une facture rapide.")
-        quick_actions.addWidget(self.quick_status, 1)
-        quick_actions.addWidget(quick_remove)
-        quick_actions.addWidget(quick_clear)
-        quick_actions.addWidget(quick_inject)
-        quick_layout.addLayout(quick_actions)
-        layout.addWidget(quick_box)
-
         self.order_table = QTableWidget(0, len(COMMAND_HEADERS))
         self.order_table.setHorizontalHeaderLabels(COMMAND_HEADERS)
         self.order_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -1132,9 +1231,12 @@ class MainWindow(QMainWindow):
         copy_link_button.clicked.connect(self._copy_selected_order_web_link)
         inject_selected = QPushButton("Injecter dans Sage")
         inject_selected.clicked.connect(self._inject_selected_order_from_folder)
+        quick_invoice = QPushButton("Facture rapide")
+        quick_invoice.clicked.connect(self._open_quick_invoice_dialog)
         mark_done = QPushButton("Marquer traité")
         mark_done.clicked.connect(self._mark_selected_order_done)
         actions.addWidget(import_order_button)
+        actions.addWidget(quick_invoice)
         actions.addStretch(1)
         actions.addWidget(sync_orders)
         actions.addWidget(detail_button)
@@ -1560,6 +1662,18 @@ class MainWindow(QMainWindow):
         source_index = self.product_proxy.mapToSource(indexes[0])
         ref = self.product_model.data(self.product_model.index(source_index.row(), 0), Qt.UserRole)
         return self.db.get_product_by_ref(str(ref or ""))
+
+    def _open_quick_invoice_dialog(self) -> None:
+        dialog = QuickInvoiceDialog(self.db, self.resolver, self)
+        dialog.exec()
+        if not dialog.lines:
+            return
+        self.lines = dialog.lines
+        self.current_order_source = "Facture rapide"
+        self.current_order_key = ""
+        self.current_order_path = None
+        if dialog.inject_requested:
+            self._prepare_injection()
 
     def _parse_quick_ref_text(self, text: str) -> tuple[str, int]:
         return parse_quick_ref_text(text)
