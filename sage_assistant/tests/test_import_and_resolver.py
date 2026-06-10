@@ -8,9 +8,15 @@ import pytest
 
 from app.db import Database
 from app.excel_import import OrderRow, import_order, import_products
-from app.main import parse_quick_ref_text
+from app.main import (
+    QUICK_INVOICE_SOURCE,
+    parse_quick_ref_text,
+    quick_invoice_line_from_clipboard_cells,
+    quick_invoice_line_to_clipboard_row,
+    quick_invoice_to_portal_order,
+)
 from app.microstore_product_writer import MicrostoreProductWriter, MicrostoreWriteNotEnabled
-from app.models import Product, SageMapping
+from app.models import InvoiceLine, Product, SageMapping
 from app.portal_orders import PortalOrder, PortalOrderLine, PortalOrderSummary
 from app.resolver import Resolver
 
@@ -112,6 +118,8 @@ def test_parse_quick_ref_text_defaults_to_one_package():
     assert parse_quick_ref_text("FL530-1") == ("FL530-1", 1)
     assert parse_quick_ref_text("fl530-1 x2") == ("FL530-1", 2)
     assert parse_quick_ref_text("LA15-9 ×3") == ("LA15-9", 3)
+    assert parse_quick_ref_text("CM55-9\t4") == ("CM55-9", 4)
+    assert parse_quick_ref_text("CM55-9\tROBE\t4") == ("CM55-9", 4)
 
 
 def test_quick_invoice_line_uses_one_package_by_default(tmp_path):
@@ -140,6 +148,76 @@ def test_quick_invoice_line_uses_one_package_by_default(tmp_path):
     assert line.unit_price_ht == Decimal("6.80")
     assert line.sage_code == "RO"
     db.close()
+
+
+def test_quick_invoice_can_be_persisted_as_cached_order(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    line = Resolver(db).line_from_product(
+        Product(
+            id=12,
+            ref="FL530-1",
+            type_label="ROBES COURTES",
+            name="Robe test",
+            unit_price_ht=Decimal("6.80"),
+            package_size=12,
+        ),
+        quantity_pieces=24,
+        package_count=2,
+        source="quick_invoice",
+    )
+    line.sage_code = "RO"
+    line.validate()
+
+    summary, detail = quick_invoice_to_portal_order([line], order_number="FR-TEST", created_at="2026-06-10T10:00:00Z")
+    db.upsert_cached_order(summary, detail, "Prêt")
+    db.close()
+
+    reopened = Database(tmp_path / "app.sqlite")
+    cached_summary = reopened.list_cached_order_summaries()[0]
+    cached_order = reopened.get_cached_order(QUICK_INVOICE_SOURCE, "FR-TEST")
+
+    assert cached_summary.source == QUICK_INVOICE_SOURCE
+    assert cached_summary.order_number == "FR-TEST"
+    assert cached_summary.customer == "Facture rapide"
+    assert cached_summary.total_amount == Decimal("163.20")
+    assert reopened.count_cached_orders(QUICK_INVOICE_SOURCE) == 1
+    assert cached_order is not None
+    assert cached_order.lines[0].ref == "FL530-1"
+    assert cached_order.lines[0].package_count == 2
+    assert cached_order.lines[0].quantity_pieces == 24
+    assert cached_order.lines[0].unit_price_ht == Decimal("6.80")
+    assert cached_order.lines[0].raw["sage_code"] == "RO"
+    reopened.close()
+
+
+def test_quick_invoice_clipboard_roundtrip_preserves_editable_details():
+    invoice_line = InvoiceLine(
+        ref="FL530-1",
+        sage_code="RO",
+        description="ROBE / TUNIC FL530-1 CORRIGEE",
+        quantity_pieces=30,
+        package_count=2,
+        package_size=15,
+        unit_price_ht=Decimal("7.10"),
+        order_unit_price_ht=Decimal("7.10"),
+        product_id=12,
+        type_label="ROBES COURTES",
+        source="quick_invoice",
+    )
+    invoice_line.validate()
+
+    copied = quick_invoice_line_to_clipboard_row(invoice_line)
+    pasted = quick_invoice_line_from_clipboard_cells(copied)
+
+    assert pasted is not None
+    assert pasted.ref == "FL530-1"
+    assert pasted.sage_code == "RO"
+    assert pasted.description == "ROBE / TUNIC FL530-1 CORRIGEE"
+    assert pasted.package_count == 2
+    assert pasted.package_size == 15
+    assert pasted.quantity_pieces == 30
+    assert pasted.unit_price_ht == Decimal("7.10")
+    assert pasted.validation_message == "reference non resolue"
 
 
 def test_import_order_reads_packages_and_calculates_pieces(tmp_path):

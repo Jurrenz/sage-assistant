@@ -46,10 +46,10 @@ from PySide6.QtWidgets import (
 from .db import Database
 from .excel_import import import_order, import_products
 from .injection import launch_ahk_tool, launch_autohotkey, write_injection_queue
-from .models import InvoiceLine, Product, SageMapping
+from .models import InvoiceLine, Product, SageMapping, utc_now_iso
 from .microstore_product_writer import MicrostoreProductWriter, MicrostoreWriteNotEnabled
 from .order_folder import OrderFile, list_order_files
-from .portal_orders import EfashionConnector, MicrostoreConnector, PfsConnector, PortalOrder, PortalOrderSummary
+from .portal_orders import EfashionConnector, MicrostoreConnector, PfsConnector, PortalOrder, PortalOrderLine, PortalOrderSummary
 from .product_folder import latest_product_export
 from .resolver import Resolver
 from .settings import (
@@ -70,8 +70,9 @@ STATUS_INJECTED = "Injecté"
 STATUS_DONE = "Traité"
 STATUS_ERROR = "Erreur"
 TERMINAL_STATUSES = {STATUS_INJECTED, STATUS_DONE}
+QUICK_INVOICE_SOURCE = "Facture rapide"
 
-ORDER_SOURCES = ("Toutes", "Microstore", "Fichier manuel", "PFS", "eFashion")
+ORDER_SOURCES = ("Toutes", "Microstore", QUICK_INVOICE_SOURCE, "Fichier manuel", "PFS", "eFashion")
 ORDER_STATUSES = ("Tous", STATUS_READY, STATUS_REVIEW, STATUS_INJECTED, STATUS_DONE, STATUS_ERROR)
 DATE_FILTERS = ("Toutes", "Aujourd'hui", "7 jours", "30 jours")
 ROLE_KIND = Qt.UserRole
@@ -198,6 +199,17 @@ def parse_quick_ref_text(text: str) -> tuple[str, int]:
     cleaned = text.strip().upper().replace("×", "X")
     if not cleaned:
         return "", 1
+    if "\t" in cleaned:
+        cells = [cell.strip() for cell in cleaned.split("\t") if cell.strip()]
+        if cells:
+            ref = cells[0]
+            for cell in cells[1:]:
+                qty_text = cell[1:] if cell.startswith("X") else cell
+                try:
+                    return ref, max(1, int(qty_text))
+                except ValueError:
+                    continue
+            return ref, 1
     parts = cleaned.split()
     if len(parts) >= 2 and parts[-1].startswith("X"):
         try:
@@ -211,6 +223,101 @@ def parse_quick_ref_text(text: str) -> tuple[str, int]:
         except ValueError:
             return cleaned, 1
     return cleaned, 1
+
+
+def quick_invoice_to_portal_order(
+    lines: list[InvoiceLine],
+    order_number: str | None = None,
+    created_at: str | None = None,
+) -> tuple[PortalOrderSummary, PortalOrder]:
+    created = created_at or utc_now_iso()
+    number = order_number or f"FR-{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}"
+    total = sum((line.unit_price_ht or Decimal("0")) * Decimal(line.quantity_pieces or 0) for line in lines)
+    raw = {"kind": "quick_invoice"}
+    portal_lines = [
+        PortalOrderLine(
+            ref=line.ref,
+            category=line.type_label,
+            description=line.description or line.ref,
+            package_count=line.package_count or 0,
+            package_size=line.package_size,
+            quantity_pieces=line.quantity_pieces,
+            unit_price_ht=line.unit_price_ht,
+            raw={
+                "sage_code": line.sage_code,
+                "product_id": line.product_id,
+                "validation_status": line.validation_status,
+                "validation_message": line.validation_message,
+            },
+        )
+        for line in lines
+    ]
+    summary = PortalOrderSummary(
+        source=QUICK_INVOICE_SOURCE,
+        order_id=number,
+        order_number=number,
+        customer="Facture rapide",
+        created_at=created,
+        status="Brouillon",
+        total_amount=total,
+        raw=raw,
+    )
+    detail = PortalOrder(
+        source=QUICK_INVOICE_SOURCE,
+        order_id=number,
+        order_number=number,
+        customer="Facture rapide",
+        created_at=created,
+        status="Brouillon",
+        total_amount=total,
+        lines=portal_lines,
+        raw=raw,
+    )
+    return summary, detail
+
+
+QUICK_INVOICE_CLIPBOARD_HEADERS = ["Reference", "Code Sage", "Description", "Paquets", "Colisage", "Pieces", "Prix"]
+
+
+def quick_invoice_line_to_clipboard_row(line: InvoiceLine) -> list[str]:
+    return [
+        line.ref,
+        line.sage_code,
+        line.description,
+        str(line.package_count or ""),
+        str(line.package_size or ""),
+        str(line.quantity_pieces or ""),
+        str(line.unit_price_ht or ""),
+    ]
+
+
+def quick_invoice_line_from_clipboard_cells(cells: list[str]) -> InvoiceLine | None:
+    if len(cells) < len(QUICK_INVOICE_CLIPBOARD_HEADERS):
+        return None
+    ref = cells[0].strip().upper()
+    if not ref or ref in {"REFERENCE", "RÉFÉRENCE", "REF"}:
+        return None
+    try:
+        package_count = int(cells[3].strip()) if cells[3].strip() else None
+        package_size = int(cells[4].strip()) if cells[4].strip() else None
+        quantity_pieces = int(cells[5].strip())
+        unit_price_ht = _decimal_from_text(cells[6]) if cells[6].strip() else None
+    except (ValueError, InvalidOperation):
+        return None
+    line = InvoiceLine(
+        ref=ref,
+        sage_code=cells[1].strip().upper(),
+        description=cells[2].strip() or ref,
+        package_count=package_count,
+        package_size=package_size,
+        quantity_pieces=quantity_pieces,
+        unit_price_ht=unit_price_ht,
+        order_unit_price_ht=unit_price_ht,
+        price_confirmed=True,
+        source="quick_invoice",
+    )
+    line.validate()
+    return line
 
 
 class ProductTableModel(QAbstractTableModel):
@@ -526,6 +633,8 @@ class QuickInvoiceDialog(QDialog):
         self.status = QLabel("Ajoute une référence pour préparer une facture rapide.")
         remove_button = QPushButton("Supprimer ligne")
         remove_button.clicked.connect(self._remove_selected_lines)
+        copy_button = QPushButton("Copier liste")
+        copy_button.clicked.connect(self._copy_lines)
         clear_button = QPushButton("Vider")
         clear_button.clicked.connect(self._clear)
         inject_button = QPushButton("Injecter dans Sage")
@@ -534,6 +643,7 @@ class QuickInvoiceDialog(QDialog):
         close_button.clicked.connect(self.accept)
         actions.addWidget(self.status, 1)
         actions.addWidget(remove_button)
+        actions.addWidget(copy_button)
         actions.addWidget(clear_button)
         actions.addWidget(inject_button)
         actions.addWidget(close_button)
@@ -558,23 +668,86 @@ class QuickInvoiceDialog(QDialog):
         return ref
 
     def _add_line(self) -> None:
-        typed_ref, packages = parse_quick_ref_text(self.ref_input.text())
+        text = self.ref_input.text()
+        if self._add_lines_from_text(text):
+            self.ref_input.clear()
+            self.suggestions.clear()
+            return
+        pasted_line = self._line_from_pasted_text(text)
+        if pasted_line is not None:
+            self.lines.append(pasted_line)
+            self._refresh_table()
+            self.ref_input.clear()
+            self.suggestions.clear()
+            self.status.setText(f"{pasted_line.ref} ajouté depuis une ligne copiée.")
+            return
+        typed_ref, packages = parse_quick_ref_text(text)
         ref = self._selected_ref() or typed_ref
+        self._add_line_by_ref(ref, packages)
+
+    def _add_lines_from_text(self, text: str) -> bool:
+        entries = [line.strip() for line in text.replace(";", "\n").splitlines() if line.strip()]
+        if len(entries) <= 1:
+            return False
+        added = 0
+        errors: list[str] = []
+        for entry in entries:
+            pasted_line = self._line_from_pasted_text(entry)
+            if pasted_line is not None:
+                self.lines.append(pasted_line)
+                added += 1
+                continue
+            if self._is_quick_invoice_clipboard_header(entry):
+                continue
+            ref, packages = parse_quick_ref_text(entry)
+            if self._add_line_by_ref(ref, packages, refresh=False, clear_input=False):
+                added += 1
+            else:
+                errors.append(ref or entry)
+        self._refresh_table()
+        if errors:
+            self.status.setText(f"{added} ligne(s) ajoutée(s). Références inconnues: {', '.join(errors[:6])}")
+        else:
+            self.status.setText(f"{added} ligne(s) ajoutée(s).")
+        return True
+
+    def _is_quick_invoice_clipboard_header(self, text: str) -> bool:
+        cells = [cell.strip().upper() for cell in text.split("\t")]
+        return len(cells) >= 3 and cells[0] in {"REFERENCE", "RÉFÉRENCE", "REF"} and "CODE SAGE" in cells[1]
+
+    def _line_from_pasted_text(self, text: str) -> InvoiceLine | None:
+        if "\t" not in text:
+            return None
+        line = quick_invoice_line_from_clipboard_cells([cell.strip() for cell in text.split("\t")])
+        if line is None:
+            return None
+        product = self.db.get_product_by_ref(line.ref)
+        if product is not None:
+            line.product_id = product.id
+            line.type_label = product.type_label
+            line.catalog_unit_price_ht = product.unit_price_ht
+        line.validate()
+        return line
+
+    def _add_line_by_ref(self, ref: str, packages: int, refresh: bool = True, clear_input: bool = True) -> bool:
         if not ref:
             self.status.setText("Tape une référence.")
-            return
+            return False
         product = self.db.get_product_by_ref(ref)
         if product is None:
             self.status.setText(f"Référence inconnue: {ref}")
-            return
+            return False
         package_size = product.package_size or 0
         quantity_pieces = packages * package_size if package_size else packages
         line = self.resolver.line_from_product(product, quantity_pieces=quantity_pieces, package_count=packages, source="quick_invoice")
         self.lines.append(line)
-        self._refresh_table()
-        self.ref_input.clear()
-        self.suggestions.clear()
+        if refresh:
+            self._refresh_table()
+        if clear_input:
+            self.ref_input.clear()
+            self.suggestions.clear()
         self.status.setText(f"{line.ref} ajouté: {packages} paquet(s), {line.quantity_pieces} pièce(s).")
+        return True
 
     def _refresh_table(self) -> None:
         populate_lines_table(self.table, self.lines, editable=True)
@@ -615,6 +788,19 @@ class QuickInvoiceDialog(QDialog):
         self.lines.clear()
         self._refresh_table()
         self.status.setText("Facture rapide vidée.")
+
+    def _copy_lines(self) -> None:
+        if not self.lines:
+            self.status.setText("Aucune ligne à copier.")
+            return
+        selected_rows = sorted({item.row() for item in self.table.selectedItems()})
+        rows_to_copy = selected_rows if selected_rows else list(range(len(self.lines)))
+        rows = ["\t".join(QUICK_INVOICE_CLIPBOARD_HEADERS)]
+        for row in rows_to_copy:
+            if row < len(self.lines):
+                rows.append("\t".join(quick_invoice_line_to_clipboard_row(self.lines[row])))
+        QApplication.clipboard().setText("\n".join(rows))
+        self.status.setText(f"{len(rows_to_copy)} ligne(s) copiée(s) avec détails.")
 
     def _accept_for_injection(self) -> None:
         if not self.lines:
@@ -1592,6 +1778,7 @@ class MainWindow(QMainWindow):
         commands_latest = self.db.latest_cached_order_sync()
         parts = [
             f"Microstore : {self.db.count_cached_orders('Microstore')} commandes, {self.db.count_products()} produits",
+            f"Factures rapides : {self.db.count_cached_orders(QUICK_INVOICE_SOURCE)}",
             f"eFashion : {self.db.count_cached_orders('eFashion')} commandes",
             f"PFS : {self.db.count_cached_orders('PFS')} commandes",
             f"Produits Microstore : {_display_date(product_latest) if product_latest else 'aucune synchro'}",
@@ -1668,12 +1855,26 @@ class MainWindow(QMainWindow):
         dialog.exec()
         if not dialog.lines:
             return
+        key = self._save_quick_invoice(dialog.lines)
         self.lines = dialog.lines
-        self.current_order_source = "Facture rapide"
-        self.current_order_key = ""
+        self.current_order_source = QUICK_INVOICE_SOURCE
+        self.current_order_key = key
         self.current_order_path = None
+        self._load_cached_orders()
+        self._refresh_status()
         if dialog.inject_requested:
-            self._prepare_injection()
+            if self._prepare_injection():
+                self._load_cached_orders()
+
+    def _save_quick_invoice(self, lines: list[InvoiceLine]) -> str:
+        for line in lines:
+            line.validate()
+        summary, detail = quick_invoice_to_portal_order(lines)
+        key = summary.order_number or summary.order_id
+        status = _status_from_lines(lines)
+        self.db.upsert_cached_order(summary, detail, status)
+        self.db.log("quick_invoice_save", f"{key}: {len(lines)} ligne(s) sauvegardee(s)")
+        return key
 
     def _parse_quick_ref_text(self, text: str) -> tuple[str, int]:
         return parse_quick_ref_text(text)
@@ -2098,7 +2299,20 @@ class MainWindow(QMainWindow):
         return detail
 
     def _lines_from_portal_order(self, order: PortalOrder) -> list[InvoiceLine]:
-        return self.resolver.lines_from_portal_lines(order.lines, source=order.source)
+        lines = self.resolver.lines_from_portal_lines(order.lines, source=order.source)
+        if order.source == QUICK_INVOICE_SOURCE:
+            for invoice_line, portal_line in zip(lines, order.lines, strict=False):
+                if portal_line.raw.get("sage_code"):
+                    invoice_line.sage_code = str(portal_line.raw.get("sage_code") or "")
+                if portal_line.description:
+                    invoice_line.description = portal_line.description
+                if portal_line.raw.get("product_id") not in (None, ""):
+                    try:
+                        invoice_line.product_id = int(portal_line.raw["product_id"])
+                    except (TypeError, ValueError):
+                        pass
+                invoice_line.validate()
+        return lines
 
     def _prepare_injection(self) -> bool:
         if not self.lines:
@@ -2130,7 +2344,11 @@ class MainWindow(QMainWindow):
                 return False
         if self.current_order_source and self.current_order_key:
             self.db.set_order_status(self.current_order_source, self.current_order_key, STATUS_INJECTED)
-            self._refresh_order_folder()
+            if self.current_order_path is None:
+                self.portal_status_cache[(self.current_order_source, self.current_order_key)] = STATUS_INJECTED
+                self._apply_order_filters()
+            else:
+                self._refresh_order_folder()
         if is_windows():
             self.statusBar().showMessage("Injection envoyée à AutoHotkey. Vérifie Sage visuellement.", 5000)
         else:

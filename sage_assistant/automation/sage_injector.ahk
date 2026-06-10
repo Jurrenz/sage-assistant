@@ -66,8 +66,18 @@ LogEnabled := profile.Has("log_enabled") ? ToBool(profile["log_enabled"]) : true
 CaptureEnabled := profile.Has("capture_before_after") ? ToBool(profile["capture_before_after"]) : true
 confirmationMode := profile.Has("confirmation_mode") ? profile["confirmation_mode"] : "simple"
 stablePauseMs := profile.Has("stable_pause_ms") ? Integer(profile["stable_pause_ms"]) : 220
+if (confirmationMode = "debug") {
+    ; Debug intentionally keeps the old reliable behavior: visible checkpoints,
+    ; captures and logs. The extra work also gives Sage time to settle.
+    LogEnabled := true
+    CaptureEnabled := true
+}
 
 LogLine(logPath, "START queue=" queuePath " lines=" lines.Length)
+
+if (confirmationMode = "debug") {
+    MsgBox("Prepare Sage sur une facture brouillon, puis clique OK.`nMode: Injection Sage reelle`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S", "Sage Assistant")
+}
 
 if !WinExist(windowTitle) {
     LogLine(logPath, "ERROR Sage window not found: " windowTitle)
@@ -92,10 +102,11 @@ if (confirmationMode = "debug") {
 } else if (confirmationMode = "simple") {
     MsgBox("Sage pret: " realTarget["invoiceTitle"] "`nLignes: " lines.Length "`n`nClique OK pour injecter.", "Sage Assistant")
 }
-EnsureSageActive(windowTitle, focusGuard, logPath, 1, lines[1]["ref"])
+ActivateSageTarget(realTarget["mainHwnd"], windowTitle)
+EnsureSageActive(windowTitle, focusGuard, logPath, 1, lines[1]["ref"], realTarget["mainHwnd"])
 Click(realTarget["addCenterX"], realTarget["addCenterY"])
 StableSleep(delayMs * 2, stablePauseMs)
-EnsureSageActive(windowTitle, focusGuard, logPath, 1, lines[1]["ref"])
+EnsureSageActive(windowTitle, focusGuard, logPath, 1, lines[1]["ref"], realTarget["mainHwnd"])
 afterClickPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_click")
 if CaptureEnabled
     LogLine(logPath, "CAPTURE after_click=" afterClickPath)
@@ -109,7 +120,7 @@ for index, line in lines {
         LogLine(logPath, "STOP before line " index " ref=" line["ref"])
         ExitApp(2)
     }
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"], realTarget["mainHwnd"])
     LogLine(logPath, "SEND line=" index " ref=" line["ref"] " mode=keyboard_from_sage_focus article_focus=" focusAtArticle)
     SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, logPath, realTarget, index, index < lines.Length, focusAtArticle)
     LogLine(logPath, "OK line=" index " ref=" line["ref"])
@@ -134,13 +145,13 @@ SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, 
         Send("+{Tab}")
         StableSleep(delayMs * 2, stablePauseMs)
     }
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"], realTarget["mainHwnd"])
 
     SendText(line["article_code"])
     StableSleep(delayMs * 2, stablePauseMs)
     Send("{Tab}")
     StableSleep(delayMs * 8, stablePauseMs)
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"], realTarget["mainHwnd"])
     afterArticlePath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_article_" index)
     if CaptureEnabled
         LogLine(logPath, "CAPTURE after_article=" afterArticlePath)
@@ -156,7 +167,7 @@ SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, 
     StableSleep(delayMs * 2, stablePauseMs)
     SendText(" " line["ref"])
     StableSleep(delayMs * 2, stablePauseMs)
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"], realTarget["mainHwnd"])
     afterDescriptionPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_description_" index)
     if CaptureEnabled
         LogLine(logPath, "CAPTURE after_description=" afterDescriptionPath)
@@ -168,7 +179,7 @@ SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, 
     StableSleep(delayMs * 2, stablePauseMs)
     SendText(String(line["quantity"]))
     StableSleep(delayMs * 2, stablePauseMs)
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"], realTarget["mainHwnd"])
     afterQuantityPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_quantity_" index)
     if CaptureEnabled
         LogLine(logPath, "CAPTURE after_quantity=" afterQuantityPath)
@@ -180,7 +191,7 @@ SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, 
     StableSleep(delayMs * 2, stablePauseMs)
     SendText(line["unit_price_ht"])
     StableSleep(delayMs * 2, stablePauseMs)
-    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"])
+    EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"], realTarget["mainHwnd"])
     afterPricePath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_price_" index)
     if CaptureEnabled
         LogLine(logPath, "CAPTURE after_price=" afterPricePath)
@@ -420,15 +431,49 @@ WaitNextLine(index, ref, logPath) {
     ToolTip()
 }
 
-EnsureSageActive(windowTitle, focusGuard, logPath, index, ref) {
+ActivateSageTarget(mainHwnd, windowTitle) {
+    if mainHwnd {
+        WinActivate("ahk_id " mainHwnd)
+        WinWaitActive("ahk_id " mainHwnd, , 2)
+    } else {
+        WinActivate(windowTitle)
+        WinWaitActive(windowTitle, , 2)
+    }
+}
+
+EnsureSageActive(windowTitle, focusGuard, logPath, index, ref, mainHwnd := 0) {
     if !focusGuard {
         return
     }
-    if !WinActive(windowTitle) {
-        LogLine(logPath, "ERROR focus lost line=" index " ref=" ref)
-        MsgBox("Sage n'est plus actif. Injection stoppee a la ligne " index " (" ref ").")
+    if IsSageActive(windowTitle, mainHwnd) {
+        return
+    }
+    ActivateSageTarget(mainHwnd, windowTitle)
+    StableSleep(100, 100)
+    if !IsSageActive(windowTitle, mainHwnd) {
+        activeTitle := ""
+        activeClass := ""
+        try {
+            activeTitle := WinGetTitle("A")
+            activeClass := WinGetClass("A")
+        }
+        LogLine(logPath, "ERROR focus lost line=" index " ref=" ref " active_title=" activeTitle " active_class=" activeClass)
+        MsgBox("Sage n'est plus actif. Injection stoppee a la ligne " index " (" ref ").`n`nFenetre active: " activeTitle, "Sage Assistant")
         ExitApp(3)
     }
+}
+
+IsSageActive(windowTitle, mainHwnd := 0) {
+    if WinActive(windowTitle) {
+        return true
+    }
+    activeHwnd := WinExist("A")
+    if !activeHwnd || !mainHwnd {
+        return false
+    }
+    activeRoot := DllCall("user32\GetAncestor", "ptr", activeHwnd, "uint", 2, "ptr")
+    mainRoot := DllCall("user32\GetAncestor", "ptr", mainHwnd, "uint", 2, "ptr")
+    return activeHwnd = mainHwnd || activeRoot = mainRoot
 }
 
 LogLine(logPath, message) {
