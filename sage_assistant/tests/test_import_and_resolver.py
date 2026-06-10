@@ -16,7 +16,7 @@ from app.main import (
     quick_invoice_line_to_clipboard_row,
     quick_invoice_to_portal_order,
 )
-from app.microstore_product_writer import MicrostoreProductWriter, MicrostoreWriteNotEnabled
+from app.microstore_product_writer import MicrostoreProductWriter
 from app.models import InvoiceLine, Product, SageMapping, build_sage_description
 from app.portal_orders import PortalOrder, PortalOrderLine, PortalOrderSummary
 from app.resolver import Resolver
@@ -488,7 +488,54 @@ def test_product_activity_dates_and_sheet_fields_are_persisted(tmp_path):
     db.close()
 
 
-def test_microstore_product_writer_is_diagnostic_only():
+class FakeMicrostoreProductConnector:
+    def __init__(self) -> None:
+        self.add_payloads = []
+        self.update_payloads = []
+        self.status_calls = []
+
+    def add_product(self, payload):
+        self.add_payloads.append(payload)
+        return Product(
+            id=None,
+            ref=payload["item_ref"],
+            type_label="ROBES COURTES",
+            name=payload["name"],
+            unit_price_ht=Decimal("8.00"),
+            package_size=12,
+            workflow_status="synced",
+            raw={"id": "9001"},
+        )
+
+    def update_product(self, product_id, payload):
+        self.update_payloads.append((product_id, payload))
+        return Product(
+            id=None,
+            ref=payload["item_ref"],
+            type_label="ROBES COURTES",
+            name=payload["name"],
+            unit_price_ht=Decimal("9.00"),
+            package_size=6,
+            workflow_status="synced",
+            raw={"id": product_id},
+        )
+
+    def set_product_active(self, product_id, active):
+        self.status_calls.append((product_id, active))
+        return Product(
+            id=None,
+            ref="OLD123",
+            type_label="ROBES COURTES",
+            name="Produit test",
+            unit_price_ht=Decimal("9.00"),
+            package_size=6,
+            microstore_status="active" if active else "disabled",
+            workflow_status="synced",
+            raw={"id": product_id},
+        )
+
+
+def test_microstore_product_writer_creates_updates_and_sets_status():
     product = Product(
         id=None,
         ref="NEW123",
@@ -498,17 +545,35 @@ def test_microstore_product_writer_is_diagnostic_only():
         package_size=12,
         workflow_status="to_create",
     )
-    writer = MicrostoreProductWriter()
+    connector = FakeMicrostoreProductConnector()
+    writer = MicrostoreProductWriter(connector)  # type: ignore[arg-type]
     payload = writer.build_payload(product)
 
     assert payload.endpoint == "/goods/add"
     assert payload.payload["item_ref"] == "NEW123"
-    try:
-        writer.apply(product)
-    except MicrostoreWriteNotEnabled:
-        pass
-    else:
-        raise AssertionError("writer.apply doit rester bloque tant que l'API ecriture n'est pas validee")
+    created = writer.apply(product)
+    assert created.raw["id"] == "9001"
+    assert connector.add_payloads[0]["sku"][0]["price_1"] == "8.00"
+
+    updated = writer.apply(
+        Product(
+            id=None,
+            ref="OLD123",
+            type_label="ROBES COURTES",
+            name="Produit modifié",
+            unit_price_ht=Decimal("9.00"),
+            package_size=6,
+            workflow_status="modified",
+            raw={"id": "42", "sku": [{"id": "55", "color_id": "9", "size_id": "0", "num_per_pack": "12"}]},
+        )
+    )
+    assert updated.package_size == 6
+    assert connector.update_payloads[0][0] == "42"
+    assert connector.update_payloads[0][1]["sku"][0]["id"] == "55"
+
+    disabled = writer.set_active(updated, False)
+    assert disabled.microstore_status == "disabled"
+    assert connector.status_calls == [("42", False)]
 
 
 def test_cached_portal_line_with_zero_quantity_is_repaired(tmp_path):

@@ -49,7 +49,7 @@ from .db import Database
 from .excel_import import import_order, import_products
 from .injection import launch_ahk_tool, launch_autohotkey, write_injection_queue
 from .models import InvoiceLine, Product, SageMapping, build_sage_description, normalize_spaces, utc_now_iso
-from .microstore_product_writer import MicrostoreProductWriter, MicrostoreWriteNotEnabled
+from .microstore_product_writer import MicrostoreProductPayload, MicrostoreProductWriter, MicrostoreWriteError
 from .order_folder import OrderFile, list_order_files
 from .portal_orders import EfashionConnector, MicrostoreConnector, PfsConnector, PortalOrder, PortalOrderLine, PortalOrderSummary
 from .product_folder import latest_product_export
@@ -1673,7 +1673,7 @@ class MainWindow(QMainWindow):
         refresh_button = QPushButton("Recharger affichage")
         refresh_button.clicked.connect(self._refresh_products_page)
         sync_button = QPushButton("Synchroniser Microstore")
-        sync_button.clicked.connect(lambda: self._start_sync(["Microstore"]))
+        sync_button.clicked.connect(lambda: self._start_sync(["MicrostoreProducts"]))
         new_button = QPushButton("Nouveau brouillon")
         new_button.clicked.connect(self._new_product_draft)
         edit_button = QPushButton("Modifier")
@@ -1682,6 +1682,10 @@ class MainWindow(QMainWindow):
         simulate_button.clicked.connect(self._simulate_selected_product)
         apply_button = QPushButton("Appliquer à Microstore")
         apply_button.clicked.connect(self._apply_selected_product_to_microstore)
+        disable_button = QPushButton("Désactiver")
+        disable_button.clicked.connect(lambda: self._set_selected_product_active(False))
+        reactivate_button = QPushButton("Réactiver")
+        reactivate_button.clicked.connect(lambda: self._set_selected_product_active(True))
         actions.addWidget(refresh_button)
         actions.addWidget(sync_button)
         actions.addStretch(1)
@@ -1689,6 +1693,8 @@ class MainWindow(QMainWindow):
         actions.addWidget(edit_button)
         actions.addWidget(simulate_button)
         actions.addWidget(apply_button)
+        actions.addWidget(disable_button)
+        actions.addWidget(reactivate_button)
         layout.addLayout(actions)
         return page
 
@@ -2214,22 +2220,80 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, APP_NAME, "Ce produit n'a pas de modification locale à appliquer.")
             return
         changes = self.db.product_change_preview(product)
-        writer = MicrostoreProductWriter()
+        writer = self._microstore_writer()
+        if writer is None:
+            return
         payload = writer.build_payload(product)
-        text = (
-            "Simulation Microstore uniquement.\n\n"
-            + "\n".join(changes)
-            + "\n\nEndpoint prévu: "
-            + payload.endpoint
-            + "\n\nPayload prévu:\n"
-            + json.dumps(payload.payload, ensure_ascii=False, indent=2)
-            + "\n\nAucune écriture réelle ne sera lancée tant que le payload goods/add/update n'est pas validé sur une référence test."
-        )
-        QMessageBox.information(self, APP_NAME, text)
+        if not self._confirm_microstore_write(payload, changes):
+            return
         try:
-            writer.apply(product)
-        except MicrostoreWriteNotEnabled as exc:
-            self.db.log("microstore_write_preview", f"{product.ref}: {exc}")
+            saved_product = writer.apply(product)
+            self.db.upsert_products([saved_product])
+        except MicrostoreWriteError as exc:
+            self.db.log("microstore_write_error", f"{product.ref}: {exc}")
+            QMessageBox.warning(self, APP_NAME, f"Écriture Microstore échouée:\n{exc}")
+            return
+        self._refresh_products_page()
+        self.db.log("microstore_write", f"{payload.action}: {product.ref}")
+        QMessageBox.information(self, APP_NAME, f"Produit appliqué à Microstore: {saved_product.ref}")
+
+    def _set_selected_product_active(self, active: bool) -> None:
+        product = self._selected_product()
+        if product is None:
+            QMessageBox.information(self, APP_NAME, "Aucun produit sélectionné.")
+            return
+        action_label = "réactiver" if active else "désactiver"
+        microstore_id = product.raw.get("id") if isinstance(product.raw, dict) else None
+        if not microstore_id:
+            QMessageBox.warning(
+                self,
+                APP_NAME,
+                "Id Microstore absent. Synchronise d'abord la DB produits Microstore, puis réessaie.",
+            )
+            return
+        answer = QMessageBox.question(
+            self,
+            APP_NAME,
+            f"Confirmer: {action_label} {product.ref} dans Microstore ?",
+        )
+        if answer != QMessageBox.Yes:
+            return
+        writer = self._microstore_writer()
+        if writer is None:
+            return
+        try:
+            saved_product = writer.set_active(product, active)
+            self.db.upsert_products([saved_product])
+        except MicrostoreWriteError as exc:
+            self.db.log("microstore_status_error", f"{product.ref}: {exc}")
+            QMessageBox.warning(self, APP_NAME, f"Changement de statut Microstore échoué:\n{exc}")
+            return
+        self._refresh_products_page()
+        self.db.log("microstore_status", f"{action_label}: {product.ref}")
+        QMessageBox.information(self, APP_NAME, f"Produit {action_label} dans Microstore: {saved_product.ref}")
+
+    def _microstore_writer(self) -> MicrostoreProductWriter | None:
+        self._save_app_settings_silent()
+        token = self.settings.microstore_api_token.strip()
+        if not token and hasattr(self, "microstore_token"):
+            token = self.microstore_token.text().strip()
+        if not token:
+            QMessageBox.warning(self, APP_NAME, "Token Microstore absent dans Réglages.")
+            return None
+        return MicrostoreProductWriter(MicrostoreConnector(token))
+
+    def _confirm_microstore_write(self, payload: MicrostoreProductPayload, changes: list[str]) -> bool:
+        payload_preview = json.dumps(payload.payload, ensure_ascii=False, indent=2)
+        if len(payload_preview) > 2200:
+            payload_preview = payload_preview[:2200] + "\n..."
+        action = "Créer" if payload.action == "create" else "Modifier"
+        text = (
+            f"{action} le produit dans Microstore ?\n\n"
+            + "\n".join(changes)
+            + f"\n\nEndpoint: {payload.endpoint}\n\n"
+            + payload_preview
+        )
+        return QMessageBox.question(self, APP_NAME, text) == QMessageBox.Yes
 
     def _portal_credentials(self, source: str) -> tuple[str, str] | None:
         if source == "eFashion":

@@ -293,6 +293,29 @@ class FakeHttp:
             return {"data": {"commandes": {"data": [{"id_commande": "1", "id_commande_name": "EF1"}]}}}
         return {"data": {"commandeById": {"id_commande": "1", "id_commande_name": "EF1", "lignes": []}}}
 
+    def post_form(self, url, payload, params=None):
+        self.calls.append(("POST_FORM", url, {"payload": payload, "params": params}))
+        if url.endswith("/goods/get"):
+            return {
+                "err": 0,
+                "info": {
+                    "id": str(payload["id"]),
+                    "item_ref": "CM55-9",
+                    "name": "Chemise test",
+                    "num_per_pack": "12",
+                    "cat_info": {"id": "1", "name": "CHEMISES / TUNIQUES"},
+                    "price_1": "6.50",
+                    "disable": "0",
+                    "sku": [{"id": "sku-1", "color_id": "9", "size_id": "0", "num_per_pack": "12"}],
+                },
+                "msg": "Succès",
+            }
+        if url.endswith("/goods/add"):
+            return {"err": 0, "id": "new-id", "msg": "Succès"}
+        if url.endswith("/goods/update") or url.endswith("/goods/batch_set_attribute"):
+            return {"err": 0, "msg": "Succès"}
+        return {"err": 9999, "msg": "unexpected"}
+
     def get_json(self, url, params=None):
         self.calls.append(("GET", url, params))
         if url.endswith("/goods/get_by_order"):
@@ -338,6 +361,10 @@ def test_connectors_call_expected_endpoints():
     assert microstore.list_products()[0].ref == "CM55-9"
     assert microstore.list_orders()[0].order_number == "1001627"
     assert microstore.get_order("1001627").lines[0].quantity_pieces == 24
+    assert microstore.get_product("123").ref == "CM55-9"
+    assert microstore.add_product({"item_ref": "CM55-9"}).ref == "CM55-9"
+    assert microstore.update_product("123", {"id": "123", "item_ref": "CM55-9"}).ref == "CM55-9"
+    assert microstore.set_product_active("123", False).ref == "CM55-9"
 
     efashion = EfashionConnector(fake)
     assert efashion.list_orders()[0].order_number == "EF1"
@@ -351,6 +378,10 @@ def test_connectors_call_expected_endpoints():
     assert ("GET", f"{MICROSTORE_API_BASE_URL}/goods/get_by_order") in methods_urls
     assert ("GET", f"{MICROSTORE_API_BASE_URL}/order/new_view_all") in methods_urls
     assert ("GET", f"{MICROSTORE_API_BASE_URL}/pluginsWeb/orderInfo/1001627") in methods_urls
+    assert ("POST_FORM", f"{MICROSTORE_API_BASE_URL}/goods/get") in methods_urls
+    assert ("POST_FORM", f"{MICROSTORE_API_BASE_URL}/goods/add") in methods_urls
+    assert ("POST_FORM", f"{MICROSTORE_API_BASE_URL}/goods/update") in methods_urls
+    assert ("POST_FORM", f"{MICROSTORE_API_BASE_URL}/goods/batch_set_attribute") in methods_urls
     assert ("POST", "https://wapi.efashion-paris.com/graphql") in methods_urls
     assert ("GET", "https://wholesaler-api.parisfashionshops.com/api/v1/orders/listOrders") in methods_urls
     assert ("GET", "https://wholesaler-api.parisfashionshops.com/api/v1/orders/ord_1") in methods_urls

@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Any
 from urllib import request
+from urllib.parse import urlencode
 
 from .excel_import import OrderRow, normalize_ref
 from .models import Product
@@ -271,14 +272,20 @@ def normalize_microstore_product(raw: dict[str, Any]) -> Product | None:
     ref = normalize_ref(raw.get("item_ref"))
     if not ref:
         return None
-    category = raw.get("cate_info") or {}
+    category = raw.get("cate_info") or raw.get("cat_info") or {}
     price_range = raw.get("price_range") or {}
     prices = price_range.get("range") if isinstance(price_range, dict) else []
-    unit_price = _decimal(prices[0]) if prices else None
+    unit_price = _decimal(raw.get("price_1") or raw.get("price")) or (_decimal(prices[0]) if prices else None)
     if unit_price is None:
         sku = raw.get("sku") or {}
         if isinstance(sku, dict):
             for item in sku.values():
+                if isinstance(item, dict):
+                    unit_price = _decimal(item.get("price_1"))
+                    if unit_price is not None:
+                        break
+        elif isinstance(sku, list):
+            for item in sku:
                 if isinstance(item, dict):
                     unit_price = _decimal(item.get("price_1"))
                     if unit_price is not None:
@@ -296,10 +303,10 @@ def normalize_microstore_product(raw: dict[str, Any]) -> Product | None:
         type_label=str(category.get("name") or "").strip(),
         name=str(raw.get("name") or "").strip(),
         unit_price_ht=unit_price,
-        package_size=_int(raw.get("unit_number")),
+        package_size=_int(raw.get("unit_number") or raw.get("num_per_pack")),
         active=True,
         microstore_status=microstore_status,
-        content_label=str(raw.get("package_content") or raw.get("content") or raw.get("content_label") or raw.get("unit_content") or "").strip(),
+        content_label=str(raw.get("package_content") or raw.get("content") or raw.get("content_label") or raw.get("unit_content") or raw.get("remark_package") or "").strip(),
         composition=str(raw.get("material") or raw.get("composition") or raw.get("remark_material") or "").strip(),
         color=str(raw.get("color") or raw.get("color_name") or raw.get("color_list") or "").strip(),
         stock_snapshot=stock_snapshot,
@@ -396,6 +403,23 @@ class JsonHttpClient:
 
     def post_json(self, url: str, payload: dict[str, Any]) -> dict[str, Any]:
         return self._request_json("POST", url, payload)
+
+    def post_form(self, url: str, payload: dict[str, Any], params: dict[str, Any] | None = None) -> dict[str, Any]:
+        if params:
+            separator = "&" if "?" in url else "?"
+            url = f"{url}{separator}{urlencode({key: value for key, value in params.items() if value is not None})}"
+        data = urlencode({key: _form_value(value) for key, value in payload.items() if value is not None}).encode("utf-8")
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            **self.headers,
+        }
+        req = request.Request(url, data=data, headers=headers, method="POST")
+        try:
+            with self.opener.open(req, timeout=self.timeout) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except Exception as exc:
+            raise PortalApiError(f"Erreur API POST {url}: {exc}") from exc
 
     def _request_json(self, method: str, url: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
         data = json.dumps(payload).encode("utf-8") if payload is not None else None
@@ -547,6 +571,60 @@ class MicrostoreConnector:
         if int(body.get("err") or 0) != 0:
             raise PortalApiError(str(body.get("msg") or body.get("debug_msg") or "Erreur detail Microstore"))
         return normalize_microstore_order_detail(body)
+
+    def get_product(self, product_id: str | int) -> Product:
+        body = self.http.post_form(
+            f"{self.api_base_url}/goods/get",
+            {"id": product_id},
+            self._params(),
+        )
+        if int(body.get("err") or 0) != 0:
+            raise PortalApiError(str(body.get("msg") or body.get("debug_msg") or "Erreur détail produit Microstore"))
+        raw = body.get("info") or body.get("data") or {}
+        if not isinstance(raw, dict):
+            raise PortalApiError("Détail produit Microstore invalide.")
+        product = normalize_microstore_product(raw)
+        if product is None:
+            raise PortalApiError("Produit Microstore sans référence.")
+        return product
+
+    def add_product(self, payload: dict[str, Any]) -> Product:
+        body = self.http.post_form(f"{self.api_base_url}/goods/add", payload, self._params())
+        if int(body.get("err") or 0) != 0:
+            raise PortalApiError(str(body.get("msg") or body.get("debug_msg") or "Création produit Microstore échouée"))
+        product_id = body.get("id")
+        if not product_id:
+            raise PortalApiError("Création Microstore réussie mais id produit absent.")
+        return self.get_product(product_id)
+
+    def update_product(self, product_id: str | int, payload: dict[str, Any]) -> Product:
+        body = self.http.post_form(f"{self.api_base_url}/goods/update", payload, self._params())
+        if int(body.get("err") or 0) != 0:
+            raise PortalApiError(str(body.get("msg") or body.get("debug_msg") or "Modification produit Microstore échouée"))
+        return self.get_product(product_id)
+
+    def set_product_active(self, product_id: str | int, active: bool) -> Product:
+        body = self.http.post_form(
+            f"{self.api_base_url}/goods/batch_set_attribute",
+            {
+                "quantity": 1,
+                "attribute": {"disable": not active},
+                "filter": {"select_all": False, "ids": [str(product_id)]},
+            },
+            self._params(),
+        )
+        if int(body.get("err") or 0) != 0:
+            action = "réactivation" if active else "désactivation"
+            raise PortalApiError(str(body.get("msg") or body.get("debug_msg") or f"Erreur {action} produit Microstore"))
+        return self.get_product(product_id)
+
+
+def _form_value(value: Any) -> str:
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
 
 
 class PfsConnector:
