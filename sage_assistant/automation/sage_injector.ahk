@@ -522,6 +522,8 @@ Jxon_Load(&src, args*) {
     profile["step_mode"] := JsonGetBool(profileText, "step_mode", false)
     profile["log_enabled"] := JsonGetBool(profileText, "log_enabled", true)
     profile["capture_before_after"] := JsonGetBool(profileText, "capture_before_after", true)
+    profile["confirmation_mode"] := JsonGetString(profileText, "confirmation_mode", "simple")
+    profile["stable_pause_ms"] := JsonGetNumber(profileText, "stable_pause_ms", 220)
     profile["log_path"] := JsonGetString(profileText, "log_path", A_ScriptDir "\sage_injection.log")
     profile["new_line_x"] := JsonGetNumber(profileText, "new_line_x", 0)
     profile["new_line_y"] := JsonGetNumber(profileText, "new_line_y", 0)

@@ -660,6 +660,22 @@ class OrderDetailDialog(QDialog):
         self.message_label = QLabel("")
         layout.addWidget(self.message_label)
 
+        entry = QHBoxLayout()
+        self.ref_input = QLineEdit()
+        self.ref_input.setPlaceholderText("Ajouter une référence, ex: FL530-1 ou FL530-1 x2")
+        self.ref_input.textChanged.connect(self._refresh_suggestions)
+        self.ref_input.returnPressed.connect(self._add_line)
+        add_button = QPushButton("Ajouter")
+        add_button.clicked.connect(self._add_line)
+        entry.addWidget(self.ref_input, 1)
+        entry.addWidget(add_button)
+        layout.addLayout(entry)
+
+        self.suggestions = QListWidget()
+        self.suggestions.setMaximumHeight(100)
+        self.suggestions.itemDoubleClicked.connect(lambda _item: self._add_line())
+        layout.addWidget(self.suggestions)
+
         self.table = QTableWidget(0, len(LINE_HEADERS))
         self.table.setHorizontalHeaderLabels(line_headers_for_source(self.source))
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -695,6 +711,9 @@ class OrderDetailDialog(QDialog):
         actions.addWidget(inject_button)
         actions.addWidget(close_button)
         layout.addLayout(actions)
+        self.ref_input.installEventFilter(self)
+        self.suggestions.installEventFilter(self)
+        self._validate_lines()
         self._refresh_table()
         self._refresh_status()
 
@@ -703,12 +722,131 @@ class OrderDetailDialog(QDialog):
         configure_line_table_autocomplete(self.table, self.db)
 
     def eventFilter(self, watched: QObject, event) -> bool:
+        if watched is self.ref_input and event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_Down and self.suggestions.count():
+                self.suggestions.setFocus()
+                self.suggestions.setCurrentRow(0)
+                return True
+        if watched is self.suggestions and event.type() == QEvent.KeyPress:
+            if event.key() in {Qt.Key_Return, Qt.Key_Enter}:
+                self._add_line()
+                return True
+            if event.key() == Qt.Key_Escape:
+                self.ref_input.setFocus()
+                return True
         if watched is self.table and event.type() == QEvent.KeyPress and event.key() == Qt.Key_Space:
             item = self.table.currentItem()
             if item and item.flags() & Qt.ItemIsEditable:
                 self.table.editItem(item)
                 return True
         return super().eventFilter(watched, event)
+
+    def _refresh_suggestions(self) -> None:
+        ref, _packages = parse_quick_ref_text(self.ref_input.text())
+        self.suggestions.clear()
+        if len(ref) < 2:
+            return
+        for product in self.db.search_products(ref, limit=8):
+            label = f"{product.ref} | {product.name or product.type_label} | {product.unit_price_ht or ''} EUR | colisage {product.package_size or '?'}"
+            item = QListWidgetItem(label)
+            item.setData(Qt.UserRole, product.ref)
+            self.suggestions.addItem(item)
+
+    def _selected_ref(self) -> str:
+        selected = self.suggestions.selectedItems()
+        if selected:
+            return str(selected[0].data(Qt.UserRole) or "")
+        ref, _packages = parse_quick_ref_text(self.ref_input.text())
+        return ref
+
+    def _add_line(self) -> None:
+        text = self.ref_input.text()
+        if self._add_lines_from_text(text):
+            self.ref_input.clear()
+            self.suggestions.clear()
+            self.ref_input.setFocus()
+            return
+        pasted_line = self._line_from_pasted_text(text)
+        if pasted_line is not None:
+            self.lines.append(pasted_line)
+            self._refresh_table()
+            self._refresh_status()
+            self.ref_input.clear()
+            self.suggestions.clear()
+            self.message_label.setText(f"{pasted_line.ref} ajouté depuis une ligne copiée.")
+            self.ref_input.setFocus()
+            return
+        typed_ref, packages = parse_quick_ref_text(text)
+        ref = self._selected_ref() or typed_ref
+        self._add_line_by_ref(ref, packages)
+
+    def _add_lines_from_text(self, text: str) -> bool:
+        entries = [line.strip() for line in text.replace(";", "\n").splitlines() if line.strip()]
+        if len(entries) <= 1:
+            return False
+        added = 0
+        errors: list[str] = []
+        for entry_text in entries:
+            pasted_line = self._line_from_pasted_text(entry_text)
+            if pasted_line is not None:
+                self.lines.append(pasted_line)
+                added += 1
+                continue
+            if self._is_quick_invoice_clipboard_header(entry_text):
+                continue
+            ref, packages = parse_quick_ref_text(entry_text)
+            if self._add_line_by_ref(ref, packages, refresh=False, clear_input=False):
+                added += 1
+            else:
+                errors.append(ref or entry_text)
+        self._refresh_table()
+        self._refresh_status()
+        if errors:
+            self.message_label.setText(f"{added} ligne(s) ajoutée(s). Références inconnues: {', '.join(errors[:6])}")
+        else:
+            self.message_label.setText(f"{added} ligne(s) ajoutée(s).")
+        return True
+
+    def _is_quick_invoice_clipboard_header(self, text: str) -> bool:
+        cells = [cell.strip().upper() for cell in text.split("\t")]
+        return len(cells) >= 3 and cells[0] in {"REFERENCE", "RÉFÉRENCE", "REF"} and "CODE SAGE" in cells[1]
+
+    def _line_from_pasted_text(self, text: str) -> InvoiceLine | None:
+        if "\t" not in text:
+            return None
+        line = quick_invoice_line_from_clipboard_cells([cell.strip() for cell in text.split("\t")])
+        if line is None:
+            return None
+        product = self.db.get_product_by_ref(line.ref)
+        if product is not None:
+            line.product_id = product.id
+            line.type_label = product.type_label
+            line.catalog_unit_price_ht = product.unit_price_ht
+        line.source = self.source or "manual"
+        line.validate()
+        return line
+
+    def _add_line_by_ref(self, ref: str, packages: int, refresh: bool = True, clear_input: bool = True) -> bool:
+        if not ref:
+            self.message_label.setText("Tape une référence.")
+            return False
+        product = self.db.get_product_by_ref(ref)
+        if product is None:
+            self.message_label.setText(f"Référence inconnue: {ref}")
+            return False
+        package_size = product.package_size or 0
+        quantity_pieces = packages * package_size if package_size else packages
+        line = Resolver(self.db).line_from_product(product, quantity_pieces=quantity_pieces, package_count=packages, source=self.source or "manual")
+        self.lines.append(line)
+        if refresh:
+            self._refresh_table()
+            self._refresh_status()
+        if clear_input:
+            self.ref_input.clear()
+            self.suggestions.clear()
+            self.ref_input.setFocus()
+        self.message_label.setText(f"{line.ref} ajouté: {packages} paquet(s), {line.quantity_pieces} pièce(s).")
+        return True
 
     def _accept_for_injection(self) -> None:
         self._save_corrections(show_message=False)
@@ -733,12 +871,15 @@ class OrderDetailDialog(QDialog):
         self._refresh_status()
 
     def _save_corrections(self, show_message: bool = True) -> None:
-        for line in self.lines:
-            line.validate()
+        self._validate_lines()
         self._refresh_table()
         self._refresh_status()
         if show_message:
             self.message_label.setText("Corrections sauvegardees.")
+
+    def _validate_lines(self) -> None:
+        for line in self.lines:
+            line.validate()
 
     def _refresh_status(self) -> None:
         status = _status_from_lines(self.lines)

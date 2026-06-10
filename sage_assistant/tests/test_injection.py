@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal
+from pathlib import Path
 
 from app.injection import write_injection_queue
 from app.models import InvoiceLine
@@ -218,6 +219,13 @@ def test_injection_confirmation_mode_and_stable_pause_are_persisted(tmp_path):
     assert loaded.sage_profile.stable_pause_ms == 350
     assert loaded.sage_profile.capture_before_after is False
     assert loaded.sage_profile.log_enabled is False
+
+
+def test_ahk_parser_reads_confirmation_and_stable_pause():
+    script = (Path(__file__).resolve().parents[1] / "automation" / "sage_injector.ahk").read_text(encoding="utf-8")
+
+    assert 'profile["confirmation_mode"] := JsonGetString(profileText, "confirmation_mode", "simple")' in script
+    assert 'profile["stable_pause_ms"] := JsonGetNumber(profileText, "stable_pause_ms", 220)' in script
 
 
 def test_invalid_confirmation_mode_falls_back_to_simple(tmp_path):
