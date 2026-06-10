@@ -558,11 +558,11 @@ def test_portal_lines_can_resolve_without_local_product_when_category_is_mapped(
     assert pfs_lines[0].validation_status == "ok"
     assert pfs_lines[0].product_id == 0
     assert pfs_lines[0].sage_code == "RO"
-    assert pfs_lines[0].description == "FL730-1"
+    assert pfs_lines[0].description == "ROBE / TUNIC FL730-1"
     assert efashion_lines[0].validation_status == "ok"
     assert efashion_lines[0].product_id == 0
     assert efashion_lines[0].sage_code == "RO"
-    assert efashion_lines[0].description == "FL633-5"
+    assert efashion_lines[0].description == "ROBE / TUNIC FL633-5"
     db.close()
 
 

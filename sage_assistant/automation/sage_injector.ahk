@@ -135,6 +135,8 @@ if (confirmationMode = "debug" && CaptureEnabled)
     MsgBox("Injection envoyee.`nVerifie visuellement les lignes dans Sage avant toute autre action.`n`nCapture avant:`n" beforePath "`n`nCapture apres clic:`n" afterClickPath "`n`nCapture apres:`n" afterPath, "Sage Assistant")
 else if (confirmationMode = "simple")
     MsgBox("Injection envoyee.`nVerifie visuellement Sage.", "Sage Assistant")
+else if (confirmationMode = "direct")
+    MsgBox("Injection envoyee.`nVerifie visuellement Sage.", "Sage Assistant")
 ExitApp(0)
 
 SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, logPath, realTarget, index, moveToNextLine, focusAtArticle) {
@@ -163,9 +165,9 @@ SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, 
     StableSleep(delayMs * 2, stablePauseMs)
     Send("{Space}")
     StableSleep(delayMs * 2, stablePauseMs)
-    Send("{End}")
+    Send("^a")
     StableSleep(delayMs * 2, stablePauseMs)
-    SendText(" " line["ref"])
+    SendText(NormalizeSpaces(line["description"]))
     StableSleep(delayMs * 2, stablePauseMs)
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"], realTarget["mainHwnd"])
     afterDescriptionPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_description_" index)
@@ -386,6 +388,10 @@ CaptureWindow(hwnd, logPath, label) {
 
 StableSleep(dynamicMs, stableMs) {
     Sleep(Max(Integer(dynamicMs), Integer(stableMs)))
+}
+
+NormalizeSpaces(text) {
+    return RegExReplace(Trim(String(text)), "\s+", " ")
 }
 
 EscapePowerShell(text) {

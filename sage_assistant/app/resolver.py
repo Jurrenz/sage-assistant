@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from .db import Database
 from .excel_import import OrderRow
-from .models import InvoiceLine, Product
+from .models import InvoiceLine, Product, build_sage_description
 from .portal_orders import PortalOrderLine
 
 
@@ -86,12 +86,13 @@ class Resolver:
     ) -> InvoiceLine:
         mapping = self.db.get_mapping(product.type_label)
         sage_code = mapping.sage_code if mapping else ""
+        sage_label = mapping.sage_label if mapping else product.type_label
         retained_price = unit_price_ht if unit_price_ht is not None else product.unit_price_ht
         price_confirmed = unit_price_ht is None or product.unit_price_ht is None or unit_price_ht == product.unit_price_ht
         line = InvoiceLine(
             ref=product.ref,
             sage_code=sage_code,
-            description=product.ref,
+            description=build_sage_description(product.ref, sage_label, product.type_label),
             quantity_pieces=quantity_pieces,
             package_count=package_count,
             package_size=product.package_size,
@@ -164,6 +165,7 @@ class Resolver:
         if quantity_pieces is None or quantity_pieces <= 0:
             quantity_pieces = row.package_count
         if product:
+            product_mapping = self.db.get_mapping(product.type_label)
             line = self.line_from_product(
                 product,
                 quantity_pieces=quantity_pieces,
@@ -171,7 +173,7 @@ class Resolver:
                 package_count=row.package_count or None,
                 source=source,
             )
-            line.description = product.ref
+            line.description = build_sage_description(product.ref, product_mapping.sage_label if product_mapping else product.type_label, product.type_label)
             line.validate()
             return line
 
@@ -180,7 +182,7 @@ class Resolver:
         line = InvoiceLine(
             ref=row.ref,
             sage_code=mapping.sage_code if mapping else "",
-            description=row.ref or row.description,
+            description=build_sage_description(row.ref, mapping.sage_label if mapping else "", type_label or row.description),
             quantity_pieces=quantity_pieces,
             package_count=row.package_count or None,
             package_size=package_size,

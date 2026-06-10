@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, QObject, QSortFilterProxyModel, QThread, QTimer, Qt, QUrl, Signal
+from PySide6.QtCore import QAbstractTableModel, QEvent, QModelIndex, QObject, QSortFilterProxyModel, QThread, QTimer, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QFont
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -46,7 +46,7 @@ from PySide6.QtWidgets import (
 from .db import Database
 from .excel_import import import_order, import_products
 from .injection import launch_ahk_tool, launch_autohotkey, write_injection_queue
-from .models import InvoiceLine, Product, SageMapping, utc_now_iso
+from .models import InvoiceLine, Product, SageMapping, build_sage_description, normalize_spaces, utc_now_iso
 from .microstore_product_writer import MicrostoreProductWriter, MicrostoreWriteNotEnabled
 from .order_folder import OrderFile, list_order_files
 from .portal_orders import EfashionConnector, MicrostoreConnector, PfsConnector, PortalOrder, PortalOrderLine, PortalOrderSummary
@@ -97,13 +97,22 @@ LINE_HEADERS = [
     "Categorie",
     "Code Sage",
     "Description",
-    "Paquets",
     "Colisage",
     "Pieces",
-    "Prix commande",
+    "Prix Sage",
+    "Prix Microstore",
     "Statut",
 ]
 MAPPING_HEADERS = ["Categorie fournisseur", "Code Sage", "Actif"]
+LINE_COL_REF = 0
+LINE_COL_CATEGORY = 1
+LINE_COL_CODE = 2
+LINE_COL_DESCRIPTION = 3
+LINE_COL_PACKAGE_SIZE = 4
+LINE_COL_QUANTITY = 5
+LINE_COL_PRICE = 6
+LINE_COL_CATALOG_PRICE = 7
+LINE_COL_STATUS = 8
 
 
 def _money_label(value: Decimal | None) -> str:
@@ -276,7 +285,7 @@ def quick_invoice_to_portal_order(
     return summary, detail
 
 
-QUICK_INVOICE_CLIPBOARD_HEADERS = ["Reference", "Code Sage", "Description", "Paquets", "Colisage", "Pieces", "Prix"]
+QUICK_INVOICE_CLIPBOARD_HEADERS = ["Reference", "Code Sage", "Description", "Paquets", "Colisage", "Pieces", "Prix Sage", "Prix Microstore"]
 
 
 def quick_invoice_line_to_clipboard_row(line: InvoiceLine) -> list[str]:
@@ -288,6 +297,7 @@ def quick_invoice_line_to_clipboard_row(line: InvoiceLine) -> list[str]:
         str(line.package_size or ""),
         str(line.quantity_pieces or ""),
         str(line.unit_price_ht or ""),
+        str(line.catalog_unit_price_ht or ""),
     ]
 
 
@@ -302,6 +312,7 @@ def quick_invoice_line_from_clipboard_cells(cells: list[str]) -> InvoiceLine | N
         package_size = int(cells[4].strip()) if cells[4].strip() else None
         quantity_pieces = int(cells[5].strip())
         unit_price_ht = _decimal_from_text(cells[6]) if cells[6].strip() else None
+        catalog_unit_price_ht = _decimal_from_text(cells[7]) if len(cells) > 7 and cells[7].strip() else None
     except (ValueError, InvalidOperation):
         return None
     line = InvoiceLine(
@@ -312,6 +323,7 @@ def quick_invoice_line_from_clipboard_cells(cells: list[str]) -> InvoiceLine | N
         package_size=package_size,
         quantity_pieces=quantity_pieces,
         unit_price_ht=unit_price_ht,
+        catalog_unit_price_ht=catalog_unit_price_ht,
         order_unit_price_ht=unit_price_ht,
         price_confirmed=True,
         source="quick_invoice",
@@ -431,16 +443,47 @@ def _order_web_url(source: str, order_id: str, order_number: str = "", microstor
 def line_headers_for_source(source: str = "") -> list[str]:
     headers = list(LINE_HEADERS)
     if source == "eFashion":
-        headers[7] = "Prix eFashion"
+        headers[LINE_COL_PRICE] = "Prix commande"
     elif source == "PFS":
-        headers[7] = "Prix PFS"
+        headers[LINE_COL_PRICE] = "Prix commande"
     elif source == "Microstore":
-        headers[7] = "Prix Microstore"
+        headers[LINE_COL_PRICE] = "Prix Sage"
+    elif source == QUICK_INVOICE_SOURCE:
+        headers[LINE_COL_PRICE] = "Prix Sage"
     return headers
 
 
-def populate_lines_table(table: QTableWidget, lines: list[InvoiceLine], editable: bool = False) -> None:
+def _mappings_by_type(db: Database) -> dict[str, SageMapping]:
+    return {mapping.microstore_type: mapping for mapping in db.list_mappings()}
+
+
+def _mappings_by_code(db: Database) -> dict[str, list[SageMapping]]:
+    result: dict[str, list[SageMapping]] = {}
+    for mapping in db.list_mappings():
+        result.setdefault(mapping.sage_code.upper(), []).append(mapping)
+    return result
+
+
+def _description_for_line(line: InvoiceLine, mapping: SageMapping | None = None) -> str:
+    return build_sage_description(line.ref, mapping.sage_label if mapping else "", line.type_label)
+
+
+def _line_price_editable(source: str) -> bool:
+    return source in {"", "manual", "Microstore", QUICK_INVOICE_SOURCE}
+
+
+def _apply_mapping_to_line(line: InvoiceLine, mapping: SageMapping | None) -> None:
+    if mapping is None:
+        return
+    line.type_label = mapping.microstore_type
+    line.sage_code = mapping.sage_code
+    line.description = _description_for_line(line, mapping)
+    line.validate()
+
+
+def populate_lines_table(table: QTableWidget, lines: list[InvoiceLine], editable: bool = False, source: str = "") -> None:
     table.blockSignals(True)
+    table.setSortingEnabled(False)
     table.setRowCount(len(lines))
     for row, line in enumerate(lines):
         status = line.validation_status if line.validation_status == "ok" else line.validation_message
@@ -449,17 +492,20 @@ def populate_lines_table(table: QTableWidget, lines: list[InvoiceLine], editable
             line.type_label,
             line.sage_code,
             line.description,
-            str(line.package_count or ""),
             str(line.package_size or ""),
             str(line.quantity_pieces),
-            str(line.order_unit_price_ht or line.unit_price_ht or ""),
+            str(line.unit_price_ht or ""),
+            str(line.catalog_unit_price_ht or ""),
             status,
         ]
         for col, value in enumerate(values):
             item = QTableWidgetItem(value)
-            if not editable or col not in {2, 3, 6, 7}:
+            editable_columns = {LINE_COL_CATEGORY, LINE_COL_CODE, LINE_COL_DESCRIPTION, LINE_COL_QUANTITY}
+            if _line_price_editable(source):
+                editable_columns.add(LINE_COL_PRICE)
+            if not editable or col not in editable_columns:
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            if col == 7:
+            if col == LINE_COL_PRICE:
                 font = QFont(item.font())
                 font.setBold(True)
                 item.setFont(font)
@@ -468,15 +514,109 @@ def populate_lines_table(table: QTableWidget, lines: list[InvoiceLine], editable
     table.resizeRowsToContents()
 
 
+def install_line_table_mapping_widgets(
+    table: QTableWidget,
+    lines: list[InvoiceLine],
+    db: Database,
+    source: str,
+    message_callback=None,
+) -> None:
+    if not lines:
+        return
+    mappings_by_type = _mappings_by_type(db)
+    mappings_by_code = _mappings_by_code(db)
+    categories = sorted(mappings_by_type)
+    codes = sorted(mappings_by_code)
+    applying = {"value": False}
+
+    def update_row(row: int) -> None:
+        if row >= len(lines):
+            return
+        line = lines[row]
+        table.blockSignals(True)
+        for col, value in (
+            (LINE_COL_DESCRIPTION, line.description),
+            (LINE_COL_QUANTITY, str(line.quantity_pieces)),
+            (LINE_COL_PRICE, str(line.unit_price_ht or "")),
+            (LINE_COL_CATALOG_PRICE, str(line.catalog_unit_price_ht or "")),
+            (LINE_COL_STATUS, line.validation_status if line.validation_status == "ok" else line.validation_message),
+        ):
+            item = table.item(row, col)
+            if item:
+                item.setText(value)
+        table.blockSignals(False)
+
+    for row, line in enumerate(lines):
+        category_combo = QComboBox()
+        category_combo.setEditable(True)
+        category_combo.addItems(categories)
+        if line.type_label and line.type_label not in categories:
+            category_combo.addItem(line.type_label)
+        category_combo.setCurrentText(line.type_label)
+        category_combo.setInsertPolicy(QComboBox.NoInsert)
+
+        code_combo = QComboBox()
+        code_combo.setEditable(True)
+        code_combo.addItems(codes)
+        if line.sage_code and line.sage_code not in codes:
+            code_combo.addItem(line.sage_code)
+        code_combo.setCurrentText(line.sage_code)
+        code_combo.setInsertPolicy(QComboBox.NoInsert)
+
+        def on_category_changed(text: str, row: int = row, code_combo: QComboBox = code_combo) -> None:
+            if applying["value"] or row >= len(lines):
+                return
+            mapping = mappings_by_type.get(text.strip())
+            lines[row].type_label = text.strip()
+            if mapping:
+                applying["value"] = True
+                code_combo.setCurrentText(mapping.sage_code)
+                applying["value"] = False
+                _apply_mapping_to_line(lines[row], mapping)
+            else:
+                lines[row].validate()
+            update_row(row)
+
+        def on_code_changed(text: str, row: int = row, category_combo: QComboBox = category_combo) -> None:
+            if applying["value"] or row >= len(lines):
+                return
+            code = text.strip().upper()
+            matches = mappings_by_code.get(code, [])
+            lines[row].sage_code = code
+            if len(matches) == 1:
+                mapping = matches[0]
+                applying["value"] = True
+                category_combo.setCurrentText(mapping.microstore_type)
+                applying["value"] = False
+                _apply_mapping_to_line(lines[row], mapping)
+            elif len(matches) > 1:
+                if message_callback:
+                    message_callback(f"Code {code} correspond a plusieurs categories. Categorie conservee.")
+                mapping = mappings_by_type.get(lines[row].type_label)
+                if mapping and mapping.sage_code == code:
+                    lines[row].description = _description_for_line(lines[row], mapping)
+                lines[row].validate()
+            else:
+                lines[row].validate()
+            update_row(row)
+
+        category_combo.currentTextChanged.connect(on_category_changed)
+        code_combo.currentTextChanged.connect(on_code_changed)
+        table.setCellWidget(row, LINE_COL_CATEGORY, category_combo)
+        table.setCellWidget(row, LINE_COL_CODE, code_combo)
+
+
 class OrderDetailDialog(QDialog):
     def __init__(
         self,
         lines: list[InvoiceLine],
         summary: dict[str, str],
+        db: Database,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.lines = list(lines)
+        self.db = db
         self.inject_requested = False
         self.source = summary.get("source", "")
         self.web_url = summary.get("web_url", "")
@@ -503,8 +643,9 @@ class OrderDetailDialog(QDialog):
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.table.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed | QAbstractItemView.AnyKeyPressed)
         self.table.itemChanged.connect(self._on_item_changed)
         layout.addWidget(self.table, 1)
 
@@ -531,8 +672,12 @@ class OrderDetailDialog(QDialog):
         actions.addWidget(inject_button)
         actions.addWidget(close_button)
         layout.addLayout(actions)
-        populate_lines_table(self.table, self.lines, editable=True)
+        self._refresh_table()
         self._refresh_status()
+
+    def _refresh_table(self) -> None:
+        populate_lines_table(self.table, self.lines, editable=True, source=self.source)
+        install_line_table_mapping_widgets(self.table, self.lines, self.db, self.source, self.message_label.setText)
 
     def _accept_for_injection(self) -> None:
         self._save_corrections(show_message=False)
@@ -553,13 +698,13 @@ class OrderDetailDialog(QDialog):
         for row in rows:
             if row < len(self.lines):
                 del self.lines[row]
-        populate_lines_table(self.table, self.lines, editable=True)
+        self._refresh_table()
         self._refresh_status()
 
     def _save_corrections(self, show_message: bool = True) -> None:
         for line in self.lines:
             line.validate()
-        populate_lines_table(self.table, self.lines, editable=True)
+        self._refresh_table()
         self._refresh_status()
         if show_message:
             self.message_label.setText("Corrections sauvegardees.")
@@ -579,12 +724,14 @@ class OrderDetailDialog(QDialog):
             return
         line = self.lines[row]
         try:
-            line.sage_code = self.table.item(row, 2).text().strip().upper()
-            line.description = self.table.item(row, 3).text().strip()
-            line.quantity_pieces = int(self.table.item(row, 6).text().strip())
-            price_text = self.table.item(row, 7).text().strip().replace(",", ".")
-            line.unit_price_ht = Decimal(price_text) if price_text else None
-            line.order_unit_price_ht = line.unit_price_ht
+            line.description = normalize_spaces(self.table.item(row, LINE_COL_DESCRIPTION).text())
+            package_size_text = self.table.item(row, LINE_COL_PACKAGE_SIZE).text().strip()
+            line.package_size = int(package_size_text) if package_size_text else None
+            line.quantity_pieces = int(self.table.item(row, LINE_COL_QUANTITY).text().strip())
+            if _line_price_editable(self.source):
+                price_text = self.table.item(row, LINE_COL_PRICE).text().strip().replace(",", ".")
+                line.unit_price_ht = Decimal(price_text) if price_text else None
+                line.order_unit_price_ht = line.unit_price_ht
             line.price_confirmed = True
         except Exception as exc:
             line.validation_status = "blocked"
@@ -621,11 +768,12 @@ class QuickInvoiceDialog(QDialog):
         layout.addWidget(self.suggestions)
 
         self.table = QTableWidget(0, len(LINE_HEADERS))
-        self.table.setHorizontalHeaderLabels(line_headers_for_source("manual"))
+        self.table.setHorizontalHeaderLabels(line_headers_for_source(QUICK_INVOICE_SOURCE))
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.table.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed | QAbstractItemView.AnyKeyPressed)
         self.table.itemChanged.connect(self._on_item_changed)
         layout.addWidget(self.table, 1)
 
@@ -648,6 +796,24 @@ class QuickInvoiceDialog(QDialog):
         actions.addWidget(inject_button)
         actions.addWidget(close_button)
         layout.addLayout(actions)
+        self.ref_input.installEventFilter(self)
+        self.suggestions.installEventFilter(self)
+        QTimer.singleShot(0, self.ref_input.setFocus)
+
+    def eventFilter(self, watched: QObject, event) -> bool:
+        if watched is self.ref_input and event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_Down and self.suggestions.count():
+                self.suggestions.setFocus()
+                self.suggestions.setCurrentRow(0)
+                return True
+        if watched is self.suggestions and event.type() == QEvent.KeyPress:
+            if event.key() in {Qt.Key_Return, Qt.Key_Enter}:
+                self._add_line()
+                return True
+            if event.key() == Qt.Key_Escape:
+                self.ref_input.setFocus()
+                return True
+        return super().eventFilter(watched, event)
 
     def _refresh_suggestions(self) -> None:
         ref, _packages = parse_quick_ref_text(self.ref_input.text())
@@ -672,6 +838,7 @@ class QuickInvoiceDialog(QDialog):
         if self._add_lines_from_text(text):
             self.ref_input.clear()
             self.suggestions.clear()
+            self.ref_input.setFocus()
             return
         pasted_line = self._line_from_pasted_text(text)
         if pasted_line is not None:
@@ -680,6 +847,7 @@ class QuickInvoiceDialog(QDialog):
             self.ref_input.clear()
             self.suggestions.clear()
             self.status.setText(f"{pasted_line.ref} ajouté depuis une ligne copiée.")
+            self.ref_input.setFocus()
             return
         typed_ref, packages = parse_quick_ref_text(text)
         ref = self._selected_ref() or typed_ref
@@ -746,11 +914,13 @@ class QuickInvoiceDialog(QDialog):
         if clear_input:
             self.ref_input.clear()
             self.suggestions.clear()
+            self.ref_input.setFocus()
         self.status.setText(f"{line.ref} ajouté: {packages} paquet(s), {line.quantity_pieces} pièce(s).")
         return True
 
     def _refresh_table(self) -> None:
-        populate_lines_table(self.table, self.lines, editable=True)
+        populate_lines_table(self.table, self.lines, editable=True, source=QUICK_INVOICE_SOURCE)
+        install_line_table_mapping_widgets(self.table, self.lines, self.db, QUICK_INVOICE_SOURCE, self.status.setText)
 
     def _on_item_changed(self, item: QTableWidgetItem) -> None:
         row = item.row()
@@ -758,14 +928,11 @@ class QuickInvoiceDialog(QDialog):
             return
         line = self.lines[row]
         try:
-            line.sage_code = self.table.item(row, 2).text().strip().upper()
-            line.description = self.table.item(row, 3).text().strip()
-            package_text = self.table.item(row, 4).text().strip()
-            line.package_count = int(package_text) if package_text else None
-            package_size_text = self.table.item(row, 5).text().strip()
+            line.description = normalize_spaces(self.table.item(row, LINE_COL_DESCRIPTION).text())
+            package_size_text = self.table.item(row, LINE_COL_PACKAGE_SIZE).text().strip()
             line.package_size = int(package_size_text) if package_size_text else None
-            line.quantity_pieces = int(self.table.item(row, 6).text().strip())
-            price_text = self.table.item(row, 7).text().strip().replace(",", ".")
+            line.quantity_pieces = int(self.table.item(row, LINE_COL_QUANTITY).text().strip())
+            price_text = self.table.item(row, LINE_COL_PRICE).text().strip().replace(",", ".")
             line.unit_price_ht = Decimal(price_text) if price_text else None
             line.order_unit_price_ht = line.unit_price_ht
             line.price_confirmed = True
@@ -775,6 +942,7 @@ class QuickInvoiceDialog(QDialog):
         else:
             line.validate()
         self.status.setText(_status_from_lines(self.lines) if self.lines else "Aucune ligne.")
+        self.ref_input.setFocus()
 
     def _remove_selected_lines(self) -> None:
         rows = sorted({item.row() for item in self.table.selectedItems()}, reverse=True)
@@ -1719,11 +1887,13 @@ class MainWindow(QMainWindow):
         self.confirmation_mode.addItem("Direct", "direct")
         self.confirmation_mode.addItem("Simple", "simple")
         self.confirmation_mode.addItem("Debug", "debug")
+        self.confirmation_mode.setToolTip("Direct: popup final seulement. Simple: controle avant + popup final. Debug: anciens controles detailles avec captures/logs.")
         self.confirmation_mode.setCurrentIndex(max(0, self.confirmation_mode.findData(self.settings.sage_profile.confirmation_mode or "simple")))
         self.stable_pause_ms = QSpinBox()
         self.stable_pause_ms.setRange(0, 2000)
         self.stable_pause_ms.setSuffix(" ms")
         self.stable_pause_ms.setValue(self.settings.sage_profile.stable_pause_ms)
+        self.stable_pause_ms.setToolTip("Reglage avance: pause minimale de securite entre actions Sage. Si elle est haute, elle limite la vitesse meme avec un petit delai touches.")
         self.auto_capture = QCheckBox("Captures automatiques")
         self.auto_capture.setChecked(self.settings.sage_profile.capture_before_after)
         self.injection_logs = QCheckBox("Logs")
@@ -1736,7 +1906,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.confirmation_mode, 0, 3)
         layout.addWidget(QLabel("Délai touches"), 1, 0)
         layout.addWidget(self.delay_ms, 1, 1)
-        layout.addWidget(QLabel("Pause stable"), 1, 2)
+        stable_label = QLabel("Pause securite avancee")
+        stable_label.setToolTip(self.stable_pause_ms.toolTip())
+        layout.addWidget(stable_label, 1, 2)
         layout.addWidget(self.stable_pause_ms, 1, 3)
         layout.addWidget(self.auto_capture, 2, 0, 1, 2)
         layout.addWidget(self.injection_logs, 2, 2)
@@ -1930,7 +2102,8 @@ class MainWindow(QMainWindow):
 
     def _refresh_quick_invoice_table(self) -> None:
         if hasattr(self, "quick_table"):
-            populate_lines_table(self.quick_table, self.lines, editable=True)
+            populate_lines_table(self.quick_table, self.lines, editable=True, source=QUICK_INVOICE_SOURCE)
+            install_line_table_mapping_widgets(self.quick_table, self.lines, self.db, QUICK_INVOICE_SOURCE, self.quick_status.setText)
 
     def _on_quick_item_changed(self, item: QTableWidgetItem) -> None:
         row = item.row()
@@ -1938,14 +2111,11 @@ class MainWindow(QMainWindow):
             return
         line = self.lines[row]
         try:
-            line.sage_code = self.quick_table.item(row, 2).text().strip().upper()
-            line.description = self.quick_table.item(row, 3).text().strip()
-            package_text = self.quick_table.item(row, 4).text().strip()
-            line.package_count = int(package_text) if package_text else None
-            package_size_text = self.quick_table.item(row, 5).text().strip()
+            line.description = normalize_spaces(self.quick_table.item(row, LINE_COL_DESCRIPTION).text())
+            package_size_text = self.quick_table.item(row, LINE_COL_PACKAGE_SIZE).text().strip()
             line.package_size = int(package_size_text) if package_size_text else None
-            line.quantity_pieces = int(self.quick_table.item(row, 6).text().strip())
-            price_text = self.quick_table.item(row, 7).text().strip().replace(",", ".")
+            line.quantity_pieces = int(self.quick_table.item(row, LINE_COL_QUANTITY).text().strip())
+            price_text = self.quick_table.item(row, LINE_COL_PRICE).text().strip().replace(",", ".")
             line.unit_price_ht = Decimal(price_text) if price_text else None
             line.order_unit_price_ht = line.unit_price_ht
             line.price_confirmed = True
@@ -2483,7 +2653,7 @@ class MainWindow(QMainWindow):
             "status": status,
             "web_url": _order_web_url(order.source, order.order_id, key, self.settings.microstore_api_token),
         }
-        dialog = OrderDetailDialog(lines, summary, self)
+        dialog = OrderDetailDialog(lines, summary, self.db, self)
         dialog.exec()
         self.lines = dialog.lines
         self.current_order_path = None
@@ -2507,7 +2677,7 @@ class MainWindow(QMainWindow):
             "status": status,
             "web_url": _order_web_url(source, "", key, self.settings.microstore_api_token),
         }
-        dialog = OrderDetailDialog(lines, summary, self)
+        dialog = OrderDetailDialog(lines, summary, self.db, self)
         dialog.exec()
         self.lines = dialog.lines
         self.current_order_path = path

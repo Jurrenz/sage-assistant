@@ -27,6 +27,23 @@ def test_write_injection_queue(tmp_path):
     assert payload["lines"][0]["unit_price_ht"] == "6.80"
 
 
+def test_write_injection_queue_normalizes_description_spaces(tmp_path):
+    line = InvoiceLine(
+        ref="A01-11",
+        sage_code="SH",
+        description="Short  A01-11",
+        quantity_pieces=12,
+        unit_price_ht=Decimal("6.80"),
+        product_id=1,
+    )
+    line.validate()
+
+    queue_path = write_injection_queue([line], AppSettings(), tmp_path / "queue.json")
+    payload = json.loads(queue_path.read_text(encoding="utf-8"))
+
+    assert payload["lines"][0]["description"] == "Short A01-11"
+
+
 def test_write_injection_queue_default_is_temporary_file():
     line = InvoiceLine(
         ref="FL530-1",

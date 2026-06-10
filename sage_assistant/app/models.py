@@ -5,6 +5,18 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 
+def normalize_spaces(value: str) -> str:
+    return " ".join(str(value or "").split())
+
+
+def build_sage_description(ref: str, sage_label: str = "", fallback: str = "") -> str:
+    label = normalize_spaces(sage_label or fallback)
+    ref_text = normalize_spaces(ref)
+    if label and ref_text and ref_text not in label.split():
+        return normalize_spaces(f"{label} {ref_text}")
+    return normalize_spaces(label or ref_text)
+
+
 @dataclass(frozen=True)
 class Product:
     id: int | None
@@ -99,7 +111,7 @@ class InvoiceLine:
     def as_injection_dict(self) -> dict[str, object]:
         return {
             "article_code": self.sage_code,
-            "description": self.description,
+            "description": normalize_spaces(self.description),
             "quantity": self.quantity_pieces,
             "unit_price_ht": str(self.unit_price_ht or ""),
             "ref": self.ref,

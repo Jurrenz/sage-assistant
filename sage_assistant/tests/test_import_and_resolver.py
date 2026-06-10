@@ -10,13 +10,14 @@ from app.db import Database
 from app.excel_import import OrderRow, import_order, import_products
 from app.main import (
     QUICK_INVOICE_SOURCE,
+    line_headers_for_source,
     parse_quick_ref_text,
     quick_invoice_line_from_clipboard_cells,
     quick_invoice_line_to_clipboard_row,
     quick_invoice_to_portal_order,
 )
 from app.microstore_product_writer import MicrostoreProductWriter, MicrostoreWriteNotEnabled
-from app.models import InvoiceLine, Product, SageMapping
+from app.models import InvoiceLine, Product, SageMapping, build_sage_description
 from app.portal_orders import PortalOrder, PortalOrderLine, PortalOrderSummary
 from app.resolver import Resolver
 
@@ -46,7 +47,7 @@ def test_import_products_and_resolve_line(tmp_path):
     line = Resolver(db).line_from_product(product, quantity_pieces=24, package_count=2)
     assert line.validation_status == "ok"
     assert line.sage_code == "RO"
-    assert line.description == "FL530-1"
+    assert line.description == "ROBE / TUNIC FL530-1"
     assert line.quantity_pieces == 24
     db.close()
 
@@ -150,6 +151,20 @@ def test_quick_invoice_line_uses_one_package_by_default(tmp_path):
     db.close()
 
 
+def test_sage_description_normalizes_mapping_label_spaces():
+    assert build_sage_description("A01-11", "Short ") == "Short A01-11"
+    assert build_sage_description("FR", "Frais de port ") == "Frais de port FR"
+    assert build_sage_description("FL530-1", "") == "FL530-1"
+
+
+def test_line_headers_show_sage_and_catalog_prices_by_source():
+    assert line_headers_for_source("Microstore")[6] == "Prix Sage"
+    assert line_headers_for_source(QUICK_INVOICE_SOURCE)[6] == "Prix Sage"
+    assert line_headers_for_source("PFS")[6] == "Prix commande"
+    assert line_headers_for_source("eFashion")[6] == "Prix commande"
+    assert line_headers_for_source("PFS")[7] == "Prix Microstore"
+
+
 def test_quick_invoice_can_be_persisted_as_cached_order(tmp_path):
     db = Database(tmp_path / "app.sqlite")
     line = Resolver(db).line_from_product(
@@ -199,6 +214,7 @@ def test_quick_invoice_clipboard_roundtrip_preserves_editable_details():
         package_count=2,
         package_size=15,
         unit_price_ht=Decimal("7.10"),
+        catalog_unit_price_ht=Decimal("6.80"),
         order_unit_price_ht=Decimal("7.10"),
         product_id=12,
         type_label="ROBES COURTES",
@@ -217,6 +233,7 @@ def test_quick_invoice_clipboard_roundtrip_preserves_editable_details():
     assert pasted.package_size == 15
     assert pasted.quantity_pieces == 30
     assert pasted.unit_price_ht == Decimal("7.10")
+    assert pasted.catalog_unit_price_ht == Decimal("6.80")
     assert pasted.validation_message == "reference non resolue"
 
 
