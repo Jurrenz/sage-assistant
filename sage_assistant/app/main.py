@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
+    QCompleter,
     QDialog,
     QFileDialog,
     QFormLayout,
@@ -34,6 +35,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QSpinBox,
     QStackedWidget,
+    QStyledItemDelegate,
     QTabWidget,
     QTableWidget,
     QTableWidgetItem,
@@ -427,6 +429,36 @@ class ProductFilterProxyModel(QSortFilterProxyModel):
         return left_value < right_value
 
 
+class LineAutocompleteDelegate(QStyledItemDelegate):
+    def __init__(self, values: list[str], parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self.values = values
+
+    def createEditor(self, parent, option, index):
+        editor = QLineEdit(parent)
+        completer = QCompleter(self.values, editor)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.setFilterMode(Qt.MatchContains)
+        completer.setCompletionMode(QCompleter.PopupCompletion)
+        editor.setCompleter(completer)
+        editor.textEdited.connect(lambda _text: completer.complete())
+        QTimer.singleShot(0, completer.complete)
+        return editor
+
+    def setEditorData(self, editor, index) -> None:
+        if isinstance(editor, QLineEdit):
+            editor.setText(str(index.data(Qt.EditRole) or index.data(Qt.DisplayRole) or ""))
+            editor.selectAll()
+            return
+        super().setEditorData(editor, index)
+
+    def setModelData(self, editor, model, index) -> None:
+        if isinstance(editor, QLineEdit):
+            model.setData(index, editor.text(), Qt.EditRole)
+            return
+        super().setModelData(editor, model, index)
+
+
 def _order_web_url(source: str, order_id: str, order_number: str = "", microstore_token: str = "") -> str:
     identifier = order_id or order_number
     if source == "eFashion" and identifier:
@@ -481,6 +513,25 @@ def _apply_mapping_to_line(line: InvoiceLine, mapping: SageMapping | None) -> No
     line.validate()
 
 
+def _update_line_table_row(table: QTableWidget, row: int, line: InvoiceLine) -> None:
+    table.blockSignals(True)
+    values = {
+        LINE_COL_CATEGORY: line.type_label,
+        LINE_COL_CODE: line.sage_code,
+        LINE_COL_DESCRIPTION: line.description,
+        LINE_COL_PACKAGE_SIZE: str(line.package_size or ""),
+        LINE_COL_QUANTITY: str(line.quantity_pieces),
+        LINE_COL_PRICE: str(line.unit_price_ht or ""),
+        LINE_COL_CATALOG_PRICE: str(line.catalog_unit_price_ht or ""),
+        LINE_COL_STATUS: line.validation_status if line.validation_status == "ok" else line.validation_message,
+    }
+    for col, value in values.items():
+        item = table.item(row, col)
+        if item:
+            item.setText(value)
+    table.blockSignals(False)
+
+
 def populate_lines_table(table: QTableWidget, lines: list[InvoiceLine], editable: bool = False, source: str = "") -> None:
     table.blockSignals(True)
     table.setSortingEnabled(False)
@@ -514,96 +565,67 @@ def populate_lines_table(table: QTableWidget, lines: list[InvoiceLine], editable
     table.resizeRowsToContents()
 
 
-def install_line_table_mapping_widgets(
+def configure_line_table_autocomplete(table: QTableWidget, db: Database) -> None:
+    categories = sorted(_mappings_by_type(db))
+    codes = sorted(_mappings_by_code(db))
+    table.setItemDelegateForColumn(LINE_COL_CATEGORY, LineAutocompleteDelegate(categories, table))
+    table.setItemDelegateForColumn(LINE_COL_CODE, LineAutocompleteDelegate(codes, table))
+
+
+def apply_line_table_item_change(
     table: QTableWidget,
     lines: list[InvoiceLine],
     db: Database,
     source: str,
+    item: QTableWidgetItem,
     message_callback=None,
 ) -> None:
-    if not lines:
+    row = item.row()
+    if row >= len(lines):
         return
     mappings_by_type = _mappings_by_type(db)
     mappings_by_code = _mappings_by_code(db)
-    categories = sorted(mappings_by_type)
-    codes = sorted(mappings_by_code)
-    applying = {"value": False}
-
-    def update_row(row: int) -> None:
-        if row >= len(lines):
-            return
-        line = lines[row]
-        table.blockSignals(True)
-        for col, value in (
-            (LINE_COL_DESCRIPTION, line.description),
-            (LINE_COL_QUANTITY, str(line.quantity_pieces)),
-            (LINE_COL_PRICE, str(line.unit_price_ht or "")),
-            (LINE_COL_CATALOG_PRICE, str(line.catalog_unit_price_ht or "")),
-            (LINE_COL_STATUS, line.validation_status if line.validation_status == "ok" else line.validation_message),
-        ):
-            item = table.item(row, col)
-            if item:
-                item.setText(value)
-        table.blockSignals(False)
-
-    for row, line in enumerate(lines):
-        category_combo = QComboBox()
-        category_combo.setEditable(True)
-        category_combo.addItems(categories)
-        if line.type_label and line.type_label not in categories:
-            category_combo.addItem(line.type_label)
-        category_combo.setCurrentText(line.type_label)
-        category_combo.setInsertPolicy(QComboBox.NoInsert)
-
-        code_combo = QComboBox()
-        code_combo.setEditable(True)
-        code_combo.addItems(codes)
-        if line.sage_code and line.sage_code not in codes:
-            code_combo.addItem(line.sage_code)
-        code_combo.setCurrentText(line.sage_code)
-        code_combo.setInsertPolicy(QComboBox.NoInsert)
-
-        def on_category_changed(text: str, row: int = row, code_combo: QComboBox = code_combo) -> None:
-            if applying["value"] or row >= len(lines):
-                return
-            mapping = mappings_by_type.get(text.strip())
-            lines[row].type_label = text.strip()
-            if mapping:
-                applying["value"] = True
-                code_combo.setCurrentText(mapping.sage_code)
-                applying["value"] = False
-                _apply_mapping_to_line(lines[row], mapping)
-            else:
-                lines[row].validate()
-            update_row(row)
-
-        def on_code_changed(text: str, row: int = row, category_combo: QComboBox = category_combo) -> None:
-            if applying["value"] or row >= len(lines):
-                return
-            code = text.strip().upper()
+    line = lines[row]
+    try:
+        if item.column() == LINE_COL_CATEGORY:
+            category = item.text().strip()
+            line.type_label = category
+            _apply_mapping_to_line(line, mappings_by_type.get(category))
+        elif item.column() == LINE_COL_CODE:
+            code = item.text().strip().upper()
+            line.sage_code = code
             matches = mappings_by_code.get(code, [])
-            lines[row].sage_code = code
             if len(matches) == 1:
-                mapping = matches[0]
-                applying["value"] = True
-                category_combo.setCurrentText(mapping.microstore_type)
-                applying["value"] = False
-                _apply_mapping_to_line(lines[row], mapping)
+                _apply_mapping_to_line(line, matches[0])
             elif len(matches) > 1:
+                mapping = mappings_by_type.get(line.type_label)
+                if mapping and mapping.sage_code == code:
+                    line.description = _description_for_line(line, mapping)
                 if message_callback:
                     message_callback(f"Code {code} correspond a plusieurs categories. Categorie conservee.")
-                mapping = mappings_by_type.get(lines[row].type_label)
-                if mapping and mapping.sage_code == code:
-                    lines[row].description = _description_for_line(lines[row], mapping)
-                lines[row].validate()
+                line.validate()
             else:
-                lines[row].validate()
-            update_row(row)
-
-        category_combo.currentTextChanged.connect(on_category_changed)
-        code_combo.currentTextChanged.connect(on_code_changed)
-        table.setCellWidget(row, LINE_COL_CATEGORY, category_combo)
-        table.setCellWidget(row, LINE_COL_CODE, code_combo)
+                line.validate()
+        elif item.column() == LINE_COL_DESCRIPTION:
+            line.description = normalize_spaces(item.text())
+            line.validate()
+        elif item.column() == LINE_COL_PACKAGE_SIZE:
+            package_size_text = item.text().strip()
+            line.package_size = int(package_size_text) if package_size_text else None
+            line.validate()
+        elif item.column() == LINE_COL_QUANTITY:
+            line.quantity_pieces = int(item.text().strip())
+            line.validate()
+        elif item.column() == LINE_COL_PRICE and _line_price_editable(source):
+            price_text = item.text().strip().replace(",", ".")
+            line.unit_price_ht = Decimal(price_text) if price_text else None
+            line.order_unit_price_ht = line.unit_price_ht
+            line.price_confirmed = True
+            line.validate()
+    except Exception as exc:
+        line.validation_status = "blocked"
+        line.validation_message = f"valeur invalide: {exc}"
+    _update_line_table_row(table, row, line)
 
 
 class OrderDetailDialog(QDialog):
@@ -646,6 +668,7 @@ class OrderDetailDialog(QDialog):
         self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.table.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed | QAbstractItemView.AnyKeyPressed)
+        self.table.installEventFilter(self)
         self.table.itemChanged.connect(self._on_item_changed)
         layout.addWidget(self.table, 1)
 
@@ -677,7 +700,15 @@ class OrderDetailDialog(QDialog):
 
     def _refresh_table(self) -> None:
         populate_lines_table(self.table, self.lines, editable=True, source=self.source)
-        install_line_table_mapping_widgets(self.table, self.lines, self.db, self.source, self.message_label.setText)
+        configure_line_table_autocomplete(self.table, self.db)
+
+    def eventFilter(self, watched: QObject, event) -> bool:
+        if watched is self.table and event.type() == QEvent.KeyPress and event.key() == Qt.Key_Space:
+            item = self.table.currentItem()
+            if item and item.flags() & Qt.ItemIsEditable:
+                self.table.editItem(item)
+                return True
+        return super().eventFilter(watched, event)
 
     def _accept_for_injection(self) -> None:
         self._save_corrections(show_message=False)
@@ -719,25 +750,7 @@ class OrderDetailDialog(QDialog):
             self.message_label.setText("Toutes les lignes sont pretes.")
 
     def _on_item_changed(self, item: QTableWidgetItem) -> None:
-        row = item.row()
-        if row >= len(self.lines):
-            return
-        line = self.lines[row]
-        try:
-            line.description = normalize_spaces(self.table.item(row, LINE_COL_DESCRIPTION).text())
-            package_size_text = self.table.item(row, LINE_COL_PACKAGE_SIZE).text().strip()
-            line.package_size = int(package_size_text) if package_size_text else None
-            line.quantity_pieces = int(self.table.item(row, LINE_COL_QUANTITY).text().strip())
-            if _line_price_editable(self.source):
-                price_text = self.table.item(row, LINE_COL_PRICE).text().strip().replace(",", ".")
-                line.unit_price_ht = Decimal(price_text) if price_text else None
-                line.order_unit_price_ht = line.unit_price_ht
-            line.price_confirmed = True
-        except Exception as exc:
-            line.validation_status = "blocked"
-            line.validation_message = f"valeur invalide: {exc}"
-        else:
-            line.validate()
+        apply_line_table_item_change(self.table, self.lines, self.db, self.source, item, self.message_label.setText)
 
 
 class QuickInvoiceDialog(QDialog):
@@ -774,6 +787,7 @@ class QuickInvoiceDialog(QDialog):
         self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.table.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed | QAbstractItemView.AnyKeyPressed)
+        self.table.installEventFilter(self)
         self.table.itemChanged.connect(self._on_item_changed)
         layout.addWidget(self.table, 1)
 
@@ -812,6 +826,11 @@ class QuickInvoiceDialog(QDialog):
                 return True
             if event.key() == Qt.Key_Escape:
                 self.ref_input.setFocus()
+                return True
+        if watched is self.table and event.type() == QEvent.KeyPress and event.key() == Qt.Key_Space:
+            item = self.table.currentItem()
+            if item and item.flags() & Qt.ItemIsEditable:
+                self.table.editItem(item)
                 return True
         return super().eventFilter(watched, event)
 
@@ -920,29 +939,11 @@ class QuickInvoiceDialog(QDialog):
 
     def _refresh_table(self) -> None:
         populate_lines_table(self.table, self.lines, editable=True, source=QUICK_INVOICE_SOURCE)
-        install_line_table_mapping_widgets(self.table, self.lines, self.db, QUICK_INVOICE_SOURCE, self.status.setText)
+        configure_line_table_autocomplete(self.table, self.db)
 
     def _on_item_changed(self, item: QTableWidgetItem) -> None:
-        row = item.row()
-        if row >= len(self.lines):
-            return
-        line = self.lines[row]
-        try:
-            line.description = normalize_spaces(self.table.item(row, LINE_COL_DESCRIPTION).text())
-            package_size_text = self.table.item(row, LINE_COL_PACKAGE_SIZE).text().strip()
-            line.package_size = int(package_size_text) if package_size_text else None
-            line.quantity_pieces = int(self.table.item(row, LINE_COL_QUANTITY).text().strip())
-            price_text = self.table.item(row, LINE_COL_PRICE).text().strip().replace(",", ".")
-            line.unit_price_ht = Decimal(price_text) if price_text else None
-            line.order_unit_price_ht = line.unit_price_ht
-            line.price_confirmed = True
-        except Exception as exc:
-            line.validation_status = "blocked"
-            line.validation_message = f"valeur invalide: {exc}"
-        else:
-            line.validate()
+        apply_line_table_item_change(self.table, self.lines, self.db, QUICK_INVOICE_SOURCE, item, self.status.setText)
         self.status.setText(_status_from_lines(self.lines) if self.lines else "Aucune ligne.")
-        self.ref_input.setFocus()
 
     def _remove_selected_lines(self) -> None:
         rows = sorted({item.row() for item in self.table.selectedItems()}, reverse=True)
@@ -1290,6 +1291,8 @@ class SyncWorker(QObject):
         db = Database(default_db_path())
         resolver = Resolver(db)
         try:
+            if "MicrostoreProducts" in self.sources and not self.cancel_requested:
+                self._run_microstore_products(db, result)
             if "Microstore" in self.sources and not self.cancel_requested:
                 self._run_microstore(db, resolver, result)
             if "eFashion" in self.sources and not self.cancel_requested:
@@ -1299,6 +1302,33 @@ class SyncWorker(QObject):
         finally:
             db.close()
             self.all_finished.emit(result)
+
+    def _run_microstore_products(self, db: Database, result: dict) -> None:
+        source = "MicrostoreProducts"
+        product_count = 0
+        try:
+            self._raise_if_cancelled()
+            self._emit_progress(source, 1, "connexion API")
+            connector = MicrostoreConnector(self.microstore_token)
+            self._raise_if_cancelled()
+            self._emit_progress(source, 20, "recuperation produits actifs/desactives")
+            products = connector.list_products()
+            product_count = db.upsert_products(products, mark_missing=True)
+            summary_payload = {"orders": 0, "products": product_count, "cancelled": False}
+            result["sources"][source] = summary_payload
+            self._emit_progress(source, 100, f"{product_count} produits sauvegardes")
+            self.source_finished.emit(source, summary_payload)
+        except InterruptedError:
+            summary_payload = {"orders": 0, "products": product_count, "cancelled": True}
+            result["sources"][source] = summary_payload
+            result["cancelled"] = True
+            self._emit_progress(source, 100, f"annule - {product_count} produits sauvegardes")
+            self.source_finished.emit(source, summary_payload)
+        except Exception as exc:
+            message = str(exc)
+            result["errors"][source] = message
+            self._emit_progress(source, 100, f"erreur - {message}")
+            self.source_error.emit(source, message)
 
     def _run_microstore(self, db: Database, resolver: Resolver, result: dict) -> None:
         source = "Microstore"
@@ -1746,23 +1776,27 @@ class MainWindow(QMainWindow):
             status_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
             status_label.setWordWrap(False)
         sync_microstore = QPushButton("Synchroniser Microstore")
+        sync_products = QPushButton("Synchroniser DB produits Microstore")
         sync_efashion = QPushButton("Synchroniser eFashion")
         sync_pfs = QPushButton("Synchroniser PFS")
         sync_button = QPushButton("Synchroniser tout")
         self.cancel_sync_button = QPushButton("Annuler")
         self.cancel_sync_button.setEnabled(False)
         sync_microstore.clicked.connect(lambda: self._start_sync(["Microstore"]))
+        sync_products.clicked.connect(lambda: self._start_sync(["MicrostoreProducts"]))
         sync_efashion.clicked.connect(lambda: self._start_sync(["eFashion"]))
         sync_pfs.clicked.connect(lambda: self._start_sync(["PFS"]))
         sync_button.clicked.connect(lambda: self._start_sync(["Microstore", "eFashion", "PFS"]))
         self.cancel_sync_button.clicked.connect(self._cancel_sync)
         self.sync_buttons = {
             "Microstore": sync_microstore,
+            "MicrostoreProducts": sync_products,
             "eFashion": sync_efashion,
             "PFS": sync_pfs,
             "all": sync_button,
         }
         actions.addStretch(1)
+        actions.addWidget(sync_products)
         actions.addWidget(sync_microstore)
         actions.addWidget(sync_efashion)
         actions.addWidget(sync_pfs)
@@ -2103,27 +2137,10 @@ class MainWindow(QMainWindow):
     def _refresh_quick_invoice_table(self) -> None:
         if hasattr(self, "quick_table"):
             populate_lines_table(self.quick_table, self.lines, editable=True, source=QUICK_INVOICE_SOURCE)
-            install_line_table_mapping_widgets(self.quick_table, self.lines, self.db, QUICK_INVOICE_SOURCE, self.quick_status.setText)
+            configure_line_table_autocomplete(self.quick_table, self.db)
 
     def _on_quick_item_changed(self, item: QTableWidgetItem) -> None:
-        row = item.row()
-        if row >= len(self.lines):
-            return
-        line = self.lines[row]
-        try:
-            line.description = normalize_spaces(self.quick_table.item(row, LINE_COL_DESCRIPTION).text())
-            package_size_text = self.quick_table.item(row, LINE_COL_PACKAGE_SIZE).text().strip()
-            line.package_size = int(package_size_text) if package_size_text else None
-            line.quantity_pieces = int(self.quick_table.item(row, LINE_COL_QUANTITY).text().strip())
-            price_text = self.quick_table.item(row, LINE_COL_PRICE).text().strip().replace(",", ".")
-            line.unit_price_ht = Decimal(price_text) if price_text else None
-            line.order_unit_price_ht = line.unit_price_ht
-            line.price_confirmed = True
-        except Exception as exc:
-            line.validation_status = "blocked"
-            line.validation_message = f"valeur invalide: {exc}"
-        else:
-            line.validate()
+        apply_line_table_item_change(self.quick_table, self.lines, self.db, QUICK_INVOICE_SOURCE, item, self.quick_status.setText)
         if hasattr(self, "quick_status"):
             self.quick_status.setText(_status_from_lines(self.lines) if self.lines else "Aucune ligne.")
 
@@ -2282,6 +2299,12 @@ class MainWindow(QMainWindow):
             return
         self._save_app_settings_silent()
         runnable_sources: list[str] = []
+        if "MicrostoreProducts" in sources:
+            if self.microstore_token.text().strip():
+                runnable_sources.append("MicrostoreProducts")
+                self._on_sync_progress("MicrostoreProducts", 0, "en attente")
+            else:
+                self.microstore_status.setText("Microstore produits: token absent")
         if "Microstore" in sources:
             if self.microstore_token.text().strip():
                 runnable_sources.append("Microstore")
@@ -2310,6 +2333,11 @@ class MainWindow(QMainWindow):
             button = self.sync_buttons.get(source)
             if button:
                 button.setEnabled(False)
+            if source in {"Microstore", "MicrostoreProducts"}:
+                for linked_source in ("Microstore", "MicrostoreProducts"):
+                    linked_button = self.sync_buttons.get(linked_source)
+                    if linked_button:
+                        linked_button.setEnabled(False)
         if set(sources) == {"Microstore", "eFashion", "PFS"} and "all" in self.sync_buttons:
             self.sync_buttons["all"].setEnabled(False)
         if hasattr(self, "cancel_sync_button"):
@@ -2343,14 +2371,15 @@ class MainWindow(QMainWindow):
         thread.start()
 
     def _on_sync_progress(self, source: str, percent: int, message: str) -> None:
-        label = f"{source}: {percent}% - {message}"
-        if source == "Microstore":
+        display_source = "Microstore produits" if source == "MicrostoreProducts" else source
+        label = f"{display_source}: {percent}% - {message}"
+        if source in {"Microstore", "MicrostoreProducts"}:
             self.microstore_status.setText(label)
         elif source == "eFashion":
             self.efashion_status.setText(label)
         elif source == "PFS":
             self.pfs_status.setText(label)
-        bar = self.sync_progress_bars.get(source)
+        bar = self.sync_progress_bars.get("Microstore" if source == "MicrostoreProducts" else source)
         if bar:
             bar.setValue(percent)
 
@@ -2362,6 +2391,8 @@ class MainWindow(QMainWindow):
             message = f"annule - {orders} commandes sauvegardees"
         elif source == "Microstore":
             message = f"{orders} commandes, {products} produits"
+        elif source == "MicrostoreProducts":
+            message = f"{products} produits sauvegardes"
         else:
             message = f"{orders} commandes sauvegardees"
         self._on_sync_progress(source, 100, message)
@@ -2374,6 +2405,11 @@ class MainWindow(QMainWindow):
             button = self.sync_buttons.get(source)
             if button:
                 button.setEnabled(True)
+            if source in {"Microstore", "MicrostoreProducts"}:
+                for linked_source in ("Microstore", "MicrostoreProducts"):
+                    linked_button = self.sync_buttons.get(linked_source)
+                    if linked_button:
+                        linked_button.setEnabled(True)
         if "all" in self.sync_buttons:
             self.sync_buttons["all"].setEnabled(True)
         if hasattr(self, "cancel_sync_button"):
@@ -2386,8 +2422,13 @@ class MainWindow(QMainWindow):
             parts = []
             for source, payload in result.get("sources", {}).items():
                 orders = int(payload.get("orders") or 0)
+                products = int(payload.get("products") or 0)
                 if payload.get("cancelled"):
-                    parts.append(f"{source}: annule ({orders} sauvegardees)")
+                    label = "Microstore produits" if source == "MicrostoreProducts" else source
+                    saved = f"{products} produits" if source == "MicrostoreProducts" else f"{orders} sauvegardees"
+                    parts.append(f"{label}: annule ({saved})")
+                elif source == "MicrostoreProducts":
+                    parts.append(f"Microstore produits: {products} produits")
                 else:
                     parts.append(f"{source}: {orders} commandes")
             for source, message in result.get("errors", {}).items():
