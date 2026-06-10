@@ -56,6 +56,7 @@ from .product_folder import latest_product_export
 from .resolver import Resolver
 from .settings import (
     APP_NAME,
+    MIN_STABLE_PAUSE_MS,
     REAL_SAGE_INJECTION_LABEL,
     REAL_SAGE_ONE_LINE_MODE,
     SAGE_50_WINDOW_TITLE,
@@ -2068,10 +2069,10 @@ class MainWindow(QMainWindow):
         self.confirmation_mode.addItem("Direct", "direct")
         self.confirmation_mode.addItem("Simple", "simple")
         self.confirmation_mode.addItem("Debug", "debug")
-        self.confirmation_mode.setToolTip("Direct: popup final seulement. Simple: controle avant + popup final. Debug: anciens controles detailles avec captures/logs.")
+        self.confirmation_mode.setToolTip("Direct: popup final seulement. Simple: controle avant + popup final. Debug: controles detailles. Les cases Captures/Logs restent independantes.")
         self.confirmation_mode.setCurrentIndex(max(0, self.confirmation_mode.findData(self.settings.sage_profile.confirmation_mode or "simple")))
         self.stable_pause_ms = QSpinBox()
-        self.stable_pause_ms.setRange(0, 2000)
+        self.stable_pause_ms.setRange(MIN_STABLE_PAUSE_MS, 2000)
         self.stable_pause_ms.setSuffix(" ms")
         self.stable_pause_ms.setValue(self.settings.sage_profile.stable_pause_ms)
         self.stable_pause_ms.setToolTip("Reglage avance: pause minimale de securite entre actions Sage. Si elle est haute, elle limite la vitesse meme avec un petit delai touches.")

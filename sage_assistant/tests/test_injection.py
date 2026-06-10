@@ -237,3 +237,21 @@ def test_invalid_confirmation_mode_falls_back_to_simple(tmp_path):
     loaded = load_settings(path)
 
     assert loaded.sage_profile.confirmation_mode == "simple"
+
+
+def test_stable_pause_has_safe_minimum(tmp_path):
+    settings = AppSettings()
+    settings.sage_profile.stable_pause_ms = 5
+    path = tmp_path / "settings.json"
+
+    save_settings(settings, path)
+    loaded = load_settings(path)
+
+    assert loaded.sage_profile.stable_pause_ms == 120
+
+
+def test_ahk_appends_reference_to_sage_description():
+    script = (Path(__file__).resolve().parents[1] / "automation" / "sage_injector.ahk").read_text(encoding="utf-8")
+
+    assert 'SendText(" " line["ref"])' in script
+    assert 'SendText(NormalizeSpaces(line["description"]))' not in script

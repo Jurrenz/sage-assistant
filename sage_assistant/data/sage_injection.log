@@ -1,0 +1,701 @@
+﻿2026-06-09 10:44:51 | START queue=C:\Users\Ffff\AppData\Local\Temp\sage_assistant_queue_20260609T084451Z.json lines=20
+2026-06-09 10:44:52 | FOUND Sage main hwnd=0x9055C class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-09 10:44:52 | FOUND invoice hwnd=0x60A06 title=Nouvelle facture *
+2026-06-09 10:44:53 | FOUND add hwnd=0x9096E rect=985,446,1083,469 center=1034,457
+2026-06-09 10:44:53 | FOUND grid hwnd=0x90956 rect=985,474,1895,947
+2026-06-09 10:44:55 | ERROR focus lost line=1 ref=G01-116
+2026-06-09 10:45:03 | START queue=C:\Users\Ffff\AppData\Local\Temp\sage_assistant_queue_20260609T084503Z.json lines=20
+2026-06-09 10:45:04 | FOUND Sage main hwnd=0x9055C class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-09 10:45:04 | FOUND invoice hwnd=0x60A06 title=Nouvelle facture *
+2026-06-09 10:45:04 | FOUND add hwnd=0x9096E rect=985,446,1083,469 center=1034,457
+2026-06-09 10:45:04 | FOUND grid hwnd=0x90956 rect=985,474,1895,947
+2026-06-09 10:45:05 | ACTIVE after_add rect=985,474,1895,947
+2026-06-09 10:45:05 | SEND line=1 ref=G01-116 mode=keyboard_from_sage_focus article_focus=0
+2026-06-09 10:45:05 | OK line=1 ref=G01-116
+2026-06-09 10:45:05 | SEND line=2 ref=LA18-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:06 | OK line=2 ref=LA18-1
+2026-06-09 10:45:06 | SEND line=3 ref=LA17-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:06 | OK line=3 ref=LA17-1
+2026-06-09 10:45:06 | SEND line=4 ref=FL696-3 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:06 | OK line=4 ref=FL696-3
+2026-06-09 10:45:06 | SEND line=5 ref=JY88-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:06 | OK line=5 ref=JY88-1
+2026-06-09 10:45:06 | SEND line=6 ref=LA20-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:07 | OK line=6 ref=LA20-1
+2026-06-09 10:45:07 | SEND line=7 ref=FL633-5 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:07 | OK line=7 ref=FL633-5
+2026-06-09 10:45:07 | SEND line=8 ref=FL761-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:07 | OK line=8 ref=FL761-2
+2026-06-09 10:45:07 | SEND line=9 ref=FL732-3 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:08 | OK line=9 ref=FL732-3
+2026-06-09 10:45:08 | SEND line=10 ref=FL663-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:08 | OK line=10 ref=FL663-1
+2026-06-09 10:45:08 | SEND line=11 ref=FY221-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:08 | OK line=11 ref=FY221-1
+2026-06-09 10:45:08 | SEND line=12 ref=LA55-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:08 | OK line=12 ref=LA55-1
+2026-06-09 10:45:08 | SEND line=13 ref=FL283-13 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:09 | OK line=13 ref=FL283-13
+2026-06-09 10:45:09 | SEND line=14 ref=FL625-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:09 | OK line=14 ref=FL625-1
+2026-06-09 10:45:09 | SEND line=15 ref=FL625-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:09 | OK line=15 ref=FL625-2
+2026-06-09 10:45:09 | SEND line=16 ref=LA60-3 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:10 | OK line=16 ref=LA60-3
+2026-06-09 10:45:10 | SEND line=17 ref=LA15-10 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:10 | OK line=17 ref=LA15-10
+2026-06-09 10:45:10 | SEND line=18 ref=LA15-11 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:10 | OK line=18 ref=LA15-11
+2026-06-09 10:45:10 | SEND line=19 ref=FL283-15 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:11 | OK line=19 ref=FL283-15
+2026-06-09 10:45:11 | SEND line=20 ref=FL255-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:45:11 | OK line=20 ref=FL255-2
+2026-06-09 10:45:11 | DONE lines=20
+2026-06-09 10:50:48 | START queue=C:\Users\Ffff\AppData\Local\Temp\sage_assistant_queue_20260609T085048Z.json lines=20
+2026-06-09 10:50:49 | FOUND Sage main hwnd=0x9055C class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-09 10:50:49 | FOUND invoice hwnd=0x1C0924 title=Nouvelle facture *
+2026-06-09 10:50:50 | FOUND add hwnd=0xE0896 rect=985,446,1083,469 center=1034,457
+2026-06-09 10:50:50 | FOUND grid hwnd=0xB0804 rect=985,474,1895,947
+2026-06-09 10:50:50 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260609_105050.png
+2026-06-09 10:50:52 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260609_105052.png
+2026-06-09 10:50:52 | ACTIVE after_add rect=1482,531,1588,559
+2026-06-09 10:50:52 | SEND line=1 ref=G01-116 mode=keyboard_from_sage_focus article_focus=0
+2026-06-09 10:50:52 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260609_105052.png
+2026-06-09 10:50:53 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260609_105052.png
+2026-06-09 10:50:53 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260609_105053.png
+2026-06-09 10:50:53 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260609_105053.png
+2026-06-09 10:50:53 | OK line=1 ref=G01-116
+2026-06-09 10:50:53 | SEND line=2 ref=LA18-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:50:54 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260609_105053.png
+2026-06-09 10:50:54 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260609_105054.png
+2026-06-09 10:50:54 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260609_105054.png
+2026-06-09 10:50:55 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260609_105054.png
+2026-06-09 10:50:55 | OK line=2 ref=LA18-1
+2026-06-09 10:50:55 | SEND line=3 ref=LA17-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:50:55 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_3_20260609_105055.png
+2026-06-09 10:50:56 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_3_20260609_105055.png
+2026-06-09 10:50:56 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_3_20260609_105056.png
+2026-06-09 10:50:56 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_3_20260609_105056.png
+2026-06-09 10:50:56 | OK line=3 ref=LA17-1
+2026-06-09 10:50:56 | SEND line=4 ref=FL696-3 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:50:57 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_4_20260609_105056.png
+2026-06-09 10:50:57 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_4_20260609_105057.png
+2026-06-09 10:50:57 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_4_20260609_105057.png
+2026-06-09 10:50:58 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_4_20260609_105057.png
+2026-06-09 10:50:58 | OK line=4 ref=FL696-3
+2026-06-09 10:50:58 | SEND line=5 ref=JY88-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:50:58 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_5_20260609_105058.png
+2026-06-09 10:50:58 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_5_20260609_105058.png
+2026-06-09 10:50:59 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_5_20260609_105058.png
+2026-06-09 10:50:59 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_5_20260609_105059.png
+2026-06-09 10:50:59 | OK line=5 ref=JY88-1
+2026-06-09 10:50:59 | SEND line=6 ref=LA20-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:00 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_6_20260609_105059.png
+2026-06-09 10:51:00 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_6_20260609_105100.png
+2026-06-09 10:51:00 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_6_20260609_105100.png
+2026-06-09 10:51:01 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_6_20260609_105100.png
+2026-06-09 10:51:01 | OK line=6 ref=LA20-1
+2026-06-09 10:51:01 | SEND line=7 ref=FL633-5 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:01 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_7_20260609_105101.png
+2026-06-09 10:51:01 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_7_20260609_105101.png
+2026-06-09 10:51:02 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_7_20260609_105101.png
+2026-06-09 10:51:02 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_7_20260609_105102.png
+2026-06-09 10:51:02 | OK line=7 ref=FL633-5
+2026-06-09 10:51:02 | SEND line=8 ref=FL761-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:02 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_8_20260609_105102.png
+2026-06-09 10:51:03 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_8_20260609_105102.png
+2026-06-09 10:51:03 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_8_20260609_105103.png
+2026-06-09 10:51:03 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_8_20260609_105103.png
+2026-06-09 10:51:03 | OK line=8 ref=FL761-2
+2026-06-09 10:51:03 | SEND line=9 ref=FL732-3 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:04 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_9_20260609_105103.png
+2026-06-09 10:51:04 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_9_20260609_105104.png
+2026-06-09 10:51:04 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_9_20260609_105104.png
+2026-06-09 10:51:05 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_9_20260609_105104.png
+2026-06-09 10:51:05 | OK line=9 ref=FL732-3
+2026-06-09 10:51:05 | SEND line=10 ref=FL663-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:05 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_10_20260609_105105.png
+2026-06-09 10:51:06 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_10_20260609_105105.png
+2026-06-09 10:51:06 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_10_20260609_105106.png
+2026-06-09 10:51:06 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_10_20260609_105106.png
+2026-06-09 10:51:06 | OK line=10 ref=FL663-1
+2026-06-09 10:51:06 | SEND line=11 ref=FY221-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:07 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_11_20260609_105106.png
+2026-06-09 10:51:07 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_11_20260609_105107.png
+2026-06-09 10:51:07 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_11_20260609_105107.png
+2026-06-09 10:51:08 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_11_20260609_105107.png
+2026-06-09 10:51:08 | OK line=11 ref=FY221-1
+2026-06-09 10:51:08 | SEND line=12 ref=LA55-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:08 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_12_20260609_105108.png
+2026-06-09 10:51:08 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_12_20260609_105108.png
+2026-06-09 10:51:09 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_12_20260609_105108.png
+2026-06-09 10:51:09 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_12_20260609_105109.png
+2026-06-09 10:51:09 | OK line=12 ref=LA55-1
+2026-06-09 10:51:09 | SEND line=13 ref=FL283-13 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:09 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_13_20260609_105109.png
+2026-06-09 10:51:10 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_13_20260609_105109.png
+2026-06-09 10:51:10 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_13_20260609_105110.png
+2026-06-09 10:51:11 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_13_20260609_105110.png
+2026-06-09 10:51:11 | OK line=13 ref=FL283-13
+2026-06-09 10:51:11 | SEND line=14 ref=FL625-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:11 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_14_20260609_105111.png
+2026-06-09 10:51:11 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_14_20260609_105111.png
+2026-06-09 10:51:12 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_14_20260609_105111.png
+2026-06-09 10:51:12 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_14_20260609_105112.png
+2026-06-09 10:51:12 | OK line=14 ref=FL625-1
+2026-06-09 10:51:12 | SEND line=15 ref=FL625-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:12 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_15_20260609_105112.png
+2026-06-09 10:51:13 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_15_20260609_105112.png
+2026-06-09 10:51:13 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_15_20260609_105113.png
+2026-06-09 10:51:13 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_15_20260609_105113.png
+2026-06-09 10:51:13 | OK line=15 ref=FL625-2
+2026-06-09 10:51:13 | SEND line=16 ref=LA60-3 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:14 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_16_20260609_105113.png
+2026-06-09 10:51:14 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_16_20260609_105114.png
+2026-06-09 10:51:14 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_16_20260609_105114.png
+2026-06-09 10:51:15 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_16_20260609_105114.png
+2026-06-09 10:51:15 | OK line=16 ref=LA60-3
+2026-06-09 10:51:15 | SEND line=17 ref=LA15-10 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:15 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_17_20260609_105115.png
+2026-06-09 10:51:16 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_17_20260609_105115.png
+2026-06-09 10:51:16 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_17_20260609_105116.png
+2026-06-09 10:51:16 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_17_20260609_105116.png
+2026-06-09 10:51:16 | OK line=17 ref=LA15-10
+2026-06-09 10:51:16 | SEND line=18 ref=LA15-11 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:17 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_18_20260609_105116.png
+2026-06-09 10:51:17 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_18_20260609_105117.png
+2026-06-09 10:51:17 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_18_20260609_105117.png
+2026-06-09 10:51:18 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_18_20260609_105117.png
+2026-06-09 10:51:18 | OK line=18 ref=LA15-11
+2026-06-09 10:51:18 | SEND line=19 ref=FL283-15 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:18 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_19_20260609_105118.png
+2026-06-09 10:51:18 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_19_20260609_105118.png
+2026-06-09 10:51:19 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_19_20260609_105118.png
+2026-06-09 10:51:19 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_19_20260609_105119.png
+2026-06-09 10:51:19 | OK line=19 ref=FL283-15
+2026-06-09 10:51:19 | SEND line=20 ref=FL255-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 10:51:19 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_20_20260609_105119.png
+2026-06-09 10:51:20 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_20_20260609_105119.png
+2026-06-09 10:51:20 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_20_20260609_105120.png
+2026-06-09 10:51:21 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_20_20260609_105120.png
+2026-06-09 10:51:21 | OK line=20 ref=FL255-2
+2026-06-09 10:51:21 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260609_105121.png
+2026-06-09 10:51:21 | DONE lines=20
+2026-06-09 16:48:19 | START queue=C:\Users\Ffff\AppData\Local\Temp\sage_assistant_queue_20260609T144819Z.json lines=15
+2026-06-09 16:48:20 | FOUND Sage main hwnd=0x9055C class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-09 16:48:20 | FOUND invoice hwnd=0x23085E title=Nouvelle facture *
+2026-06-09 16:48:20 | FOUND add hwnd=0x160990 rect=985,446,1083,469 center=1034,457
+2026-06-09 16:48:20 | FOUND grid hwnd=0x1A03BC rect=985,474,1895,947
+2026-06-09 16:48:21 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260609_164820.png
+2026-06-09 16:48:22 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260609_164822.png
+2026-06-09 16:48:22 | ACTIVE after_add rect=1482,531,1588,559
+2026-06-09 16:48:22 | SEND line=1 ref=FL731-3 mode=keyboard_from_sage_focus article_focus=0
+2026-06-09 16:48:23 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260609_164822.png
+2026-06-09 16:48:23 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260609_164823.png
+2026-06-09 16:48:23 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260609_164823.png
+2026-06-09 16:48:24 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260609_164823.png
+2026-06-09 16:48:24 | OK line=1 ref=FL731-3
+2026-06-09 16:48:24 | SEND line=2 ref=R32-63 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:24 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260609_164824.png
+2026-06-09 16:48:24 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260609_164824.png
+2026-06-09 16:48:25 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260609_164824.png
+2026-06-09 16:48:25 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260609_164825.png
+2026-06-09 16:48:25 | OK line=2 ref=R32-63
+2026-06-09 16:48:25 | SEND line=3 ref=FL783 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:26 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_3_20260609_164825.png
+2026-06-09 16:48:26 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_3_20260609_164826.png
+2026-06-09 16:48:26 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_3_20260609_164826.png
+2026-06-09 16:48:27 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_3_20260609_164826.png
+2026-06-09 16:48:27 | OK line=3 ref=FL783
+2026-06-09 16:48:27 | SEND line=4 ref=FL96-26 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:27 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_4_20260609_164827.png
+2026-06-09 16:48:27 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_4_20260609_164827.png
+2026-06-09 16:48:28 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_4_20260609_164827.png
+2026-06-09 16:48:28 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_4_20260609_164828.png
+2026-06-09 16:48:28 | OK line=4 ref=FL96-26
+2026-06-09 16:48:28 | SEND line=5 ref=LA51-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:28 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_5_20260609_164828.png
+2026-06-09 16:48:29 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_5_20260609_164828.png
+2026-06-09 16:48:29 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_5_20260609_164829.png
+2026-06-09 16:48:29 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_5_20260609_164829.png
+2026-06-09 16:48:29 | OK line=5 ref=LA51-1
+2026-06-09 16:48:29 | SEND line=6 ref=FL633-5 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:30 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_6_20260609_164830.png
+2026-06-09 16:48:30 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_6_20260609_164830.png
+2026-06-09 16:48:31 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_6_20260609_164830.png
+2026-06-09 16:48:31 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_6_20260609_164831.png
+2026-06-09 16:48:31 | OK line=6 ref=FL633-5
+2026-06-09 16:48:31 | SEND line=7 ref=FL767-3 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:31 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_7_20260609_164831.png
+2026-06-09 16:48:32 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_7_20260609_164831.png
+2026-06-09 16:48:32 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_7_20260609_164832.png
+2026-06-09 16:48:32 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_7_20260609_164832.png
+2026-06-09 16:48:32 | OK line=7 ref=FL767-3
+2026-06-09 16:48:32 | SEND line=8 ref=FL767-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:33 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_8_20260609_164832.png
+2026-06-09 16:48:33 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_8_20260609_164833.png
+2026-06-09 16:48:33 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_8_20260609_164833.png
+2026-06-09 16:48:34 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_8_20260609_164833.png
+2026-06-09 16:48:34 | OK line=8 ref=FL767-2
+2026-06-09 16:48:34 | SEND line=9 ref=G01-109 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:34 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_9_20260609_164834.png
+2026-06-09 16:48:35 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_9_20260609_164834.png
+2026-06-09 16:48:35 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_9_20260609_164835.png
+2026-06-09 16:48:35 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_9_20260609_164835.png
+2026-06-09 16:48:35 | OK line=9 ref=G01-109
+2026-06-09 16:48:35 | SEND line=10 ref=G01-111 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:36 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_10_20260609_164835.png
+2026-06-09 16:48:36 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_10_20260609_164836.png
+2026-06-09 16:48:36 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_10_20260609_164836.png
+2026-06-09 16:48:37 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_10_20260609_164836.png
+2026-06-09 16:48:37 | OK line=10 ref=G01-111
+2026-06-09 16:48:37 | SEND line=11 ref=G01-115 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:37 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_11_20260609_164837.png
+2026-06-09 16:48:37 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_11_20260609_164837.png
+2026-06-09 16:48:38 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_11_20260609_164837.png
+2026-06-09 16:48:38 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_11_20260609_164838.png
+2026-06-09 16:48:38 | OK line=11 ref=G01-115
+2026-06-09 16:48:38 | SEND line=12 ref=G01-106 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:39 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_12_20260609_164838.png
+2026-06-09 16:48:39 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_12_20260609_164839.png
+2026-06-09 16:48:39 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_12_20260609_164839.png
+2026-06-09 16:48:40 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_12_20260609_164839.png
+2026-06-09 16:48:40 | OK line=12 ref=G01-106
+2026-06-09 16:48:40 | SEND line=13 ref=G05-26B mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:40 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_13_20260609_164840.png
+2026-06-09 16:48:40 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_13_20260609_164840.png
+2026-06-09 16:48:41 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_13_20260609_164840.png
+2026-06-09 16:48:41 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_13_20260609_164841.png
+2026-06-09 16:48:41 | OK line=13 ref=G05-26B
+2026-06-09 16:48:41 | SEND line=14 ref=G05-20B mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:41 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_14_20260609_164841.png
+2026-06-09 16:48:42 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_14_20260609_164841.png
+2026-06-09 16:48:42 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_14_20260609_164842.png
+2026-06-09 16:48:42 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_14_20260609_164842.png
+2026-06-09 16:48:42 | OK line=14 ref=G05-20B
+2026-06-09 16:48:43 | SEND line=15 ref=G05-25B mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 16:48:43 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_15_20260609_164843.png
+2026-06-09 16:48:43 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_15_20260609_164843.png
+2026-06-09 16:48:44 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_15_20260609_164843.png
+2026-06-09 16:48:44 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_15_20260609_164844.png
+2026-06-09 16:48:44 | OK line=15 ref=G05-25B
+2026-06-09 16:48:44 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260609_164844.png
+2026-06-09 16:48:44 | DONE lines=15
+2026-06-09 18:20:44 | START queue=C:\Users\Ffff\AppData\Local\Temp\sage_assistant_queue_20260609T162044Z.json lines=4
+2026-06-09 18:21:21 | FOUND Sage main hwnd=0x9055C class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-09 18:21:21 | FOUND invoice hwnd=0x1706CC title=Facture - FA2921
+2026-06-09 18:21:21 | FOUND add hwnd=0x2809E4 rect=985,446,1083,469 center=1034,457
+2026-06-09 18:21:21 | FOUND grid hwnd=0xF06DC rect=985,474,1895,947
+2026-06-09 18:21:22 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260609_182121.png
+2026-06-09 18:21:31 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260609_182131.png
+2026-06-09 18:21:31 | ACTIVE after_add rect=1482,801,1588,829
+2026-06-09 18:21:31 | SEND line=1 ref=LAB01-7 mode=keyboard_from_sage_focus article_focus=0
+2026-06-09 18:21:31 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260609_182131.png
+2026-06-09 18:21:32 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260609_182131.png
+2026-06-09 18:21:32 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260609_182132.png
+2026-06-09 18:21:33 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260609_182132.png
+2026-06-09 18:21:33 | OK line=1 ref=LAB01-7
+2026-06-09 18:21:33 | SEND line=2 ref=FL280-16 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 18:21:33 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260609_182133.png
+2026-06-09 18:21:33 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260609_182133.png
+2026-06-09 18:21:34 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260609_182133.png
+2026-06-09 18:21:34 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260609_182134.png
+2026-06-09 18:21:34 | OK line=2 ref=FL280-16
+2026-06-09 18:21:34 | SEND line=3 ref=FL638-6 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 18:21:34 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_3_20260609_182134.png
+2026-06-09 18:21:35 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_3_20260609_182134.png
+2026-06-09 18:21:35 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_3_20260609_182135.png
+2026-06-09 18:21:35 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_3_20260609_182135.png
+2026-06-09 18:21:35 | OK line=3 ref=FL638-6
+2026-06-09 18:21:35 | SEND line=4 ref=JY26-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-09 18:21:36 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_4_20260609_182135.png
+2026-06-09 18:21:36 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_4_20260609_182136.png
+2026-06-09 18:21:37 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_4_20260609_182136.png
+2026-06-09 18:21:37 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_4_20260609_182137.png
+2026-06-09 18:21:37 | OK line=4 ref=JY26-2
+2026-06-09 18:21:37 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260609_182137.png
+2026-06-09 18:21:37 | DONE lines=4
+2026-06-10 16:41:54 | START queue=C:\Users\Ffff\AppData\Local\Temp\sage_assistant_queue_20260610T144154Z.json lines=42
+2026-06-10 16:41:56 | FOUND Sage main hwnd=0x20666 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-10 16:41:56 | FOUND invoice hwnd=0x320C32 title=Nouvelle facture *
+2026-06-10 16:41:56 | FOUND add hwnd=0x180BB4 rect=985,446,1083,469 center=1034,457
+2026-06-10 16:41:56 | FOUND grid hwnd=0x610EDA rect=985,474,1895,947
+2026-06-10 16:41:56 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260610_164156.png
+2026-06-10 16:41:58 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260610_164157.png
+2026-06-10 16:41:58 | ACTIVE after_add rect=1482,768,1588,796
+2026-06-10 16:41:58 | SEND line=1 ref=FL259-10 mode=keyboard_from_sage_focus article_focus=0
+2026-06-10 16:41:58 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260610_164158.png
+2026-06-10 16:41:59 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260610_164158.png
+2026-06-10 16:41:59 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260610_164159.png
+2026-06-10 16:41:59 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260610_164159.png
+2026-06-10 16:41:59 | OK line=1 ref=FL259-10
+2026-06-10 16:41:59 | SEND line=2 ref=FL780-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:00 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260610_164159.png
+2026-06-10 16:42:00 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260610_164200.png
+2026-06-10 16:42:01 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260610_164200.png
+2026-06-10 16:42:01 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260610_164201.png
+2026-06-10 16:42:01 | OK line=2 ref=FL780-1
+2026-06-10 16:42:01 | SEND line=3 ref=LA67-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:02 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_3_20260610_164201.png
+2026-06-10 16:42:02 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_3_20260610_164202.png
+2026-06-10 16:42:02 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_3_20260610_164202.png
+2026-06-10 16:42:03 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_3_20260610_164203.png
+2026-06-10 16:42:03 | OK line=3 ref=LA67-1
+2026-06-10 16:42:03 | SEND line=4 ref=FL386-20 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:03 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_4_20260610_164203.png
+2026-06-10 16:42:04 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_4_20260610_164203.png
+2026-06-10 16:42:04 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_4_20260610_164204.png
+2026-06-10 16:42:05 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_4_20260610_164204.png
+2026-06-10 16:42:05 | OK line=4 ref=FL386-20
+2026-06-10 16:42:05 | SEND line=5 ref=JY13 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:05 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_5_20260610_164205.png
+2026-06-10 16:42:06 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_5_20260610_164205.png
+2026-06-10 16:42:06 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_5_20260610_164206.png
+2026-06-10 16:42:06 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_5_20260610_164206.png
+2026-06-10 16:42:07 | OK line=5 ref=JY13
+2026-06-10 16:42:07 | SEND line=6 ref=LA27-5 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:07 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_6_20260610_164207.png
+2026-06-10 16:42:07 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_6_20260610_164207.png
+2026-06-10 16:42:08 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_6_20260610_164207.png
+2026-06-10 16:42:08 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_6_20260610_164208.png
+2026-06-10 16:42:08 | OK line=6 ref=LA27-5
+2026-06-10 16:42:08 | SEND line=7 ref=LA27-3 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:09 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_7_20260610_164208.png
+2026-06-10 16:42:09 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_7_20260610_164209.png
+2026-06-10 16:42:10 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_7_20260610_164209.png
+2026-06-10 16:42:10 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_7_20260610_164210.png
+2026-06-10 16:42:10 | OK line=7 ref=LA27-3
+2026-06-10 16:42:10 | SEND line=8 ref=LA35-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:10 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_8_20260610_164210.png
+2026-06-10 16:42:11 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_8_20260610_164211.png
+2026-06-10 16:42:11 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_8_20260610_164211.png
+2026-06-10 16:42:12 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_8_20260610_164211.png
+2026-06-10 16:42:12 | OK line=8 ref=LA35-1
+2026-06-10 16:42:12 | SEND line=9 ref=LA56-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:12 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_9_20260610_164212.png
+2026-06-10 16:42:13 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_9_20260610_164212.png
+2026-06-10 16:42:13 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_9_20260610_164213.png
+2026-06-10 16:42:14 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_9_20260610_164213.png
+2026-06-10 16:42:14 | OK line=9 ref=LA56-1
+2026-06-10 16:42:14 | SEND line=10 ref=LA33-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:14 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_10_20260610_164214.png
+2026-06-10 16:42:15 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_10_20260610_164214.png
+2026-06-10 16:42:15 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_10_20260610_164215.png
+2026-06-10 16:42:15 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_10_20260610_164215.png
+2026-06-10 16:42:15 | OK line=10 ref=LA33-1
+2026-06-10 16:42:15 | SEND line=11 ref=FL781 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:16 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_11_20260610_164215.png
+2026-06-10 16:42:16 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_11_20260610_164216.png
+2026-06-10 16:42:17 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_11_20260610_164216.png
+2026-06-10 16:42:17 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_11_20260610_164217.png
+2026-06-10 16:42:17 | OK line=11 ref=FL781
+2026-06-10 16:42:17 | SEND line=12 ref=R1274 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:18 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_12_20260610_164217.png
+2026-06-10 16:42:18 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_12_20260610_164218.png
+2026-06-10 16:42:18 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_12_20260610_164218.png
+2026-06-10 16:42:19 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_12_20260610_164219.png
+2026-06-10 16:42:19 | OK line=12 ref=R1274
+2026-06-10 16:42:19 | SEND line=13 ref=R1308 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:19 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_13_20260610_164219.png
+2026-06-10 16:42:20 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_13_20260610_164219.png
+2026-06-10 16:42:20 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_13_20260610_164220.png
+2026-06-10 16:42:21 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_13_20260610_164220.png
+2026-06-10 16:42:21 | OK line=13 ref=R1308
+2026-06-10 16:42:21 | SEND line=14 ref=R1307 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:21 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_14_20260610_164221.png
+2026-06-10 16:42:22 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_14_20260610_164221.png
+2026-06-10 16:42:22 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_14_20260610_164222.png
+2026-06-10 16:42:22 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_14_20260610_164222.png
+2026-06-10 16:42:23 | OK line=14 ref=R1307
+2026-06-10 16:42:23 | SEND line=15 ref=JY19 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:23 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_15_20260610_164223.png
+2026-06-10 16:42:24 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_15_20260610_164223.png
+2026-06-10 16:42:24 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_15_20260610_164224.png
+2026-06-10 16:42:25 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_15_20260610_164224.png
+2026-06-10 16:42:25 | OK line=15 ref=JY19
+2026-06-10 16:42:25 | SEND line=16 ref=JY89 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:25 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_16_20260610_164225.png
+2026-06-10 16:42:26 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_16_20260610_164226.png
+2026-06-10 16:42:26 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_16_20260610_164226.png
+2026-06-10 16:42:27 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_16_20260610_164226.png
+2026-06-10 16:42:27 | OK line=16 ref=JY89
+2026-06-10 16:42:27 | SEND line=17 ref=LA25-3AB mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:27 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_17_20260610_164227.png
+2026-06-10 16:42:28 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_17_20260610_164227.png
+2026-06-10 16:42:28 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_17_20260610_164228.png
+2026-06-10 16:42:28 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_17_20260610_164228.png
+2026-06-10 16:42:28 | OK line=17 ref=LA25-3AB
+2026-06-10 16:42:28 | SEND line=18 ref=R1173-3 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:29 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_18_20260610_164229.png
+2026-06-10 16:42:29 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_18_20260610_164229.png
+2026-06-10 16:42:30 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_18_20260610_164229.png
+2026-06-10 16:42:30 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_18_20260610_164230.png
+2026-06-10 16:42:30 | OK line=18 ref=R1173-3
+2026-06-10 16:42:30 | SEND line=19 ref=FL535-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:31 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_19_20260610_164230.png
+2026-06-10 16:42:31 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_19_20260610_164231.png
+2026-06-10 16:42:32 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_19_20260610_164231.png
+2026-06-10 16:42:32 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_19_20260610_164232.png
+2026-06-10 16:42:32 | OK line=19 ref=FL535-2
+2026-06-10 16:42:32 | SEND line=20 ref=FL386-9 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:32 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_20_20260610_164232.png
+2026-06-10 16:42:33 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_20_20260610_164233.png
+2026-06-10 16:42:33 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_20_20260610_164233.png
+2026-06-10 16:42:34 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_20_20260610_164233.png
+2026-06-10 16:42:34 | OK line=20 ref=FL386-9
+2026-06-10 16:42:34 | SEND line=21 ref=Z20 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:34 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_21_20260610_164234.png
+2026-06-10 16:42:35 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_21_20260610_164234.png
+2026-06-10 16:42:35 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_21_20260610_164235.png
+2026-06-10 16:42:36 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_21_20260610_164235.png
+2026-06-10 16:42:36 | OK line=21 ref=Z20
+2026-06-10 16:42:36 | SEND line=22 ref=LAB10-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:36 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_22_20260610_164236.png
+2026-06-10 16:42:37 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_22_20260610_164236.png
+2026-06-10 16:42:37 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_22_20260610_164237.png
+2026-06-10 16:42:37 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_22_20260610_164237.png
+2026-06-10 16:42:37 | OK line=22 ref=LAB10-2
+2026-06-10 16:42:37 | SEND line=23 ref=FL386-16A mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:38 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_23_20260610_164237.png
+2026-06-10 16:42:38 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_23_20260610_164238.png
+2026-06-10 16:42:39 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_23_20260610_164238.png
+2026-06-10 16:42:39 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_23_20260610_164239.png
+2026-06-10 16:42:39 | OK line=23 ref=FL386-16A
+2026-06-10 16:42:39 | SEND line=24 ref=FL386-22 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:40 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_24_20260610_164239.png
+2026-06-10 16:42:40 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_24_20260610_164240.png
+2026-06-10 16:42:40 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_24_20260610_164240.png
+2026-06-10 16:42:41 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_24_20260610_164240.png
+2026-06-10 16:42:41 | OK line=24 ref=FL386-22
+2026-06-10 16:42:41 | SEND line=25 ref=R30-1A mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:41 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_25_20260610_164241.png
+2026-06-10 16:42:42 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_25_20260610_164241.png
+2026-06-10 16:42:42 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_25_20260610_164242.png
+2026-06-10 16:42:43 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_25_20260610_164242.png
+2026-06-10 16:42:43 | OK line=25 ref=R30-1A
+2026-06-10 16:42:43 | SEND line=26 ref=R30-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:43 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_26_20260610_164243.png
+2026-06-10 16:42:44 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_26_20260610_164243.png
+2026-06-10 16:42:44 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_26_20260610_164244.png
+2026-06-10 16:42:44 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_26_20260610_164244.png
+2026-06-10 16:42:44 | OK line=26 ref=R30-2
+2026-06-10 16:42:44 | SEND line=27 ref=988 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:45 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_27_20260610_164245.png
+2026-06-10 16:42:45 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_27_20260610_164245.png
+2026-06-10 16:42:46 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_27_20260610_164245.png
+2026-06-10 16:42:46 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_27_20260610_164246.png
+2026-06-10 16:42:46 | OK line=27 ref=988
+2026-06-10 16:42:46 | SEND line=28 ref=LA17-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:47 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_28_20260610_164246.png
+2026-06-10 16:42:47 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_28_20260610_164247.png
+2026-06-10 16:42:48 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_28_20260610_164247.png
+2026-06-10 16:42:48 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_28_20260610_164248.png
+2026-06-10 16:42:48 | OK line=28 ref=LA17-1
+2026-06-10 16:42:48 | SEND line=29 ref=JY39 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:48 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_29_20260610_164248.png
+2026-06-10 16:42:49 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_29_20260610_164249.png
+2026-06-10 16:42:49 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_29_20260610_164249.png
+2026-06-10 16:42:50 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_29_20260610_164249.png
+2026-06-10 16:42:50 | OK line=29 ref=JY39
+2026-06-10 16:42:50 | SEND line=30 ref=LA27-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:50 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_30_20260610_164250.png
+2026-06-10 16:42:51 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_30_20260610_164250.png
+2026-06-10 16:42:51 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_30_20260610_164251.png
+2026-06-10 16:42:51 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_30_20260610_164251.png
+2026-06-10 16:42:52 | OK line=30 ref=LA27-2
+2026-06-10 16:42:52 | SEND line=31 ref=CM11-8 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:52 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_31_20260610_164252.png
+2026-06-10 16:42:52 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_31_20260610_164252.png
+2026-06-10 16:42:53 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_31_20260610_164253.png
+2026-06-10 16:42:53 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_31_20260610_164253.png
+2026-06-10 16:42:53 | OK line=31 ref=CM11-8
+2026-06-10 16:42:53 | SEND line=32 ref=CM217 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:54 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_32_20260610_164253.png
+2026-06-10 16:42:54 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_32_20260610_164254.png
+2026-06-10 16:42:55 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_32_20260610_164254.png
+2026-06-10 16:42:55 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_32_20260610_164255.png
+2026-06-10 16:42:55 | OK line=32 ref=CM217
+2026-06-10 16:42:55 | SEND line=33 ref=FL280 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:56 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_33_20260610_164255.png
+2026-06-10 16:42:56 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_33_20260610_164256.png
+2026-06-10 16:42:56 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_33_20260610_164256.png
+2026-06-10 16:42:57 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_33_20260610_164256.png
+2026-06-10 16:42:57 | OK line=33 ref=FL280
+2026-06-10 16:42:57 | SEND line=34 ref=FL327-12 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:57 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_34_20260610_164257.png
+2026-06-10 16:42:58 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_34_20260610_164257.png
+2026-06-10 16:42:58 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_34_20260610_164258.png
+2026-06-10 16:42:59 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_34_20260610_164258.png
+2026-06-10 16:42:59 | OK line=34 ref=FL327-12
+2026-06-10 16:42:59 | SEND line=35 ref=CH106-5 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:42:59 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_35_20260610_164259.png
+2026-06-10 16:43:00 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_35_20260610_164259.png
+2026-06-10 16:43:00 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_35_20260610_164300.png
+2026-06-10 16:43:00 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_35_20260610_164300.png
+2026-06-10 16:43:00 | OK line=35 ref=CH106-5
+2026-06-10 16:43:00 | SEND line=36 ref=FL510-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:01 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_36_20260610_164301.png
+2026-06-10 16:43:01 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_36_20260610_164301.png
+2026-06-10 16:43:02 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_36_20260610_164301.png
+2026-06-10 16:43:02 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_36_20260610_164302.png
+2026-06-10 16:43:02 | OK line=36 ref=FL510-1
+2026-06-10 16:43:02 | SEND line=37 ref=FL327-26 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:03 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_37_20260610_164302.png
+2026-06-10 16:43:03 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_37_20260610_164303.png
+2026-06-10 16:43:03 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_37_20260610_164303.png
+2026-06-10 16:43:04 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_37_20260610_164304.png
+2026-06-10 16:43:04 | OK line=37 ref=FL327-26
+2026-06-10 16:43:04 | SEND line=38 ref=FL259 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:04 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_38_20260610_164304.png
+2026-06-10 16:43:05 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_38_20260610_164304.png
+2026-06-10 16:43:05 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_38_20260610_164305.png
+2026-06-10 16:43:06 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_38_20260610_164305.png
+2026-06-10 16:43:06 | OK line=38 ref=FL259
+2026-06-10 16:43:06 | SEND line=39 ref=FL269-11 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:06 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_39_20260610_164306.png
+2026-06-10 16:43:07 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_39_20260610_164306.png
+2026-06-10 16:43:07 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_39_20260610_164307.png
+2026-06-10 16:43:07 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_39_20260610_164307.png
+2026-06-10 16:43:08 | OK line=39 ref=FL269-11
+2026-06-10 16:43:08 | SEND line=40 ref=FL327-37 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:08 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_40_20260610_164308.png
+2026-06-10 16:43:08 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_40_20260610_164308.png
+2026-06-10 16:43:09 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_40_20260610_164308.png
+2026-06-10 16:43:09 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_40_20260610_164309.png
+2026-06-10 16:43:09 | OK line=40 ref=FL327-37
+2026-06-10 16:43:09 | SEND line=41 ref=FL327-35 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:10 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_41_20260610_164309.png
+2026-06-10 16:43:10 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_41_20260610_164310.png
+2026-06-10 16:43:10 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_41_20260610_164310.png
+2026-06-10 16:43:11 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_41_20260610_164311.png
+2026-06-10 16:43:11 | OK line=41 ref=FL327-35
+2026-06-10 16:43:11 | SEND line=42 ref=FL327-10 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:11 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_42_20260610_164311.png
+2026-06-10 16:43:12 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_42_20260610_164311.png
+2026-06-10 16:43:12 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_42_20260610_164312.png
+2026-06-10 16:43:13 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_42_20260610_164312.png
+2026-06-10 16:43:13 | OK line=42 ref=FL327-10
+2026-06-10 16:43:13 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260610_164313.png
+2026-06-10 16:43:13 | DONE lines=42
+2026-06-10 16:43:30 | START queue=C:\Users\Ffff\AppData\Local\Temp\sage_assistant_queue_20260610T144330Z.json lines=13
+2026-06-10 16:43:32 | FOUND Sage main hwnd=0x20666 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-10 16:43:32 | FOUND invoice hwnd=0x320C32 title=Nouvelle facture *
+2026-06-10 16:43:32 | FOUND add hwnd=0x180BB4 rect=985,446,1083,469 center=1034,457
+2026-06-10 16:43:32 | FOUND grid hwnd=0x610EDA rect=985,474,1895,947
+2026-06-10 16:43:32 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260610_164332.png
+2026-06-10 16:43:34 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260610_164333.png
+2026-06-10 16:43:34 | ACTIVE after_add rect=1482,888,1588,916
+2026-06-10 16:43:34 | SEND line=1 ref=LA02-1 mode=keyboard_from_sage_focus article_focus=0
+2026-06-10 16:43:34 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260610_164334.png
+2026-06-10 16:43:35 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260610_164334.png
+2026-06-10 16:43:35 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260610_164335.png
+2026-06-10 16:43:35 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260610_164335.png
+2026-06-10 16:43:35 | OK line=1 ref=LA02-1
+2026-06-10 16:43:35 | SEND line=2 ref=LA66-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:36 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260610_164336.png
+2026-06-10 16:43:36 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260610_164336.png
+2026-06-10 16:43:37 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260610_164336.png
+2026-06-10 16:43:37 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260610_164337.png
+2026-06-10 16:43:37 | OK line=2 ref=LA66-1
+2026-06-10 16:43:37 | SEND line=3 ref=JY87 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:38 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_3_20260610_164337.png
+2026-06-10 16:43:38 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_3_20260610_164338.png
+2026-06-10 16:43:39 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_3_20260610_164338.png
+2026-06-10 16:43:39 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_3_20260610_164339.png
+2026-06-10 16:43:39 | OK line=3 ref=JY87
+2026-06-10 16:43:39 | SEND line=4 ref=FL761-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:39 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_4_20260610_164339.png
+2026-06-10 16:43:40 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_4_20260610_164340.png
+2026-06-10 16:43:40 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_4_20260610_164340.png
+2026-06-10 16:43:41 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_4_20260610_164340.png
+2026-06-10 16:43:41 | OK line=4 ref=FL761-2
+2026-06-10 16:43:41 | SEND line=5 ref=LA66-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:41 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_5_20260610_164341.png
+2026-06-10 16:43:42 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_5_20260610_164341.png
+2026-06-10 16:43:42 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_5_20260610_164342.png
+2026-06-10 16:43:42 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_5_20260610_164342.png
+2026-06-10 16:43:43 | OK line=5 ref=LA66-1
+2026-06-10 16:43:43 | SEND line=6 ref=LA55-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:43 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_6_20260610_164343.png
+2026-06-10 16:43:43 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_6_20260610_164343.png
+2026-06-10 16:43:44 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_6_20260610_164343.png
+2026-06-10 16:43:44 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_6_20260610_164344.png
+2026-06-10 16:43:44 | OK line=6 ref=LA55-1
+2026-06-10 16:43:44 | SEND line=7 ref=FL733 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:45 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_7_20260610_164344.png
+2026-06-10 16:43:45 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_7_20260610_164345.png
+2026-06-10 16:43:46 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_7_20260610_164345.png
+2026-06-10 16:43:46 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_7_20260610_164346.png
+2026-06-10 16:43:46 | OK line=7 ref=FL733
+2026-06-10 16:43:46 | SEND line=8 ref=JY89 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:47 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_8_20260610_164346.png
+2026-06-10 16:43:47 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_8_20260610_164347.png
+2026-06-10 16:43:47 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_8_20260610_164347.png
+2026-06-10 16:43:48 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_8_20260610_164347.png
+2026-06-10 16:43:48 | OK line=8 ref=JY89
+2026-06-10 16:43:48 | SEND line=9 ref=LA27-5 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:48 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_9_20260610_164348.png
+2026-06-10 16:43:49 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_9_20260610_164348.png
+2026-06-10 16:43:49 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_9_20260610_164349.png
+2026-06-10 16:43:50 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_9_20260610_164349.png
+2026-06-10 16:43:50 | OK line=9 ref=LA27-5
+2026-06-10 16:43:50 | SEND line=10 ref=FL765-1 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:50 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_10_20260610_164350.png
+2026-06-10 16:43:51 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_10_20260610_164350.png
+2026-06-10 16:43:51 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_10_20260610_164351.png
+2026-06-10 16:43:51 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_10_20260610_164351.png
+2026-06-10 16:43:51 | OK line=10 ref=FL765-1
+2026-06-10 16:43:51 | SEND line=11 ref=FL773 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:52 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_11_20260610_164351.png
+2026-06-10 16:43:52 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_11_20260610_164352.png
+2026-06-10 16:43:53 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_11_20260610_164352.png
+2026-06-10 16:43:53 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_11_20260610_164353.png
+2026-06-10 16:43:53 | OK line=11 ref=FL773
+2026-06-10 16:43:53 | SEND line=12 ref=JY89 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:54 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_12_20260610_164353.png
+2026-06-10 16:43:54 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_12_20260610_164354.png
+2026-06-10 16:43:55 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_12_20260610_164354.png
+2026-06-10 16:43:55 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_12_20260610_164355.png
+2026-06-10 16:43:55 | OK line=12 ref=JY89
+2026-06-10 16:43:55 | SEND line=13 ref=A01-11 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:43:55 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_13_20260610_164355.png
+2026-06-10 16:43:56 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_13_20260610_164356.png
+2026-06-10 16:43:56 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_13_20260610_164356.png
+2026-06-10 16:43:57 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_13_20260610_164356.png
+2026-06-10 16:43:57 | OK line=13 ref=A01-11
+2026-06-10 16:43:57 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260610_164357.png
+2026-06-10 16:43:57 | DONE lines=13
+2026-06-10 16:45:02 | START queue=C:\Users\Ffff\AppData\Local\Temp\sage_assistant_queue_20260610T144502Z.json lines=4
+2026-06-10 16:45:04 | FOUND Sage main hwnd=0x20666 class=CamMainFrame title=Sage 50 : S.Z FASHION
+2026-06-10 16:45:04 | FOUND invoice hwnd=0x270570 title=Nouvelle facture *
+2026-06-10 16:45:04 | FOUND add hwnd=0x1D0B86 rect=985,446,1083,469 center=1034,457
+2026-06-10 16:45:04 | FOUND grid hwnd=0x6D0544 rect=985,474,1895,947
+2026-06-10 16:45:05 | CAPTURE before=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_before_20260610_164504.png
+2026-06-10 16:45:06 | CAPTURE after_click=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_click_20260610_164506.png
+2026-06-10 16:45:06 | ACTIVE after_add rect=1482,558,1588,586
+2026-06-10 16:45:06 | SEND line=1 ref=LAB01-7 mode=keyboard_from_sage_focus article_focus=0
+2026-06-10 16:45:07 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_1_20260610_164506.png
+2026-06-10 16:45:07 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_1_20260610_164507.png
+2026-06-10 16:45:08 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_1_20260610_164507.png
+2026-06-10 16:45:08 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_1_20260610_164508.png
+2026-06-10 16:45:08 | OK line=1 ref=LAB01-7
+2026-06-10 16:45:08 | SEND line=2 ref=FL280-16 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:45:09 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_2_20260610_164508.png
+2026-06-10 16:45:09 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_2_20260610_164509.png
+2026-06-10 16:45:10 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_2_20260610_164509.png
+2026-06-10 16:45:10 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_2_20260610_164510.png
+2026-06-10 16:45:10 | OK line=2 ref=FL280-16
+2026-06-10 16:45:10 | SEND line=3 ref=FL638-6 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:45:10 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_3_20260610_164510.png
+2026-06-10 16:45:11 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_3_20260610_164511.png
+2026-06-10 16:45:11 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_3_20260610_164511.png
+2026-06-10 16:45:12 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_3_20260610_164511.png
+2026-06-10 16:45:12 | OK line=3 ref=FL638-6
+2026-06-10 16:45:12 | SEND line=4 ref=JY26-2 mode=keyboard_from_sage_focus article_focus=1
+2026-06-10 16:45:12 | CAPTURE after_article=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_article_4_20260610_164512.png
+2026-06-10 16:45:13 | CAPTURE after_description=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_description_4_20260610_164512.png
+2026-06-10 16:45:13 | CAPTURE after_quantity=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_quantity_4_20260610_164513.png
+2026-06-10 16:45:14 | CAPTURE after_price=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_price_4_20260610_164513.png
+2026-06-10 16:45:14 | OK line=4 ref=JY26-2
+2026-06-10 16:45:14 | CAPTURE after=C:\Dev\sage-assistant\sage_assistant\data\captures\sage_after_20260610_164514.png
+2026-06-10 16:45:14 | DONE lines=4

@@ -67,10 +67,7 @@ CaptureEnabled := profile.Has("capture_before_after") ? ToBool(profile["capture_
 confirmationMode := profile.Has("confirmation_mode") ? profile["confirmation_mode"] : "simple"
 stablePauseMs := profile.Has("stable_pause_ms") ? Integer(profile["stable_pause_ms"]) : 220
 if (confirmationMode = "debug") {
-    ; Debug intentionally keeps the old reliable behavior: visible checkpoints,
-    ; captures and logs. The extra work also gives Sage time to settle.
-    LogEnabled := true
-    CaptureEnabled := true
+    ; Debug adds visible checkpoints. Capture/log checkboxes are still honored.
 }
 
 LogLine(logPath, "START queue=" queuePath " lines=" lines.Length)
@@ -165,9 +162,9 @@ SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, 
     StableSleep(delayMs * 2, stablePauseMs)
     Send("{Space}")
     StableSleep(delayMs * 2, stablePauseMs)
-    Send("^a")
+    Send("{End}")
     StableSleep(delayMs * 2, stablePauseMs)
-    SendText(NormalizeSpaces(line["description"]))
+    SendText(" " line["ref"])
     StableSleep(delayMs * 2, stablePauseMs)
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"], realTarget["mainHwnd"])
     afterDescriptionPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_description_" index)
