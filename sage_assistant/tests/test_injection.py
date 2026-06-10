@@ -239,15 +239,15 @@ def test_invalid_confirmation_mode_falls_back_to_simple(tmp_path):
     assert loaded.sage_profile.confirmation_mode == "simple"
 
 
-def test_stable_pause_has_safe_minimum(tmp_path):
+def test_stable_pause_can_be_zero_for_speed_tests(tmp_path):
     settings = AppSettings()
-    settings.sage_profile.stable_pause_ms = 5
+    settings.sage_profile.stable_pause_ms = 0
     path = tmp_path / "settings.json"
 
     save_settings(settings, path)
     loaded = load_settings(path)
 
-    assert loaded.sage_profile.stable_pause_ms == 120
+    assert loaded.sage_profile.stable_pause_ms == 0
 
 
 def test_ahk_appends_reference_to_sage_description():

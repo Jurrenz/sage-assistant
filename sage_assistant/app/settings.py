@@ -12,7 +12,6 @@ REAL_SAGE_INJECTION_LABEL = "Injection Sage réelle"
 LEGACY_INJECTION_MODES = {"keyboard_only", "calibrated_clicks", "control_based", REAL_SAGE_ONE_LINE_MODE}
 SAGE_50_WINDOW_TITLE = "Sage 50 : S.Z FASHION"
 CONFIRMATION_MODES = {"direct", "simple", "debug"}
-MIN_STABLE_PAUSE_MS = 120
 
 
 def project_root() -> Path:
@@ -133,4 +132,4 @@ def normalize_sage_profile(profile: SageProfile) -> None:
     profile.step_mode = False
     if profile.confirmation_mode not in CONFIRMATION_MODES:
         profile.confirmation_mode = "simple"
-    profile.stable_pause_ms = max(MIN_STABLE_PAUSE_MS, int(profile.stable_pause_ms or 0))
+    profile.stable_pause_ms = max(0, int(profile.stable_pause_ms or 0))
