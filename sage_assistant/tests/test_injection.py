@@ -89,6 +89,8 @@ def test_write_injection_queue_writes_all_valid_lines(tmp_path):
     assert payload["profile"]["injection_mode"] == REAL_SAGE_ONE_LINE_MODE
     assert payload["profile"]["confirmation_mode"] == "simple"
     assert payload["profile"]["stable_pause_ms"] == 220
+    assert payload["profile"]["delay_ms"] == 220
+    assert payload["control_path"].endswith(".control")
     assert "diagnostics_path" in payload["profile"]
 
 
@@ -192,6 +194,7 @@ def test_settings_persist_separate_portal_credentials(tmp_path):
     settings.pfs_email = "pfs@example.com"
     settings.pfs_password = "pfs-secret"
     settings.portal_order_limit = 250
+    settings.microstore_product_resync_hours = 12
     path = tmp_path / "settings.json"
 
     save_settings(settings, path)
@@ -202,11 +205,13 @@ def test_settings_persist_separate_portal_credentials(tmp_path):
     assert loaded.pfs_email == "pfs@example.com"
     assert loaded.pfs_password == "pfs-secret"
     assert loaded.portal_order_limit == 250
+    assert loaded.microstore_product_resync_hours == 12
 
 
-def test_injection_confirmation_mode_and_stable_pause_are_persisted(tmp_path):
+def test_injection_confirmation_mode_and_unified_delay_are_persisted(tmp_path):
     settings = AppSettings()
     settings.sage_profile.confirmation_mode = "direct"
+    settings.sage_profile.delay_ms = 80
     settings.sage_profile.stable_pause_ms = 350
     settings.sage_profile.capture_before_after = False
     settings.sage_profile.log_enabled = False
@@ -216,6 +221,7 @@ def test_injection_confirmation_mode_and_stable_pause_are_persisted(tmp_path):
     loaded = load_settings(path)
 
     assert loaded.sage_profile.confirmation_mode == "direct"
+    assert loaded.sage_profile.delay_ms == 350
     assert loaded.sage_profile.stable_pause_ms == 350
     assert loaded.sage_profile.capture_before_after is False
     assert loaded.sage_profile.log_enabled is False
@@ -239,19 +245,23 @@ def test_invalid_confirmation_mode_falls_back_to_simple(tmp_path):
     assert loaded.sage_profile.confirmation_mode == "simple"
 
 
-def test_stable_pause_can_be_zero_for_speed_tests(tmp_path):
+def test_unified_delay_can_be_zero_for_speed_tests(tmp_path):
     settings = AppSettings()
+    settings.sage_profile.delay_ms = 0
     settings.sage_profile.stable_pause_ms = 0
     path = tmp_path / "settings.json"
 
     save_settings(settings, path)
     loaded = load_settings(path)
 
+    assert loaded.sage_profile.delay_ms == 0
     assert loaded.sage_profile.stable_pause_ms == 0
 
 
-def test_ahk_appends_reference_to_sage_description():
+def test_ahk_replaces_description_from_queue_and_reads_control_file():
     script = (Path(__file__).resolve().parents[1] / "automation" / "sage_injector.ahk").read_text(encoding="utf-8")
 
-    assert 'SendText(" " line["ref"])' in script
-    assert 'SendText(NormalizeSpaces(line["description"]))' not in script
+    assert 'SendText(" " line["ref"])' not in script
+    assert 'SendText(NormalizeSpaces(line["description"]))' in script
+    assert 'ControlPath := queue.Has("control_path") ? queue["control_path"] : ""' in script
+    assert "CheckExternalControl()" in script

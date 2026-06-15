@@ -38,8 +38,12 @@ def write_injection_queue(
         settings.sage_profile.log_path = str(default_ahk_log_path())
     if not settings.sage_profile.diagnostics_path:
         settings.sage_profile.diagnostics_path = str(default_ahk_diagnostics_path())
+    settings.sage_profile.stable_pause_ms = settings.sage_profile.delay_ms
+    control_path = queue_path.with_suffix(".control")
+    control_path.write_text("running", encoding="utf-8")
     payload = {
         "created_at": utc_now_iso(),
+        "control_path": str(control_path),
         "profile": asdict(settings.sage_profile),
         "source_line_count": len(lines),
         "line_limit": 0,

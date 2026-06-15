@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from http.cookiejar import CookieJar
+from http.cookiejar import Cookie, CookieJar
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -72,6 +72,23 @@ class PortalOrder:
         return [line.to_order_row() for line in self.lines]
 
 
+@dataclass(frozen=True)
+class PortalClient:
+    source: str
+    client_id: str
+    client_key: str
+    name: str = ""
+    company: str = ""
+    phone: str = ""
+    email: str = ""
+    address: str = ""
+    zip_code: str = ""
+    city: str = ""
+    country: str = ""
+    vat_number: str = ""
+    raw: dict[str, Any] = field(default_factory=dict)
+
+
 class PortalApiError(RuntimeError):
     pass
 
@@ -81,6 +98,8 @@ class PortalSession:
     source: str
     user_label: str = ""
     expires_at: str = ""
+    auth_token: str = ""
+    cookies: list[dict[str, Any]] = field(default_factory=list)
     raw: dict[str, Any] = field(default_factory=dict)
 
 
@@ -380,6 +399,47 @@ def normalize_microstore_order_detail(raw: dict[str, Any]) -> PortalOrder:
     )
 
 
+def normalize_microstore_client(raw: dict[str, Any]) -> PortalClient | None:
+    client_id = str(raw.get("id") or raw.get("client_id") or raw.get("uid") or "").strip()
+    company = _first_text(raw, "company_name", "company", "societe", "shop_name", "name_company")
+    first_name = _first_text(raw, "first_name", "firstname", "prenom")
+    last_name = _first_text(raw, "last_name", "lastname", "nom")
+    name = _first_text(raw, "name", "customer_name", "contact_name") or " ".join(part for part in (first_name, last_name) if part)
+    email = _first_text(raw, "email", "mail", "customer_mail")
+    phone = _first_text(raw, "phone", "telephone", "tel", "mobile", "customer_phone")
+    key = client_id or email or company or name
+    if not key:
+        return None
+    return PortalClient(
+        source="Microstore",
+        client_id=client_id or key,
+        client_key=key,
+        name=name.strip(),
+        company=company.strip(),
+        phone=phone.strip(),
+        email=email.strip(),
+        address=_first_text(raw, "address", "adresse", "street"),
+        zip_code=_first_text(raw, "zip", "zipcode", "postal_code", "codePostal"),
+        city=_first_text(raw, "city", "ville"),
+        country=_first_text(raw, "country", "pays", "country_name"),
+        vat_number=_first_text(raw, "vat", "tva", "vat_number", "company_id"),
+        raw=raw,
+    )
+
+
+def _export_http_cookies(http: Any) -> list[dict[str, Any]]:
+    exporter = getattr(http, "export_cookies", None)
+    if callable(exporter):
+        return exporter()
+    return []
+
+
+def _import_http_cookies(http: Any, cookies: list[dict[str, Any]]) -> None:
+    importer = getattr(http, "import_cookies", None)
+    if callable(importer):
+        importer(cookies)
+
+
 class JsonHttpClient:
     def __init__(self, headers: dict[str, str] | None = None, timeout: int = 30, cookie_jar: CookieJar | None = None) -> None:
         self.headers = {**DEFAULT_BROWSER_HEADERS, **(headers or {})}
@@ -392,6 +452,57 @@ class JsonHttpClient:
 
     def set_bearer_token(self, token: str) -> None:
         self.set_header("Authorization", f"Bearer {token}")
+
+    def export_cookies(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "version": cookie.version,
+                "name": cookie.name,
+                "value": cookie.value,
+                "port": cookie.port,
+                "port_specified": cookie.port_specified,
+                "domain": cookie.domain,
+                "domain_specified": cookie.domain_specified,
+                "domain_initial_dot": cookie.domain_initial_dot,
+                "path": cookie.path,
+                "path_specified": cookie.path_specified,
+                "secure": cookie.secure,
+                "expires": cookie.expires,
+                "discard": cookie.discard,
+                "comment": cookie.comment,
+                "comment_url": cookie.comment_url,
+                "rest": dict(cookie._rest),
+                "rfc2109": cookie.rfc2109,
+            }
+            for cookie in self.cookie_jar
+        ]
+
+    def import_cookies(self, cookies: list[dict[str, Any]]) -> None:
+        for raw in cookies or []:
+            try:
+                self.cookie_jar.set_cookie(
+                    Cookie(
+                        version=int(raw.get("version") or 0),
+                        name=str(raw.get("name") or ""),
+                        value=str(raw.get("value") or ""),
+                        port=raw.get("port"),
+                        port_specified=bool(raw.get("port_specified")),
+                        domain=str(raw.get("domain") or ""),
+                        domain_specified=bool(raw.get("domain_specified")),
+                        domain_initial_dot=bool(raw.get("domain_initial_dot")),
+                        path=str(raw.get("path") or "/"),
+                        path_specified=bool(raw.get("path_specified", True)),
+                        secure=bool(raw.get("secure")),
+                        expires=raw.get("expires"),
+                        discard=bool(raw.get("discard")),
+                        comment=raw.get("comment"),
+                        comment_url=raw.get("comment_url"),
+                        rest=raw.get("rest") if isinstance(raw.get("rest"), dict) else {},
+                        rfc2109=bool(raw.get("rfc2109")),
+                    )
+                )
+            except Exception:
+                continue
 
     def get_json(self, url: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         if params:
@@ -453,9 +564,14 @@ class EfashionConnector:
         self.session = PortalSession(
             source="eFashion",
             user_label=str(user.get("nomBoutique") or user.get("email") or email),
+            cookies=_export_http_cookies(self.http),
             raw=user,
         )
         return self.session
+
+    def restore_session(self, session: PortalSession) -> None:
+        self.session = session
+        _import_http_cookies(self.http, session.cookies)
 
     def list_orders(self, page: int = 1, limit: int = 25, filters: dict[str, Any] | None = None) -> list[PortalOrderSummary]:
         body = self.http.post_json(
@@ -563,6 +679,32 @@ class MicrostoreConnector:
             page += 1
         return summaries
 
+    def list_clients(self, page_size: int = 200) -> list[PortalClient]:
+        clients: list[PortalClient] = []
+        page = 1
+        while True:
+            body = self.http.get_json(
+                f"{self.api_base_url}/client/get_by_order",
+                self._params(
+                    {
+                        "bi_key": "clientList",
+                        "page": page,
+                        "page_num": page_size,
+                    }
+                ),
+            )
+            if int(body.get("err") or 0) != 0:
+                raise PortalApiError(str(body.get("msg") or body.get("debug_msg") or "Erreur clients Microstore"))
+            for raw in body.get("list") or body.get("data") or []:
+                if isinstance(raw, dict):
+                    client = normalize_microstore_client(raw)
+                    if client:
+                        clients.append(client)
+            if int(body.get("is_last") or 0) == 1 or not (body.get("list") or body.get("data")):
+                break
+            page += 1
+        return clients
+
     def get_order(self, order_id: str | int) -> PortalOrder:
         body = self.http.get_json(
             f"{self.api_base_url}/pluginsWeb/orderInfo/{order_id}",
@@ -648,9 +790,17 @@ class PfsConnector:
             source="PFS",
             user_label=user_label or str(user.get("name") or user.get("email") or email),
             expires_at=str(body.get("expires_at") or ""),
+            auth_token=str(token),
+            cookies=_export_http_cookies(self.http),
             raw={key: value for key, value in body.items() if key not in {"access_token", "token"}},
         )
         return self.session
+
+    def restore_session(self, session: PortalSession) -> None:
+        self.session = session
+        if session.auth_token:
+            self.http.set_bearer_token(session.auth_token)
+        _import_http_cookies(self.http, session.cookies)
 
     def list_orders(
         self,

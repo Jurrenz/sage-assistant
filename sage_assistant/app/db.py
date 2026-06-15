@@ -6,8 +6,8 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Iterable
 
-from .models import Product, SageMapping, utc_now_iso
-from .portal_orders import PortalOrder, PortalOrderLine, PortalOrderSummary
+from .models import InvoiceLine, Product, SageMapping, utc_now_iso
+from .portal_orders import PortalClient, PortalOrder, PortalOrderLine, PortalOrderSummary
 from .settings import default_db_path
 from .default_mappings import DEFAULT_SAGE_MAPPINGS
 
@@ -108,6 +108,35 @@ CREATE TABLE IF NOT EXISTS cached_orders (
 
 CREATE INDEX IF NOT EXISTS idx_cached_orders_created_at ON cached_orders(created_at);
 CREATE INDEX IF NOT EXISTS idx_cached_orders_source ON cached_orders(source);
+
+CREATE TABLE IF NOT EXISTS order_line_edits (
+    source TEXT NOT NULL,
+    order_key TEXT NOT NULL,
+    lines_json TEXT NOT NULL DEFAULT '[]',
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY(source, order_key)
+);
+
+CREATE TABLE IF NOT EXISTS clients (
+    source TEXT NOT NULL,
+    client_key TEXT NOT NULL,
+    client_id TEXT NOT NULL DEFAULT '',
+    name TEXT NOT NULL DEFAULT '',
+    company TEXT NOT NULL DEFAULT '',
+    phone TEXT NOT NULL DEFAULT '',
+    email TEXT NOT NULL DEFAULT '',
+    address TEXT NOT NULL DEFAULT '',
+    zip_code TEXT NOT NULL DEFAULT '',
+    city TEXT NOT NULL DEFAULT '',
+    country TEXT NOT NULL DEFAULT '',
+    vat_number TEXT NOT NULL DEFAULT '',
+    raw_json TEXT NOT NULL DEFAULT '{}',
+    synced_at TEXT NOT NULL,
+    PRIMARY KEY(source, client_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_clients_source ON clients(source);
+CREATE INDEX IF NOT EXISTS idx_clients_name ON clients(name, company);
 """
 
 
@@ -192,6 +221,29 @@ class Database:
         for column, statement in migrations.items():
             if column not in product_columns:
                 self.conn.execute(statement)
+        self.conn.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS clients (
+                source TEXT NOT NULL,
+                client_key TEXT NOT NULL,
+                client_id TEXT NOT NULL DEFAULT '',
+                name TEXT NOT NULL DEFAULT '',
+                company TEXT NOT NULL DEFAULT '',
+                phone TEXT NOT NULL DEFAULT '',
+                email TEXT NOT NULL DEFAULT '',
+                address TEXT NOT NULL DEFAULT '',
+                zip_code TEXT NOT NULL DEFAULT '',
+                city TEXT NOT NULL DEFAULT '',
+                country TEXT NOT NULL DEFAULT '',
+                vat_number TEXT NOT NULL DEFAULT '',
+                raw_json TEXT NOT NULL DEFAULT '{}',
+                synced_at TEXT NOT NULL,
+                PRIMARY KEY(source, client_key)
+            );
+            CREATE INDEX IF NOT EXISTS idx_clients_source ON clients(source);
+            CREATE INDEX IF NOT EXISTS idx_clients_name ON clients(name, company);
+            """
+        )
 
     def log(self, event_type: str, message: str) -> None:
         self.conn.execute(
@@ -734,6 +786,193 @@ class Database:
                 ),
             )
 
+    def delete_cached_order(self, source: str, order_key: str) -> None:
+        with self.conn:
+            self.conn.execute(
+                "DELETE FROM cached_orders WHERE source = ? AND order_key = ?",
+                (source.strip(), order_key.strip()),
+            )
+            self.conn.execute(
+                "DELETE FROM order_statuses WHERE source = ? AND order_key = ?",
+                (source.strip(), order_key.strip()),
+            )
+            self.conn.execute(
+                "DELETE FROM order_line_edits WHERE source = ? AND order_key = ?",
+                (source.strip(), order_key.strip()),
+            )
+        self.log("order_delete", f"{source.strip()} {order_key.strip()} supprime")
+
+    def clear_cached_orders(self, source: str | None = None) -> int:
+        if source:
+            count = self.count_cached_orders(source)
+            with self.conn:
+                self.conn.execute("DELETE FROM cached_orders WHERE source = ?", (source,))
+                self.conn.execute("DELETE FROM order_statuses WHERE source = ?", (source,))
+                self.conn.execute("DELETE FROM order_line_edits WHERE source = ?", (source,))
+            self.log("orders_clear", f"{count} commande(s) {source} supprimee(s)")
+            return count
+        count = self.count_cached_orders()
+        with self.conn:
+            self.conn.execute("DELETE FROM cached_orders")
+            self.conn.execute("DELETE FROM order_statuses")
+            self.conn.execute("DELETE FROM order_line_edits")
+        self.log("orders_clear", f"{count} commande(s) supprimee(s)")
+        return count
+
+    def save_order_line_edits(self, source: str, order_key: str, lines: list[InvoiceLine], status: str) -> None:
+        source_key = source.strip()
+        order_key_clean = order_key.strip()
+        updated_at = utc_now_iso()
+        payload = [self._invoice_line_to_payload(line) for line in lines]
+        package_count = sum(line.package_count or 0 for line in lines)
+        piece_count = sum(line.quantity_pieces or 0 for line in lines)
+        total_amount = sum((line.unit_price_ht or Decimal("0")) * Decimal(line.quantity_pieces or 0) for line in lines)
+        with self.conn:
+            self.conn.execute(
+                """
+                INSERT INTO order_line_edits(source, order_key, lines_json, updated_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(source, order_key) DO UPDATE SET
+                    lines_json = excluded.lines_json,
+                    updated_at = excluded.updated_at
+                """,
+                (source_key, order_key_clean, json.dumps(payload, ensure_ascii=False, default=_json_default), updated_at),
+            )
+            self.conn.execute(
+                """
+                UPDATE cached_orders
+                SET
+                    computed_status = ?,
+                    line_count = ?,
+                    package_count = ?,
+                    piece_count = ?,
+                    total_amount = ?
+                WHERE source = ? AND order_key = ?
+                """,
+                (status, len(lines), package_count, piece_count, str(total_amount), source_key, order_key_clean),
+            )
+            self.conn.execute(
+                """
+                INSERT INTO order_statuses(source, order_key, status, updated_at, note)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(source, order_key) DO UPDATE SET
+                    status = excluded.status,
+                    updated_at = excluded.updated_at,
+                    note = excluded.note
+                """,
+                (source_key, order_key_clean, status, updated_at, "corrections auto"),
+            )
+        self.log("order_line_edits", f"{source_key} {order_key_clean}: {len(lines)} ligne(s) sauvegardee(s)")
+
+    def get_order_line_edits(self, source: str, order_key: str) -> list[InvoiceLine] | None:
+        row = self.conn.execute(
+            "SELECT lines_json FROM order_line_edits WHERE source = ? AND order_key = ?",
+            (source.strip(), order_key.strip()),
+        ).fetchone()
+        if not row:
+            return None
+        try:
+            payload = json.loads(row["lines_json"])
+        except json.JSONDecodeError:
+            return None
+        if not isinstance(payload, list):
+            return None
+        return [self._invoice_line_from_payload(item) for item in payload if isinstance(item, dict)]
+
+    def clear_order_line_edits(self, source: str, order_key: str) -> None:
+        with self.conn:
+            self.conn.execute(
+                "DELETE FROM order_line_edits WHERE source = ? AND order_key = ?",
+                (source.strip(), order_key.strip()),
+            )
+        self.log("order_line_edits_reset", f"{source.strip()} {order_key.strip()}")
+
+    def upsert_clients(self, clients: Iterable[PortalClient]) -> int:
+        rows = list(clients)
+        synced_at = utc_now_iso()
+        count = 0
+        with self.conn:
+            for client in rows:
+                key = (client.client_key or client.client_id or client.email or client.company or client.name).strip()
+                if not key:
+                    continue
+                self.conn.execute(
+                    """
+                    INSERT INTO clients(
+                        source, client_key, client_id, name, company, phone, email,
+                        address, zip_code, city, country, vat_number, raw_json, synced_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(source, client_key) DO UPDATE SET
+                        client_id = excluded.client_id,
+                        name = excluded.name,
+                        company = excluded.company,
+                        phone = excluded.phone,
+                        email = excluded.email,
+                        address = excluded.address,
+                        zip_code = excluded.zip_code,
+                        city = excluded.city,
+                        country = excluded.country,
+                        vat_number = excluded.vat_number,
+                        raw_json = excluded.raw_json,
+                        synced_at = excluded.synced_at
+                    """,
+                    (
+                        client.source,
+                        key,
+                        client.client_id,
+                        client.name,
+                        client.company,
+                        client.phone,
+                        client.email,
+                        client.address,
+                        client.zip_code,
+                        client.city,
+                        client.country,
+                        client.vat_number,
+                        json.dumps(client.raw, ensure_ascii=False, default=_json_default),
+                        synced_at,
+                    ),
+                )
+                count += 1
+        if count:
+            self.log("client_sync", f"{count} client(s) sauvegarde(s)")
+        return count
+
+    def list_clients(self, source: str = "Microstore", search: str = "", limit: int = 1000) -> list[PortalClient]:
+        clauses = ["source = ?"]
+        params: list[object] = [source]
+        query = search.strip().lower()
+        if query:
+            clauses.append(
+                "(LOWER(name) LIKE ? OR LOWER(company) LIKE ? OR LOWER(email) LIKE ? OR LOWER(phone) LIKE ? OR LOWER(city) LIKE ?)"
+            )
+            params.extend([f"%{query}%"] * 5)
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM clients
+            WHERE {' AND '.join(clauses)}
+            ORDER BY synced_at DESC, company COLLATE NOCASE, name COLLATE NOCASE
+            LIMIT ?
+            """,
+            (*params, limit),
+        ).fetchall()
+        return [self._row_to_client(row) for row in rows]
+
+    def get_client(self, source: str, client_key: str) -> PortalClient | None:
+        row = self.conn.execute(
+            "SELECT * FROM clients WHERE source = ? AND client_key = ?",
+            (source.strip(), client_key.strip()),
+        ).fetchone()
+        return self._row_to_client(row) if row else None
+
+    def find_client(self, source: str, text: str) -> PortalClient | None:
+        query = text.strip().lower()
+        if not query:
+            return None
+        rows = self.list_clients(source=source, search=query, limit=5)
+        return rows[0] if rows else None
+
     def list_cached_order_summaries(self) -> list[PortalOrderSummary]:
         rows = self.conn.execute("SELECT * FROM cached_orders ORDER BY created_at DESC, order_key DESC").fetchall()
         return [self._row_to_cached_summary(row) for row in rows]
@@ -756,6 +995,13 @@ class Database:
             row = self.conn.execute("SELECT MAX(synced_at) AS latest FROM cached_orders").fetchone()
         return row["latest"] if row else None
 
+    def latest_client_sync(self, source: str | None = None) -> str | None:
+        if source:
+            row = self.conn.execute("SELECT MAX(synced_at) AS latest FROM clients WHERE source = ?", (source,)).fetchone()
+        else:
+            row = self.conn.execute("SELECT MAX(synced_at) AS latest FROM clients").fetchone()
+        return row["latest"] if row else None
+
     def count_products(self) -> int:
         row = self.conn.execute("SELECT COUNT(*) AS count FROM products WHERE active = 1").fetchone()
         return int(row["count"] or 0)
@@ -765,6 +1011,13 @@ class Database:
             row = self.conn.execute("SELECT COUNT(*) AS count FROM cached_orders WHERE source = ?", (source,)).fetchone()
         else:
             row = self.conn.execute("SELECT COUNT(*) AS count FROM cached_orders").fetchone()
+        return int(row["count"] or 0)
+
+    def count_clients(self, source: str | None = None) -> int:
+        if source:
+            row = self.conn.execute("SELECT COUNT(*) AS count FROM clients WHERE source = ?", (source,)).fetchone()
+        else:
+            row = self.conn.execute("SELECT COUNT(*) AS count FROM clients").fetchone()
         return int(row["count"] or 0)
 
     def latest_product_import(self) -> str | None:
@@ -840,6 +1093,23 @@ class Database:
             is_active=bool(row["is_active"]),
         )
 
+    def _row_to_client(self, row: sqlite3.Row) -> PortalClient:
+        return PortalClient(
+            source=row["source"],
+            client_id=row["client_id"],
+            client_key=row["client_key"],
+            name=row["name"],
+            company=row["company"],
+            phone=row["phone"],
+            email=row["email"],
+            address=row["address"],
+            zip_code=row["zip_code"],
+            city=row["city"],
+            country=row["country"],
+            vat_number=row["vat_number"],
+            raw=_json_loads(row["raw_json"]),
+        )
+
     def _row_to_cached_summary(self, row: sqlite3.Row) -> PortalOrderSummary:
         return PortalOrderSummary(
             source=row["source"],
@@ -879,6 +1149,46 @@ class Database:
             lines=lines,
             raw=payload.get("raw") if isinstance(payload.get("raw"), dict) else {},
         )
+
+    def _invoice_line_to_payload(self, line: InvoiceLine) -> dict:
+        return {
+            "ref": line.ref,
+            "sage_code": line.sage_code,
+            "description": line.description,
+            "quantity_pieces": line.quantity_pieces,
+            "package_count": line.package_count,
+            "package_size": line.package_size,
+            "unit_price_ht": str(line.unit_price_ht) if line.unit_price_ht is not None else None,
+            "catalog_unit_price_ht": str(line.catalog_unit_price_ht) if line.catalog_unit_price_ht is not None else None,
+            "order_unit_price_ht": str(line.order_unit_price_ht) if line.order_unit_price_ht is not None else None,
+            "price_confirmed": line.price_confirmed,
+            "product_id": line.product_id,
+            "type_label": line.type_label,
+            "validation_status": line.validation_status,
+            "validation_message": line.validation_message,
+            "source": line.source,
+        }
+
+    def _invoice_line_from_payload(self, payload: dict) -> InvoiceLine:
+        line = InvoiceLine(
+            ref=str(payload.get("ref") or "").strip().upper(),
+            sage_code=str(payload.get("sage_code") or ""),
+            description=str(payload.get("description") or ""),
+            quantity_pieces=int(payload.get("quantity_pieces") or 0),
+            package_count=int(payload["package_count"]) if payload.get("package_count") not in (None, "") else None,
+            package_size=int(payload["package_size"]) if payload.get("package_size") not in (None, "") else None,
+            unit_price_ht=_decimal_or_none(payload.get("unit_price_ht")),
+            catalog_unit_price_ht=_decimal_or_none(payload.get("catalog_unit_price_ht")),
+            order_unit_price_ht=_decimal_or_none(payload.get("order_unit_price_ht")),
+            price_confirmed=bool(payload.get("price_confirmed", True)),
+            product_id=int(payload["product_id"]) if payload.get("product_id") not in (None, "") else None,
+            type_label=str(payload.get("type_label") or ""),
+            validation_status=str(payload.get("validation_status") or "pending"),
+            validation_message=str(payload.get("validation_message") or ""),
+            source=str(payload.get("source") or "manual"),
+        )
+        line.validate()
+        return line
 
     def _order_to_payload(self, order: PortalOrder | None) -> dict:
         if order is None:

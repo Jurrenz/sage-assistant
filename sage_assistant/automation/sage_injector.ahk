@@ -14,6 +14,8 @@ global Paused := false
 global NextRequested := false
 global LogEnabled := true
 global CaptureEnabled := true
+global ControlPath := ""
+global LastControlCommand := ""
 
 ^!p:: {
     global Paused
@@ -51,6 +53,7 @@ jsonText := FileRead(queuePath, "UTF-8")
 queue := Jxon_Load(&jsonText)
 profile := queue["profile"]
 lines := queue["lines"]
+ControlPath := queue.Has("control_path") ? queue["control_path"] : ""
 
 windowTitle := profile.Has("window_title_contains") ? profile["window_title_contains"] : "Sage 50 : S.Z FASHION"
 injectionMode := "real_sage_one_line"
@@ -162,9 +165,9 @@ SendRealSageLineByKeyboard(line, validateKey, delayMs, windowTitle, focusGuard, 
     StableSleep(delayMs * 2, stablePauseMs)
     Send("{Space}")
     StableSleep(delayMs * 2, stablePauseMs)
-    Send("{End}")
+    Send("^a")
     StableSleep(delayMs * 2, stablePauseMs)
-    SendText(" " line["ref"])
+    SendText(NormalizeSpaces(line["description"]))
     StableSleep(delayMs * 2, stablePauseMs)
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"], realTarget["mainHwnd"])
     afterDescriptionPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after_description_" index)
@@ -384,7 +387,23 @@ CaptureWindow(hwnd, logPath, label) {
 }
 
 StableSleep(dynamicMs, stableMs) {
-    Sleep(Max(Integer(dynamicMs), Integer(stableMs)))
+    global StopRequested
+    duration := Max(Integer(dynamicMs), Integer(stableMs))
+    elapsed := 0
+    while elapsed < duration {
+        CheckExternalControl()
+        if StopRequested {
+            ExitApp(2)
+        }
+        WaitIfPaused()
+        chunk := Min(100, duration - elapsed)
+        Sleep(chunk)
+        elapsed += chunk
+    }
+    CheckExternalControl()
+    if StopRequested {
+        ExitApp(2)
+    }
 }
 
 NormalizeSpaces(text) {
@@ -418,8 +437,35 @@ ExitApp(0)
 
 WaitIfPaused() {
     global Paused, StopRequested
-    while Paused && !StopRequested {
+    while !StopRequested {
+        CheckExternalControl()
+        if !Paused {
+            break
+        }
         Sleep(100)
+    }
+}
+
+CheckExternalControl() {
+    global ControlPath, LastControlCommand, Paused, StopRequested
+    if !ControlPath || !FileExist(ControlPath) {
+        return
+    }
+    try {
+        command := StrLower(Trim(FileRead(ControlPath, "UTF-8")))
+    } catch {
+        return
+    }
+    if (command = LastControlCommand) {
+        return
+    }
+    LastControlCommand := command
+    if (command = "stop") {
+        StopRequested := true
+    } else if (command = "paused") {
+        Paused := true
+    } else if (command = "running") {
+        Paused := false
     }
 }
 
@@ -545,7 +591,7 @@ Jxon_Load(&src, args*) {
         throw Error("Aucune ligne trouvee dans la file injection.")
     }
 
-    return Map("profile", profile, "lines", lines)
+    return Map("profile", profile, "lines", lines, "control_path", JsonGetString(src, "control_path", ""))
 }
 
 JsonExtractObject(src, key) {

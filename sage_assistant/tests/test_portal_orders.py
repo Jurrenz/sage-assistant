@@ -9,6 +9,8 @@ from app.portal_orders import (
     EfashionConnector,
     MicrostoreConnector,
     PfsConnector,
+    PortalSession,
+    normalize_microstore_client,
     normalize_microstore_order_detail,
     normalize_microstore_order_summary,
     normalize_microstore_product,
@@ -268,6 +270,30 @@ def test_normalize_microstore_disabled_product_remains_resolvable():
     assert product.last_microstore_modified_at == "2026-06-08T10:03:20Z"
 
 
+def test_normalize_microstore_client():
+    client = normalize_microstore_client(
+        {
+            "id": "42",
+            "company_name": "ROMIE",
+            "first_name": "Caelle",
+            "last_name": "Boutique",
+            "email": "client@example.com",
+            "phone": "0650616033",
+            "city": "Sete",
+            "country": "France",
+            "vat_number": "FR123",
+        }
+    )
+
+    assert client is not None
+    assert client.source == "Microstore"
+    assert client.client_id == "42"
+    assert client.company == "ROMIE"
+    assert client.name == "Caelle Boutique"
+    assert client.email == "client@example.com"
+    assert client.city == "Sete"
+
+
 class FakeHttp:
     def __init__(self) -> None:
         self.calls = []
@@ -337,6 +363,12 @@ class FakeHttp:
                 "is_last": 1,
                 "list": [{"id": "1001627", "doc_sn": "1001627", "customer_name": "ROMIE", "calc_price": "492.00"}],
             }
+        if url.endswith("/client/get_by_order"):
+            return {
+                "err": 0,
+                "is_last": 1,
+                "list": [{"id": "client-1", "company_name": "ROMIE", "email": "client@example.com"}],
+            }
         if "/pluginsWeb/orderInfo/" in url:
             return {
                 "err": 0,
@@ -360,6 +392,7 @@ def test_connectors_call_expected_endpoints():
     microstore = MicrostoreConnector("micro-token", fake)
     assert microstore.list_products()[0].ref == "CM55-9"
     assert microstore.list_orders()[0].order_number == "1001627"
+    assert microstore.list_clients()[0].company == "ROMIE"
     assert microstore.get_order("1001627").lines[0].quantity_pieces == 24
     assert microstore.get_product("123").ref == "CM55-9"
     assert microstore.add_product({"item_ref": "CM55-9"}).ref == "CM55-9"
@@ -377,6 +410,7 @@ def test_connectors_call_expected_endpoints():
     methods_urls = [(method, url) for method, url, _payload in fake.calls]
     assert ("GET", f"{MICROSTORE_API_BASE_URL}/goods/get_by_order") in methods_urls
     assert ("GET", f"{MICROSTORE_API_BASE_URL}/order/new_view_all") in methods_urls
+    assert ("GET", f"{MICROSTORE_API_BASE_URL}/client/get_by_order") in methods_urls
     assert ("GET", f"{MICROSTORE_API_BASE_URL}/pluginsWeb/orderInfo/1001627") in methods_urls
     assert ("POST_FORM", f"{MICROSTORE_API_BASE_URL}/goods/get") in methods_urls
     assert ("POST_FORM", f"{MICROSTORE_API_BASE_URL}/goods/add") in methods_urls
@@ -479,9 +513,19 @@ def test_portal_api_logins_prepare_sessions_without_storing_passwords():
     assert pfs_session.source == "PFS"
     assert pfs_session.user_label == "Utilisateur PFS"
     assert fake.headers["Authorization"] == "Bearer fake-token"
+    assert pfs_session.auth_token == "fake-token"
     assert "access_token" not in pfs_session.raw
     assert "secret" not in str(efashion_session.raw)
     assert "secret" not in str(pfs_session.raw)
+
+
+def test_pfs_connector_can_restore_saved_session():
+    fake = FakeHttp()
+    connector = PfsConnector(fake)
+    connector.restore_session(PortalSession(source="PFS", user_label="Utilisateur PFS", auth_token="saved-token"))
+
+    assert connector.list_orders()[0].order_number == "PO#1"
+    assert fake.headers["Authorization"] == "Bearer saved-token"
 
 
 def test_portal_order_rows_resolve_to_invoice_lines(tmp_path):

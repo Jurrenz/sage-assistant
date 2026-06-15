@@ -11,6 +11,7 @@ from app.excel_import import OrderRow, import_order, import_products
 from app.main import (
     QUICK_INVOICE_SOURCE,
     line_headers_for_source,
+    lines_with_saved_order_edits,
     parse_quick_ref_text,
     quick_invoice_line_from_clipboard_cells,
     quick_invoice_line_to_clipboard_row,
@@ -18,7 +19,7 @@ from app.main import (
 )
 from app.microstore_product_writer import MicrostoreProductWriter
 from app.models import InvoiceLine, Product, SageMapping, build_sage_description
-from app.portal_orders import PortalOrder, PortalOrderLine, PortalOrderSummary
+from app.portal_orders import PortalClient, PortalOrder, PortalOrderLine, PortalOrderSummary
 from app.resolver import Resolver
 
 
@@ -203,6 +204,104 @@ def test_quick_invoice_can_be_persisted_as_cached_order(tmp_path):
     assert cached_order.lines[0].unit_price_ht == Decimal("6.80")
     assert cached_order.lines[0].raw["sage_code"] == "RO"
     reopened.close()
+
+
+def test_order_line_edits_are_persistent_and_resettable(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    summary = PortalOrderSummary(
+        source="Microstore",
+        order_id="1001",
+        order_number="1001",
+        customer="Client test",
+        total_amount=Decimal("12.00"),
+    )
+    detail = PortalOrder(
+        source="Microstore",
+        order_id="1001",
+        order_number="1001",
+        customer="Client test",
+        lines=[
+            PortalOrderLine(
+                ref="FL530-1",
+                category="ROBES COURTES",
+                package_count=1,
+                package_size=12,
+                quantity_pieces=12,
+                unit_price_ht=Decimal("6.80"),
+            )
+        ],
+    )
+    db.upsert_cached_order(summary, detail, "Prêt")
+    edited = InvoiceLine(
+        ref="FL530-1",
+        sage_code="RO",
+        description="ROBE / TUNIC FL530-1",
+        quantity_pieces=24,
+        package_count=2,
+        package_size=12,
+        unit_price_ht=Decimal("6.80"),
+        catalog_unit_price_ht=Decimal("6.80"),
+        order_unit_price_ht=Decimal("6.80"),
+        product_id=12,
+        type_label="ROBES COURTES",
+        source="Microstore",
+    )
+    edited.validate()
+    db.save_order_line_edits("Microstore", "1001", [edited], "Prêt")
+    db.close()
+
+    reopened = Database(tmp_path / "app.sqlite")
+    edits = reopened.get_order_line_edits("Microstore", "1001")
+
+    assert edits is not None
+    assert edits[0].quantity_pieces == 24
+    assert edits[0].sage_code == "RO"
+    assert reopened.list_cached_order_statuses()[("Microstore", "1001")] == "Prêt"
+    assert reopened.list_cached_order_summaries()[0].total_amount == Decimal("163.20")
+
+    reopened.clear_order_line_edits("Microstore", "1001")
+    assert reopened.get_order_line_edits("Microstore", "1001") is None
+    cached = reopened.get_cached_order("Microstore", "1001")
+    assert cached is not None
+    assert cached.lines[0].quantity_pieces == 12
+    reopened.close()
+
+
+def test_saved_order_edits_override_fallback_lines_before_injection(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    fallback = [
+        InvoiceLine(
+            ref="FL530-1",
+            sage_code="RO",
+            description="Original",
+            quantity_pieces=12,
+            unit_price_ht=Decimal("6.80"),
+            product_id=1,
+            type_label="ROBES COURTES",
+            source="Microstore",
+        )
+    ]
+    edited = [
+        InvoiceLine(
+            ref="FL530-1",
+            sage_code="RO",
+            description="Corrigé",
+            quantity_pieces=24,
+            unit_price_ht=Decimal("6.80"),
+            product_id=1,
+            type_label="ROBES COURTES",
+            source="Microstore",
+        )
+    ]
+    for line in [*fallback, *edited]:
+        line.validate()
+    db.save_order_line_edits("Microstore", "1001", edited, "Prêt")
+
+    selected = lines_with_saved_order_edits(db, "Microstore", "1001", fallback)
+
+    assert selected[0].description == "Corrigé"
+    assert selected[0].quantity_pieces == 24
+    db.close()
 
 
 def test_quick_invoice_clipboard_roundtrip_preserves_editable_details():
@@ -645,4 +744,33 @@ def test_cached_portal_orders_are_persistent(tmp_path):
     assert cached is not None
     assert cached.lines[0].ref == "FL530-1"
     assert cached.lines[0].unit_price_ht == Decimal("6.50")
+    reopened.close()
+
+
+def test_cached_clients_are_persistent_and_searchable(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+    db.upsert_clients(
+        [
+            PortalClient(
+                source="Microstore",
+                client_id="client-1",
+                client_key="client-1",
+                name="Caelle Boutique",
+                company="ROMIE",
+                phone="0650616033",
+                email="client@example.com",
+                city="Sete",
+                country="France",
+                raw={"id": "client-1"},
+            )
+        ]
+    )
+    db.close()
+
+    reopened = Database(tmp_path / "app.sqlite")
+    clients = reopened.list_clients("Microstore", search="romie")
+    assert reopened.count_clients("Microstore") == 1
+    assert clients[0].company == "ROMIE"
+    assert clients[0].email == "client@example.com"
+    assert reopened.find_client("Microstore", "Caelle") is not None
     reopened.close()

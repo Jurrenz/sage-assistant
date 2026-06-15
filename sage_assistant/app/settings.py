@@ -78,11 +78,13 @@ class AppSettings:
     sage_executable_path: str = ""
     microstore_api_token: str = ""
     microstore_sync_days: int = 45
+    microstore_product_resync_hours: int = 6
     portal_order_limit: int = 100
     efashion_email: str = ""
     efashion_password: str = ""
     pfs_email: str = ""
     pfs_password: str = ""
+    portal_sessions: dict[str, dict] = field(default_factory=dict)
     product_folder_path: str = ""
     last_product_file_path: str = ""
     order_folder_path: str = ""
@@ -132,4 +134,8 @@ def normalize_sage_profile(profile: SageProfile) -> None:
     profile.step_mode = False
     if profile.confirmation_mode not in CONFIRMATION_MODES:
         profile.confirmation_mode = "simple"
-    profile.stable_pause_ms = max(0, int(profile.stable_pause_ms or 0))
+    delay_ms = max(0, int(profile.delay_ms or 0))
+    stable_pause_ms = max(0, int(profile.stable_pause_ms or 0))
+    effective_delay = max(delay_ms, stable_pause_ms)
+    profile.delay_ms = effective_delay
+    profile.stable_pause_ms = effective_delay
