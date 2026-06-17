@@ -107,7 +107,7 @@ LINE_HEADERS = [
     "Prix Microstore",
     "Statut",
 ]
-MAPPING_HEADERS = ["Categorie fournisseur", "Code Sage", "Actif"]
+MAPPING_HEADERS = ["Categorie fournisseur", "Code Sage", "Libelle Sage", "Actif"]
 LINE_COL_REF = 0
 LINE_COL_CATEGORY = 1
 LINE_COL_CODE = 2
@@ -1451,6 +1451,7 @@ class SageMappingsDialog(QDialog):
     def __init__(self, db: Database, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.db = db
+        self.db.restore_default_mappings()
         self.setWindowTitle("Mappings Sage")
         self.resize(820, 620)
 
@@ -1460,8 +1461,11 @@ class SageMappingsDialog(QDialog):
         self.mapping_type.setPlaceholderText("Categorie fournisseur")
         self.mapping_code = QLineEdit()
         self.mapping_code.setPlaceholderText("Code Sage")
+        self.mapping_label = QLineEdit()
+        self.mapping_label.setPlaceholderText("Libelle Sage")
         form.addWidget(self.mapping_type, 3)
         form.addWidget(self.mapping_code, 1)
+        form.addWidget(self.mapping_label, 2)
         layout.addLayout(form)
 
         actions = QHBoxLayout()
@@ -1485,7 +1489,7 @@ class SageMappingsDialog(QDialog):
 
         self.table = QTableWidget(0, len(MAPPING_HEADERS))
         self.table.setHorizontalHeaderLabels(MAPPING_HEADERS)
-        configure_table_columns(self.table, {0: 360, 1: 90, 2: 70}, {0})
+        configure_table_columns(self.table, {0: 320, 1: 90, 2: 220, 3: 70}, {0, 2})
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -1498,7 +1502,12 @@ class SageMappingsDialog(QDialog):
         mappings = self.db.list_mappings(active_only=False)
         self.table.setRowCount(len(mappings))
         for row, mapping in enumerate(mappings):
-            values = [mapping.microstore_type, mapping.sage_code, "Oui" if mapping.is_active else "Non"]
+            values = [
+                mapping.microstore_type,
+                mapping.sage_code,
+                mapping.sage_label,
+                "Oui" if mapping.is_active else "Non",
+            ]
             for col, value in enumerate(values):
                 self.table.setItem(row, col, QTableWidgetItem(value))
 
@@ -1506,15 +1515,16 @@ class SageMappingsDialog(QDialog):
         self.table.clearSelection()
         self.mapping_type.clear()
         self.mapping_code.clear()
+        self.mapping_label.clear()
 
     def _save_mapping(self) -> None:
         mapping = SageMapping(
             microstore_type=self.mapping_type.text().strip(),
             sage_code=self.mapping_code.text().strip(),
-            sage_label=self.mapping_code.text().strip().upper(),
+            sage_label=self.mapping_label.text().strip(),
         )
-        if not mapping.microstore_type or not mapping.sage_code:
-            QMessageBox.warning(self, APP_NAME, "Categorie et code Sage sont obligatoires.")
+        if not mapping.microstore_type or not mapping.sage_code or not mapping.sage_label:
+            QMessageBox.warning(self, APP_NAME, "Categorie, code Sage et libelle Sage sont obligatoires.")
             return
         self.db.upsert_mapping(mapping)
         self._refresh()
@@ -1540,6 +1550,7 @@ class SageMappingsDialog(QDialog):
         row = rows[0]
         self.mapping_type.setText(self.table.item(row, 0).text())
         self.mapping_code.setText(self.table.item(row, 1).text())
+        self.mapping_label.setText(self.table.item(row, 2).text())
 
 
 class ProductDraftDialog(QDialog):
@@ -3915,6 +3926,7 @@ class MainWindow(QMainWindow):
             values = [
                 mapping.microstore_type,
                 mapping.sage_code,
+                mapping.sage_label,
                 "Oui" if mapping.is_active else "Non",
             ]
             for col, value in enumerate(values):
@@ -3925,15 +3937,17 @@ class MainWindow(QMainWindow):
         self.mapping_table.clearSelection()
         self.mapping_type.clear()
         self.mapping_code.clear()
+        if hasattr(self, "mapping_label"):
+            self.mapping_label.clear()
 
     def _save_mapping(self) -> None:
         mapping = SageMapping(
             microstore_type=self.mapping_type.text().strip(),
             sage_code=self.mapping_code.text().strip(),
-            sage_label=self.mapping_code.text().strip().upper(),
+            sage_label=self.mapping_label.text().strip() if hasattr(self, "mapping_label") else self.mapping_code.text().strip().upper(),
         )
-        if not mapping.microstore_type or not mapping.sage_code:
-            QMessageBox.warning(self, APP_NAME, "Categorie et code Sage sont obligatoires.")
+        if not mapping.microstore_type or not mapping.sage_code or not mapping.sage_label:
+            QMessageBox.warning(self, APP_NAME, "Categorie, code Sage et libelle Sage sont obligatoires.")
             return
         self.db.upsert_mapping(mapping)
         self._refresh_mappings_table()
@@ -3966,6 +3980,8 @@ class MainWindow(QMainWindow):
         row = rows[0]
         self.mapping_type.setText(self.mapping_table.item(row, 0).text())
         self.mapping_code.setText(self.mapping_table.item(row, 1).text())
+        if hasattr(self, "mapping_label") and self.mapping_table.item(row, 2):
+            self.mapping_label.setText(self.mapping_table.item(row, 2).text())
 
     def _save_app_settings(self) -> None:
         self._save_app_settings_silent()

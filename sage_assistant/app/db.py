@@ -693,7 +693,7 @@ class Database:
         with self.conn:
             for mapping in DEFAULT_SAGE_MAPPINGS:
                 row = self.conn.execute(
-                    "SELECT is_active FROM sage_type_mappings WHERE microstore_type = ?",
+                    "SELECT sage_code, sage_label, is_active FROM sage_type_mappings WHERE microstore_type = ?",
                     (mapping.microstore_type,),
                 ).fetchone()
                 if row is None:
@@ -709,6 +709,16 @@ class Database:
                     self.conn.execute(
                         "UPDATE sage_type_mappings SET is_active = 1 WHERE microstore_type = ?",
                         (mapping.microstore_type,),
+                    )
+                    count += 1
+                elif (
+                    str(row["sage_code"]).strip().upper() == mapping.sage_code.upper()
+                    and str(row["sage_label"]).strip().upper() == mapping.sage_code.upper()
+                    and mapping.sage_label.strip().upper() != mapping.sage_code.upper()
+                ):
+                    self.conn.execute(
+                        "UPDATE sage_type_mappings SET sage_label = ? WHERE microstore_type = ?",
+                        (mapping.sage_label, mapping.microstore_type),
                     )
                     count += 1
         if count:

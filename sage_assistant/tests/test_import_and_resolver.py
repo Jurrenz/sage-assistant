@@ -88,6 +88,20 @@ def test_restore_default_mappings_reactivates_without_overwriting_user_edits(tmp
     db.close()
 
 
+def test_restore_default_mappings_repairs_labels_accidentally_saved_as_codes(tmp_path):
+    db = Database(tmp_path / "app.sqlite")
+
+    db.upsert_mapping(SageMapping("SHORTS", "SH", "SH"))
+    restored = db.restore_default_mappings()
+    restored_mapping = db.get_mapping("SHORTS")
+
+    assert restored == 1
+    assert restored_mapping is not None
+    assert restored_mapping.sage_code == "SH"
+    assert restored_mapping.sage_label == "Short"
+    db.close()
+
+
 def test_order_statuses_are_persistent(tmp_path):
     db = Database(tmp_path / "app.sqlite")
 
