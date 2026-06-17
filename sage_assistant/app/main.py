@@ -1464,7 +1464,7 @@ class SageMappingsDialog(QDialog):
         form.addWidget(self.mapping_code, 1)
         layout.addLayout(form)
 
-        actions = QGridLayout()
+        actions = QHBoxLayout()
         new_button = make_button("Nouveau")
         new_button.clicked.connect(self._clear_form)
         save_button = make_button("Ajouter / modifier")
