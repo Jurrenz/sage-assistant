@@ -268,6 +268,10 @@ def test_ahk_replaces_description_from_queue_and_reads_control_file():
     assert "CheckExternalControl()" in script
     assert "EnableUserInputLock()" in script
     assert "DisableUserInputLock" in script
+    assert "RequestStop(" in script
+    assert 'RequestStop("hotkey")' in script
+    assert 'RequestStop("control_file")' in script
+    assert 'RequestStop("sleep")' in script
     assert "Ctrl+Alt+P" not in script
     assert "WaitIfPaused" not in script
     assert 'command = "paused"' not in script

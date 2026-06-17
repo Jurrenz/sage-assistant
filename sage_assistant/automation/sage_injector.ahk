@@ -15,10 +15,7 @@ global LastControlCommand := ""
 global UserInputLocked := false
 
 ^!s:: {
-    global StopRequested
-    StopRequested := true
-    ToolTip("Injection Sage stoppee")
-    SetTimer(() => ToolTip(), -1200)
+    RequestStop("hotkey")
 }
 
 OnExit(DisableUserInputLock)
@@ -103,6 +100,7 @@ focusAtArticle := false
 for index, line in lines {
     if StopRequested {
         LogLine(logPath, "STOP before line " index " ref=" line["ref"])
+        RequestStop("before_line")
         ExitApp(2)
     }
     EnsureSageActive(windowTitle, focusGuard, logPath, index, line["ref"], realTarget["mainHwnd"])
@@ -379,6 +377,7 @@ StableSleep(dynamicMs, stableMs) {
     while elapsed < duration {
         CheckExternalControl()
         if StopRequested {
+            RequestStop("sleep")
             ExitApp(2)
         }
         chunk := Min(100, duration - elapsed)
@@ -387,6 +386,7 @@ StableSleep(dynamicMs, stableMs) {
     }
     CheckExternalControl()
     if StopRequested {
+        RequestStop("sleep_end")
         ExitApp(2)
     }
 }
@@ -435,8 +435,19 @@ CheckExternalControl() {
     }
     LastControlCommand := command
     if (command = "stop") {
-        StopRequested := true
+        RequestStop("control_file")
     }
+}
+
+RequestStop(reason := "") {
+    global StopRequested, logPath
+    StopRequested := true
+    DisableUserInputLock()
+    if IsSet(logPath) && logPath {
+        LogLine(logPath, "STOP requested reason=" reason)
+    }
+    ToolTip("Injection Sage stoppee")
+    SetTimer(() => ToolTip(), -1200)
 }
 
 EnableUserInputLock() {
@@ -468,12 +479,9 @@ DisableUserInputLock(*) {
 }
 
 SwallowUserKey(*) {
-    global StopRequested
     key := RegExReplace(A_ThisHotkey, "^[*~$]+")
     if (StrLower(key) = "s" && GetKeyState("Ctrl", "P") && GetKeyState("Alt", "P")) {
-        StopRequested := true
-        ToolTip("Injection Sage stoppee")
-        SetTimer(() => ToolTip(), -1200)
+        RequestStop("locked_hotkey")
     }
 }
 

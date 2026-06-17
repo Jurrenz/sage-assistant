@@ -1399,11 +1399,20 @@ class InjectionControlDialog(QDialog):
         self.timer.setInterval(500)
         self.timer.timeout.connect(self._poll_process)
         self.timer.start()
+        self.force_stop_timer = QTimer(self)
+        self.force_stop_timer.setSingleShot(True)
+        self.force_stop_timer.setInterval(2500)
+        self.force_stop_timer.timeout.connect(self._force_stop_if_needed)
+        self.kill_stop_timer = QTimer(self)
+        self.kill_stop_timer.setSingleShot(True)
+        self.kill_stop_timer.setInterval(1000)
+        self.kill_stop_timer.timeout.connect(self._kill_stop_if_needed)
 
     def stop(self) -> None:
         self._write_control("stop")
-        self.status.setText("Arrêt demandé. Fin de l'étape en cours...")
+        self.status.setText("Arrêt demandé. Clavier/souris libérés.")
         self.stop_button.setEnabled(False)
+        self.force_stop_timer.start()
 
     def _write_control(self, value: str) -> None:
         try:
@@ -1416,6 +1425,8 @@ class InjectionControlDialog(QDialog):
         if return_code is None:
             return
         self.timer.stop()
+        self.force_stop_timer.stop()
+        self.kill_stop_timer.stop()
         self.stop_button.setEnabled(False)
         if return_code == 0:
             self.status.setText("Injection terminée. Vérifie visuellement Sage.")
@@ -1424,6 +1435,25 @@ class InjectionControlDialog(QDialog):
         else:
             self.status.setText(f"Injection terminée avec erreur ({return_code}).")
         QTimer.singleShot(2500, self.accept)
+
+    def _force_stop_if_needed(self) -> None:
+        if self.process.poll() is not None:
+            return
+        try:
+            self.process.terminate()
+        except OSError:
+            return
+        self.status.setText("Injection arrêtée de force.")
+        self.kill_stop_timer.start()
+
+    def _kill_stop_if_needed(self) -> None:
+        if self.process.poll() is not None:
+            return
+        try:
+            self.process.kill()
+        except OSError:
+            return
+        self.status.setText("Injection arrêtée.")
 
     def closeEvent(self, event) -> None:
         if self.process.poll() is None:
