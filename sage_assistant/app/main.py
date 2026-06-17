@@ -1057,7 +1057,12 @@ class OrderDetailDialog(QDialog):
             self.message_label.setText("Lien copie dans le presse-papiers.")
 
     def _remove_selected_lines(self) -> None:
-        rows = sorted({item.row() for item in self.table.selectedItems()}, reverse=True)
+        rows = {item.row() for item in self.table.selectedItems()}
+        rows.update(index.row() for index in self.table.selectionModel().selectedRows())
+        current_row = self.table.currentRow()
+        if current_row >= 0:
+            rows.add(current_row)
+        rows = sorted(rows, reverse=True)
         for row in rows:
             if row < len(self.lines):
                 del self.lines[row]
@@ -2485,12 +2490,15 @@ class MainWindow(QMainWindow):
 
     def _build_mappings_section(self) -> QGroupBox:
         box = QGroupBox("Mappings Sage")
-        layout = QHBoxLayout(box)
+        layout = QGridLayout(box)
         mappings_button = make_button("Mappings Sage")
         mappings_button.clicked.connect(self._open_mappings_dialog)
-        layout.addWidget(QLabel("Configurer les associations categorie fournisseur -> code Sage."))
-        layout.addStretch(1)
-        layout.addWidget(mappings_button)
+        label = QLabel("Configurer les associations categorie fournisseur -> code Sage.")
+        label.setWordWrap(True)
+        label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        layout.addWidget(label, 0, 0)
+        layout.addWidget(mappings_button, 0, 1)
+        layout.setColumnStretch(0, 1)
         return box
 
     def _build_injection_section(self) -> QGroupBox:
