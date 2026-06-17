@@ -91,6 +91,7 @@ def test_write_injection_queue_writes_all_valid_lines(tmp_path):
     assert payload["profile"]["stable_pause_ms"] == 220
     assert payload["profile"]["delay_ms"] == 220
     assert payload["control_path"].endswith(".control")
+    assert Path(payload["control_path"]).read_text(encoding="utf-8") == ""
     assert "diagnostics_path" in payload["profile"]
 
 
@@ -265,3 +266,9 @@ def test_ahk_replaces_description_from_queue_and_reads_control_file():
     assert 'SendText(NormalizeSpaces(line["description"]))' in script
     assert 'ControlPath := queue.Has("control_path") ? queue["control_path"] : ""' in script
     assert "CheckExternalControl()" in script
+    assert "EnableUserInputLock()" in script
+    assert "DisableUserInputLock" in script
+    assert "Ctrl+Alt+P" not in script
+    assert "WaitIfPaused" not in script
+    assert 'command = "paused"' not in script
+    assert 'command = "running"' not in script

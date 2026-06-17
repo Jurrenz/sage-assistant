@@ -1378,25 +1378,20 @@ class InjectionControlDialog(QDialog):
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_ShowWithoutActivating, True)
         self.setModal(False)
-        self.resize(340, 150)
+        self.resize(340, 125)
 
         layout = QVBoxLayout(self)
-        self.status = QLabel("Injection en cours. Ne touche pas à Sage pendant l'envoi.")
+        self.status = QLabel("Injection en cours. Le clavier et la souris sont réservés à Sage pendant l'envoi.")
         self.status.setWordWrap(True)
-        shortcuts = QLabel("Raccourcis: Ctrl+Alt+P pause/reprise | Ctrl+Alt+S stop")
+        shortcuts = QLabel("Arrêt d'urgence: bouton STOP ou Ctrl+Alt+S")
         shortcuts.setWordWrap(True)
         layout.addWidget(self.status)
         layout.addWidget(shortcuts)
 
         actions = QHBoxLayout()
-        self.pause_button = make_button("Pause")
-        self.resume_button = make_button("Reprendre")
-        self.stop_button = make_button("Stop")
-        self.pause_button.clicked.connect(self.pause)
-        self.resume_button.clicked.connect(self.resume)
+        self.stop_button = make_button("STOP")
         self.stop_button.clicked.connect(self.stop)
-        actions.addWidget(self.pause_button)
-        actions.addWidget(self.resume_button)
+        actions.addStretch(1)
         actions.addWidget(self.stop_button)
         layout.addLayout(actions)
 
@@ -1404,15 +1399,6 @@ class InjectionControlDialog(QDialog):
         self.timer.setInterval(500)
         self.timer.timeout.connect(self._poll_process)
         self.timer.start()
-        self._write_control("running")
-
-    def pause(self) -> None:
-        self._write_control("paused")
-        self.status.setText("Injection en pause. Clique Reprendre ou utilise Ctrl+Alt+P.")
-
-    def resume(self) -> None:
-        self._write_control("running")
-        self.status.setText("Injection reprise. Ne touche pas à Sage pendant l'envoi.")
 
     def stop(self) -> None:
         self._write_control("stop")
@@ -1430,8 +1416,6 @@ class InjectionControlDialog(QDialog):
         if return_code is None:
             return
         self.timer.stop()
-        self.pause_button.setEnabled(False)
-        self.resume_button.setEnabled(False)
         self.stop_button.setEnabled(False)
         if return_code == 0:
             self.status.setText("Injection terminée. Vérifie visuellement Sage.")

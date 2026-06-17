@@ -5,24 +5,14 @@ CoordMode("Mouse", "Screen")
 
 ; AutoHotkey v2 injector for Sage Assistant.
 ; Hotkeys:
-;   Ctrl+Alt+P = pause/resume
 ;   Ctrl+Alt+S = stop immediately
-;   Ctrl+Alt+N = next line in step mode
 
 global StopRequested := false
-global Paused := false
-global NextRequested := false
 global LogEnabled := true
 global CaptureEnabled := true
 global ControlPath := ""
 global LastControlCommand := ""
-
-^!p:: {
-    global Paused
-    Paused := !Paused
-    ToolTip(Paused ? "Injection Sage en pause" : "Injection Sage reprise")
-    SetTimer(() => ToolTip(), -1200)
-}
+global UserInputLocked := false
 
 ^!s:: {
     global StopRequested
@@ -31,12 +21,7 @@ global LastControlCommand := ""
     SetTimer(() => ToolTip(), -1200)
 }
 
-^!n:: {
-    global NextRequested
-    NextRequested := true
-    ToolTip("Ligne suivante")
-    SetTimer(() => ToolTip(), -700)
-}
+OnExit(DisableUserInputLock)
 
 if A_Args.Length < 1 {
     MsgBox("Usage: sage_injector.ahk chemin\vers\sage_queue.json")
@@ -76,7 +61,7 @@ if (confirmationMode = "debug") {
 LogLine(logPath, "START queue=" queuePath " lines=" lines.Length)
 
 if (confirmationMode = "debug") {
-    MsgBox("Prepare Sage sur une facture brouillon, puis clique OK.`nMode: Injection Sage reelle`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S", "Sage Assistant")
+    MsgBox("Prepare Sage sur une facture brouillon, puis clique OK.`nMode: Injection Sage reelle`n`nStop: Ctrl+Alt+S", "Sage Assistant")
 }
 
 if !WinExist(windowTitle) {
@@ -98,11 +83,12 @@ beforePath := CaptureWindow(realTarget["mainHwnd"], logPath, "before")
 if CaptureEnabled
     LogLine(logPath, "CAPTURE before=" beforePath)
 if (confirmationMode = "debug") {
-    MsgBox("Controle avant injection:`nFacture: " realTarget["invoiceTitle"] "`nBouton: &Ajouter`nLignes: " lines.Length "`n`nPause: Ctrl+Alt+P`nStop: Ctrl+Alt+S`n`nClique OK pour envoyer les lignes dans Sage.", "Sage Assistant")
+    MsgBox("Controle avant injection:`nFacture: " realTarget["invoiceTitle"] "`nBouton: &Ajouter`nLignes: " lines.Length "`n`nStop: Ctrl+Alt+S`n`nClique OK pour envoyer les lignes dans Sage.", "Sage Assistant")
 } else if (confirmationMode = "simple") {
     MsgBox("Sage pret: " realTarget["invoiceTitle"] "`nLignes: " lines.Length "`n`nClique OK pour injecter.", "Sage Assistant")
 }
 ActivateSageTarget(realTarget["mainHwnd"], windowTitle)
+EnableUserInputLock()
 EnsureSageActive(windowTitle, focusGuard, logPath, 1, lines[1]["ref"], realTarget["mainHwnd"])
 Click(realTarget["addCenterX"], realTarget["addCenterY"])
 StableSleep(delayMs * 2, stablePauseMs)
@@ -115,7 +101,6 @@ LogLine(logPath, "ACTIVE after_add rect=" activeCell.left "," activeCell.top ","
 focusAtArticle := false
 
 for index, line in lines {
-    WaitIfPaused()
     if StopRequested {
         LogLine(logPath, "STOP before line " index " ref=" line["ref"])
         ExitApp(2)
@@ -131,6 +116,7 @@ afterPath := CaptureWindow(realTarget["mainHwnd"], logPath, "after")
 if CaptureEnabled
     LogLine(logPath, "CAPTURE after=" afterPath)
 LogLine(logPath, "DONE lines=" lines.Length)
+DisableUserInputLock()
 if (confirmationMode = "debug" && CaptureEnabled)
     MsgBox("Injection envoyee.`nVerifie visuellement les lignes dans Sage avant toute autre action.`n`nCapture avant:`n" beforePath "`n`nCapture apres clic:`n" afterClickPath "`n`nCapture apres:`n" afterPath, "Sage Assistant")
 else if (confirmationMode = "simple")
@@ -395,7 +381,6 @@ StableSleep(dynamicMs, stableMs) {
         if StopRequested {
             ExitApp(2)
         }
-        WaitIfPaused()
         chunk := Min(100, duration - elapsed)
         Sleep(chunk)
         elapsed += chunk
@@ -435,19 +420,8 @@ ToolTip("Injection Sage terminee")
 SetTimer(() => ToolTip(), -1500)
 ExitApp(0)
 
-WaitIfPaused() {
-    global Paused, StopRequested
-    while !StopRequested {
-        CheckExternalControl()
-        if !Paused {
-            break
-        }
-        Sleep(100)
-    }
-}
-
 CheckExternalControl() {
-    global ControlPath, LastControlCommand, Paused, StopRequested
+    global ControlPath, LastControlCommand, StopRequested
     if !ControlPath || !FileExist(ControlPath) {
         return
     }
@@ -462,22 +436,95 @@ CheckExternalControl() {
     LastControlCommand := command
     if (command = "stop") {
         StopRequested := true
-    } else if (command = "paused") {
-        Paused := true
-    } else if (command = "running") {
-        Paused := false
     }
 }
 
-WaitNextLine(index, ref, logPath) {
-    global NextRequested, StopRequested
-    NextRequested := false
-    ToolTip("Pret ligne " index " / " ref ". Ctrl+Alt+N pour envoyer.")
-    LogLine(logPath, "WAIT line=" index " ref=" ref)
-    while !NextRequested && !StopRequested {
-        Sleep(100)
+EnableUserInputLock() {
+    global UserInputLocked
+    if UserInputLocked {
+        return
     }
-    ToolTip()
+    UserInputLocked := true
+    for key in UserInputLockKeys() {
+        try Hotkey("*" key, SwallowUserKey, "On")
+    }
+    for key in UserInputLockMouseKeys() {
+        try Hotkey("*" key, GuardUserMouse, "On")
+    }
+}
+
+DisableUserInputLock(*) {
+    global UserInputLocked
+    if !UserInputLocked {
+        return
+    }
+    for key in UserInputLockKeys() {
+        try Hotkey("*" key, "Off")
+    }
+    for key in UserInputLockMouseKeys() {
+        try Hotkey("*" key, "Off")
+    }
+    UserInputLocked := false
+}
+
+SwallowUserKey(*) {
+    global StopRequested
+    key := RegExReplace(A_ThisHotkey, "^[*~$]+")
+    if (StrLower(key) = "s" && GetKeyState("Ctrl", "P") && GetKeyState("Alt", "P")) {
+        StopRequested := true
+        ToolTip("Injection Sage stoppee")
+        SetTimer(() => ToolTip(), -1200)
+    }
+}
+
+GuardUserMouse(*) {
+    if !MouseOverInjectionControl() {
+        return
+    }
+    hotkeyName := A_ThisHotkey
+    key := RegExReplace(hotkeyName, "^[*~$]+")
+    try Hotkey(hotkeyName, "Off")
+    try Send("{" key "}")
+    try Hotkey(hotkeyName, GuardUserMouse, "On")
+}
+
+MouseOverInjectionControl() {
+    try {
+        MouseGetPos(, , &hwnd)
+        if !hwnd {
+            return false
+        }
+        title := WinGetTitle("ahk_id " hwnd)
+        if (InStr(title, "Injection Sage en cours") > 0) {
+            return true
+        }
+        rootHwnd := DllCall("GetAncestor", "ptr", hwnd, "uint", 2, "ptr")
+        if !rootHwnd {
+            return false
+        }
+        rootTitle := WinGetTitle("ahk_id " rootHwnd)
+        return InStr(rootTitle, "Injection Sage en cours") > 0
+    } catch {
+        return false
+    }
+}
+
+UserInputLockKeys() {
+    return [
+        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+        "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+        "Space", "Enter", "Tab", "Backspace", "Delete", "Insert", "Home", "End",
+        "PgUp", "PgDn", "Up", "Down", "Left", "Right", "Escape",
+        "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
+        "Numpad0", "Numpad1", "Numpad2", "Numpad3", "Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8", "Numpad9",
+        "NumpadDot", "NumpadDiv", "NumpadMult", "NumpadAdd", "NumpadSub", "NumpadEnter",
+        "-", "=", "[", "]", "\", ";", "'", ",", ".", "/", "``"
+    ]
+}
+
+UserInputLockMouseKeys() {
+    return ["LButton", "RButton", "MButton", "XButton1", "XButton2", "WheelUp", "WheelDown", "WheelLeft", "WheelRight"]
 }
 
 ActivateSageTarget(mainHwnd, windowTitle) {
