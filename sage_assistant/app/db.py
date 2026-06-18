@@ -10,6 +10,7 @@ from .models import InvoiceLine, Product, SageMapping, utc_now_iso
 from .portal_orders import PortalClient, PortalOrder, PortalOrderLine, PortalOrderSummary
 from .settings import default_db_path
 from .default_mappings import DEFAULT_SAGE_MAPPINGS
+from .customs import CustomsDeclarationDraft, draft_from_payload, draft_to_payload
 
 
 SCHEMA = """
@@ -113,6 +114,14 @@ CREATE TABLE IF NOT EXISTS order_line_edits (
     source TEXT NOT NULL,
     order_key TEXT NOT NULL,
     lines_json TEXT NOT NULL DEFAULT '[]',
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY(source, order_key)
+);
+
+CREATE TABLE IF NOT EXISTS customs_declarations (
+    source TEXT NOT NULL,
+    order_key TEXT NOT NULL,
+    declaration_json TEXT NOT NULL DEFAULT '{}',
     updated_at TEXT NOT NULL,
     PRIMARY KEY(source, order_key)
 );
@@ -810,6 +819,10 @@ class Database:
                 "DELETE FROM order_line_edits WHERE source = ? AND order_key = ?",
                 (source.strip(), order_key.strip()),
             )
+            self.conn.execute(
+                "DELETE FROM customs_declarations WHERE source = ? AND order_key = ?",
+                (source.strip(), order_key.strip()),
+            )
         self.log("order_delete", f"{source.strip()} {order_key.strip()} supprime")
 
     def clear_cached_orders(self, source: str | None = None) -> int:
@@ -819,6 +832,7 @@ class Database:
                 self.conn.execute("DELETE FROM cached_orders WHERE source = ?", (source,))
                 self.conn.execute("DELETE FROM order_statuses WHERE source = ?", (source,))
                 self.conn.execute("DELETE FROM order_line_edits WHERE source = ?", (source,))
+                self.conn.execute("DELETE FROM customs_declarations WHERE source = ?", (source,))
             self.log("orders_clear", f"{count} commande(s) {source} supprimee(s)")
             return count
         count = self.count_cached_orders()
@@ -826,6 +840,7 @@ class Database:
             self.conn.execute("DELETE FROM cached_orders")
             self.conn.execute("DELETE FROM order_statuses")
             self.conn.execute("DELETE FROM order_line_edits")
+            self.conn.execute("DELETE FROM customs_declarations")
         self.log("orders_clear", f"{count} commande(s) supprimee(s)")
         return count
 
@@ -896,6 +911,39 @@ class Database:
                 (source.strip(), order_key.strip()),
             )
         self.log("order_line_edits_reset", f"{source.strip()} {order_key.strip()}")
+
+    def save_customs_declaration(self, draft: CustomsDeclarationDraft) -> None:
+        payload = draft_to_payload(draft)
+        with self.conn:
+            self.conn.execute(
+                """
+                INSERT INTO customs_declarations(source, order_key, declaration_json, updated_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(source, order_key) DO UPDATE SET
+                    declaration_json = excluded.declaration_json,
+                    updated_at = excluded.updated_at
+                """,
+                (
+                    draft.source.strip(),
+                    draft.order_key.strip(),
+                    json.dumps(payload, ensure_ascii=False, default=_json_default),
+                    utc_now_iso(),
+                ),
+            )
+        self.log("customs_declaration", f"{draft.source.strip()} {draft.order_key.strip()}: colisage sauvegarde")
+
+    def get_customs_declaration(self, source: str, order_key: str) -> CustomsDeclarationDraft | None:
+        row = self.conn.execute(
+            "SELECT declaration_json FROM customs_declarations WHERE source = ? AND order_key = ?",
+            (source.strip(), order_key.strip()),
+        ).fetchone()
+        if not row:
+            return None
+        try:
+            payload = json.loads(row["declaration_json"])
+        except json.JSONDecodeError:
+            return None
+        return draft_from_payload(payload)
 
     def upsert_clients(self, clients: Iterable[PortalClient]) -> int:
         rows = list(clients)

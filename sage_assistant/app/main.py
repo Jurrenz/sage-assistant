@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QCompleter,
     QDialog,
+    QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
     QFrame,
@@ -47,6 +48,17 @@ from PySide6.QtWidgets import (
 )
 
 from .db import Database
+from .customs import (
+    MAX_PARCEL_WEIGHT_KG,
+    CustomsDeclarationDraft,
+    CustomsLine,
+    CustomsParcel,
+    build_customs_draft,
+    build_laposte_script,
+    decimal_from,
+    money,
+    weight,
+)
 from .cash_calculator import (
     DEFAULT_VAT_RATE,
     adjusted_cash_for_artdivers_match,
@@ -88,6 +100,7 @@ STATUS_DONE = "Traité"
 STATUS_ERROR = "Erreur"
 TERMINAL_STATUSES = {STATUS_INJECTED, STATUS_DONE}
 QUICK_INVOICE_SOURCE = "Facture rapide"
+CUSTOMS_DISABLED_SOURCES = {"PFS", "eFashion"}
 
 ORDER_SOURCES = ("Toutes", "Microstore", QUICK_INVOICE_SOURCE, "Fichier manuel", "PFS", "eFashion")
 ORDER_STATUSES = ("Tous", STATUS_READY, STATUS_REVIEW, STATUS_INJECTED, STATUS_DONE, STATUS_ERROR)
@@ -122,6 +135,7 @@ LINE_HEADERS = [
     "Statut",
 ]
 MAPPING_HEADERS = ["Categorie fournisseur", "Code Sage", "Libelle Sage", "Actif"]
+CUSTOMS_HEADERS = ["Ref", "Description", "Code", "Qte", "Poids kg/u", "Valeur HT/u", "Pays", "SH"]
 LINE_COL_REF = 0
 LINE_COL_CATEGORY = 1
 LINE_COL_CODE = 2
@@ -1073,6 +1087,214 @@ class CashVatDialog(QDialog):
         self.accept()
 
 
+class CustomsDeclarationDialog(QDialog):
+    def __init__(
+        self,
+        draft: CustomsDeclarationDraft,
+        save_callback: Callable[[CustomsDeclarationDraft], None],
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.draft = draft
+        self.save_callback = save_callback
+        self.current_parcel_index = 0
+        self._loading = False
+        self.setWindowTitle(f"Douane La Poste {draft.order_key}".strip())
+        self.resize(980, 620)
+
+        layout = QVBoxLayout(self)
+        self.warning_label = QLabel("")
+        self.warning_label.setWordWrap(True)
+        layout.addWidget(self.warning_label)
+
+        top = QHBoxLayout()
+        self.parcel_combo = QComboBox()
+        self.parcel_combo.currentIndexChanged.connect(self._switch_parcel)
+        add_parcel = make_button("Ajouter colis")
+        add_parcel.clicked.connect(self._add_parcel)
+        self.max_weight = QDoubleSpinBox()
+        self.max_weight.setRange(0.01, float(MAX_PARCEL_WEIGHT_KG))
+        self.max_weight.setDecimals(2)
+        self.max_weight.setSuffix(" kg")
+        self.max_weight.setValue(float(MAX_PARCEL_WEIGHT_KG))
+        self.max_weight.valueChanged.connect(lambda _value: self._refresh_totals(save=True))
+        top.addWidget(QLabel("Colis"))
+        top.addWidget(self.parcel_combo, 1)
+        top.addWidget(add_parcel)
+        top.addWidget(QLabel("Poids max"))
+        top.addWidget(self.max_weight)
+        layout.addLayout(top)
+
+        self.table = QTableWidget(0, len(CUSTOMS_HEADERS))
+        self.table.setHorizontalHeaderLabels(CUSTOMS_HEADERS)
+        configure_table_columns(
+            self.table,
+            {0: 90, 2: 55, 3: 60, 4: 90, 5: 95, 6: 100, 7: 90},
+            {1},
+        )
+        self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
+        self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.table.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed | QAbstractItemView.AnyKeyPressed)
+        self.table.itemChanged.connect(lambda _item: self._refresh_totals(save=True))
+        layout.addWidget(self.table, 1)
+
+        self.totals_label = QLabel("")
+        layout.addWidget(self.totals_label)
+
+        actions = QGridLayout()
+        save_button = make_button("Sauvegarder")
+        save_button.clicked.connect(self._save)
+        copy_script = make_button("Copier script colis")
+        copy_script.clicked.connect(self._copy_script)
+        open_laposte = make_button("Ouvrir La Poste")
+        open_laposte.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("https://www.laposte.fr/colissimo-en-ligne/parcours/douanes")))
+        close_button = make_button("Fermer")
+        close_button.clicked.connect(self.accept)
+        for index, button in enumerate((save_button, copy_script, open_laposte, close_button)):
+            actions.addWidget(button, 0, index)
+        for column in range(4):
+            actions.setColumnStretch(column, 1)
+        layout.addLayout(actions)
+
+        self._refresh_parcel_combo()
+        self._load_current_parcel()
+
+    def _refresh_parcel_combo(self) -> None:
+        self._loading = True
+        self.parcel_combo.clear()
+        for parcel in self.draft.parcels:
+            self.parcel_combo.addItem(parcel.name)
+        self.parcel_combo.setCurrentIndex(min(self.current_parcel_index, max(0, len(self.draft.parcels) - 1)))
+        self._loading = False
+
+    def _current_parcel(self) -> CustomsParcel:
+        if not self.draft.parcels:
+            self.draft.parcels.append(CustomsParcel(name="Colis 1"))
+        self.current_parcel_index = max(0, min(self.current_parcel_index, len(self.draft.parcels) - 1))
+        return self.draft.parcels[self.current_parcel_index]
+
+    def _load_current_parcel(self) -> None:
+        self._loading = True
+        parcel = self._current_parcel()
+        self.max_weight.setValue(float(parcel.max_weight_kg))
+        self.table.setRowCount(len(parcel.lines))
+        for row, line in enumerate(parcel.lines):
+            values = [
+                line.ref,
+                line.description,
+                line.sage_code,
+                str(line.quantity),
+                format(line.unit_weight_kg, "f"),
+                format(line.unit_value_ht, "f"),
+                line.origin_country,
+                line.hs_number,
+            ]
+            for column, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                if column in {0, 2}:
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.table.setItem(row, column, item)
+        self._loading = False
+        self._refresh_totals(save=False)
+
+    def _save_table_to_current_parcel(self) -> None:
+        parcel = self._current_parcel()
+        parcel.max_weight_kg = min(decimal_from(self.max_weight.value(), MAX_PARCEL_WEIGHT_KG), MAX_PARCEL_WEIGHT_KG)
+        lines: list[CustomsLine] = []
+        for row in range(self.table.rowCount()):
+            def cell(column: int) -> str:
+                item = self.table.item(row, column)
+                return item.text().strip() if item else ""
+
+            lines.append(
+                CustomsLine(
+                    ref=cell(0),
+                    description=cell(1),
+                    sage_code=cell(2),
+                    quantity=max(0, int(decimal_from(cell(3)))),
+                    unit_weight_kg=weight(decimal_from(cell(4))),
+                    unit_value_ht=money(decimal_from(cell(5))),
+                    origin_country=cell(6) or "Chine",
+                    origin_iso="CN",
+                    hs_number=cell(7) or "62044300",
+                )
+            )
+        parcel.lines = lines
+
+    def _refresh_totals(self, save: bool) -> None:
+        if self._loading:
+            return
+        if save:
+            self._save_table_to_current_parcel()
+        parcel = self._current_parcel()
+        invoice_total = self.draft.total_value_ht
+        errors = self.draft.validation_errors()
+        self.totals_label.setText(
+            f"{parcel.name}: {parcel.total_weight_kg} kg | {parcel.total_value_ht} EUR HT | "
+            f"Total declaration: {self.draft.total_weight_kg} kg | {invoice_total} EUR HT"
+        )
+        if errors:
+            self.warning_label.setText(" | ".join(errors))
+        elif len(self.draft.parcels) == 1 and parcel.total_weight_kg > MAX_PARCEL_WEIGHT_KG:
+            self.warning_label.setText("Ce colis depasse 30 kg. Ajoute un colis et repartis les quantites.")
+        else:
+            self.warning_label.setText("")
+
+    def _switch_parcel(self, index: int) -> None:
+        if self._loading or index < 0:
+            return
+        self._save_table_to_current_parcel()
+        self.current_parcel_index = index
+        self._load_current_parcel()
+
+    def _add_parcel(self) -> None:
+        self._save_table_to_current_parcel()
+        template = self.draft.parcels[0].lines if self.draft.parcels else []
+        lines = [
+            CustomsLine(
+                ref=line.ref,
+                description=line.description,
+                sage_code=line.sage_code,
+                quantity=0,
+                unit_weight_kg=line.unit_weight_kg,
+                unit_value_ht=line.unit_value_ht,
+                origin_country=line.origin_country,
+                origin_iso=line.origin_iso,
+                hs_number=line.hs_number,
+            )
+            for line in template
+        ]
+        self.draft.parcels.append(CustomsParcel(name=f"Colis {len(self.draft.parcels) + 1}", lines=lines))
+        self.current_parcel_index = len(self.draft.parcels) - 1
+        self._refresh_parcel_combo()
+        self._load_current_parcel()
+
+    def _save(self) -> None:
+        self._save_table_to_current_parcel()
+        self.save_callback(self.draft)
+        self._refresh_totals(save=False)
+        QMessageBox.information(self, APP_NAME, "Colisage douane sauvegarde.")
+
+    def _copy_script(self) -> None:
+        self._save_table_to_current_parcel()
+        parcel = self._current_parcel()
+        if not [line for line in parcel.lines if line.quantity > 0]:
+            QMessageBox.warning(self, APP_NAME, "Ce colis ne contient aucune quantite a declarer.")
+            return
+        errors = parcel.weight_errors()
+        if errors:
+            QMessageBox.warning(self, APP_NAME, "\n".join(errors))
+            return
+        self.save_callback(self.draft)
+        QApplication.clipboard().setText(build_laposte_script(parcel, self.draft.parcel_content))
+        QDesktopServices.openUrl(QUrl("https://www.laposte.fr/colissimo-en-ligne/parcours/douanes"))
+        QMessageBox.information(
+            self,
+            APP_NAME,
+            "Script copie dans le presse-papiers.\n\nSur la page La Poste, ouvre la console ou colle-le dans ton lanceur habituel, puis verifie les totaux avant Ajouter au panier.",
+        )
+
+
 class OrderDetailDialog(QDialog):
     def __init__(
         self,
@@ -1081,6 +1303,7 @@ class OrderDetailDialog(QDialog):
         db: Database,
         autosave_callback: Callable[[list[InvoiceLine]], None] | None = None,
         reset_callback: Callable[[], list[InvoiceLine]] | None = None,
+        customs_callback: Callable[[list[InvoiceLine]], None] | None = None,
         cash_min_unit_price_ht: Decimal | None = None,
         cash_suggestion_flex_eur: Decimal = Decimal("15.00"),
         parent: QWidget | None = None,
@@ -1090,6 +1313,7 @@ class OrderDetailDialog(QDialog):
         self.db = db
         self.autosave_callback = autosave_callback
         self.reset_callback = reset_callback
+        self.customs_callback = customs_callback
         self.cash_min_unit_price_ht = cash_min_unit_price_ht
         self.cash_suggestion_flex_eur = cash_suggestion_flex_eur
         self._autosave_enabled = True
@@ -1194,6 +1418,10 @@ class OrderDetailDialog(QDialog):
         inject_button = make_button("Injecter")
         inject_button.setToolTip("Injecter dans Sage")
         inject_button.clicked.connect(self._accept_for_injection)
+        customs_button = make_button("Douane La Poste")
+        customs_button.setToolTip("Preparer le colisage douane et copier le script La Poste")
+        customs_button.clicked.connect(self._open_customs)
+        customs_button.setVisible(self.customs_callback is not None and self.source not in CUSTOMS_DISABLED_SOURCES)
         open_web_button = make_button("Site")
         open_web_button.setToolTip("Ouvrir sur le site")
         open_web_button.clicked.connect(self._open_web_page)
@@ -1203,7 +1431,7 @@ class OrderDetailDialog(QDialog):
         copy_link_button.setEnabled(bool(self.web_url))
         close_button = make_button("Fermer")
         close_button.clicked.connect(self.accept)
-        for index, button in enumerate((remove_button, reset_button, cash_button, open_web_button, copy_link_button, inject_button, close_button)):
+        for index, button in enumerate((remove_button, reset_button, cash_button, customs_button, open_web_button, copy_link_button, inject_button, close_button)):
             actions.addWidget(button, index // 3, index % 3)
         for column in range(3):
             actions.setColumnStretch(column, 1)
@@ -1370,6 +1598,11 @@ class OrderDetailDialog(QDialog):
         self._refresh_status()
         self._autosave("cash applique")
         self.message_label.setText("Facture remplacee par une ligne ARTDIVERS. Retour origine restaure les lignes source.")
+
+    def _open_customs(self) -> None:
+        self._save_corrections(show_message=False)
+        if self.customs_callback is not None:
+            self.customs_callback(self.lines)
 
     def _accept_for_injection(self) -> None:
         self._save_corrections(show_message=False)
@@ -2519,6 +2752,9 @@ class MainWindow(QMainWindow):
         inject_selected = make_button("Injecter")
         inject_selected.setToolTip("Injecter dans Sage")
         inject_selected.clicked.connect(self._inject_selected_order_from_folder)
+        customs_selected = make_button("Douane La Poste")
+        customs_selected.setToolTip("Preparer le colisage douane de la commande selectionnee")
+        customs_selected.clicked.connect(self._open_selected_order_customs)
         quick_invoice = make_button("Facture rapide")
         quick_invoice.clicked.connect(self._open_quick_invoice_dialog)
         delete_order = make_button("Supprimer")
@@ -2530,6 +2766,7 @@ class MainWindow(QMainWindow):
             quick_invoice,
             sync_orders,
             inject_selected,
+            customs_selected,
             detail_button,
             open_web_button,
             copy_link_button,
@@ -3951,6 +4188,7 @@ class MainWindow(QMainWindow):
             self.db,
             autosave_callback=lambda updated_lines, s=order.source, k=key: self._save_order_line_edits(s, k, updated_lines),
             reset_callback=lambda s=order.source, k=key, original=order: self._reset_order_line_edits(s, k, original),
+            customs_callback=lambda updated_lines, s=order.source, k=key: self._open_customs_for_lines(s, k, updated_lines),
             cash_min_unit_price_ht=self.settings.cash_min_unit_price_ht,
             cash_suggestion_flex_eur=self.settings.cash_suggestion_flex_eur,
             parent=self,
@@ -3983,6 +4221,7 @@ class MainWindow(QMainWindow):
             self.db,
             autosave_callback=lambda updated_lines, s=source, k=key: self._save_order_line_edits(s, k, updated_lines),
             reset_callback=lambda s=source, k=key, p=path: self._reset_file_order_line_edits(s, k, p),
+            customs_callback=lambda updated_lines, s=source, k=key: self._open_customs_for_lines(s, k, updated_lines),
             cash_min_unit_price_ht=self.settings.cash_min_unit_price_ht,
             cash_suggestion_flex_eur=self.settings.cash_suggestion_flex_eur,
             parent=self,
@@ -4021,6 +4260,80 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, APP_NAME, str(exc))
             return
         self._prepare_injection()
+
+    def _open_selected_order_customs(self) -> None:
+        kind = self._selected_order_kind()
+        if not kind:
+            QMessageBox.information(self, APP_NAME, "Aucune commande selectionnee.")
+            return
+        source, key = self._selected_order_source_key()
+        if source in CUSTOMS_DISABLED_SOURCES:
+            QMessageBox.information(self, APP_NAME, "La douane La Poste est reservee aux factures hors eFashion et PFS.")
+            return
+        try:
+            if kind == "portal":
+                order = self._fetch_portal_order(source, key)
+                lines = self._lines_from_portal_order(order)
+                lines = lines_with_saved_order_edits(self.db, source, key, lines)
+            else:
+                path = self._selected_order_path()
+                if not path:
+                    raise ValueError("Commande fichier introuvable.")
+                lines = self._load_order_lines(path)
+                lines = lines_with_saved_order_edits(self.db, source, key, lines)
+        except Exception as exc:
+            QMessageBox.critical(self, APP_NAME, str(exc))
+            return
+        self._open_customs_for_lines(source, key, lines)
+
+    def _products_by_ref(self, lines: list[InvoiceLine]) -> dict[str, Product]:
+        products: dict[str, Product] = {}
+        for line in lines:
+            ref = line.ref.strip().upper()
+            if not ref or ref in products:
+                continue
+            product = self.db.get_product_by_ref(ref)
+            if product is not None:
+                products[ref] = product
+        return products
+
+    def _customs_signature_from_lines(self, lines: list[InvoiceLine]) -> dict[str, int]:
+        signature: dict[str, int] = {}
+        for line in lines:
+            ref = line.ref.strip().upper()
+            if ref:
+                signature[ref] = signature.get(ref, 0) + int(line.quantity_pieces or 0)
+        return signature
+
+    def _customs_signature_from_draft(self, draft: CustomsDeclarationDraft) -> dict[str, int]:
+        signature: dict[str, int] = {}
+        for parcel in draft.parcels:
+            for line in parcel.lines:
+                ref = line.ref.strip().upper()
+                if ref:
+                    signature[ref] = signature.get(ref, 0) + int(line.quantity or 0)
+        return signature
+
+    def _open_customs_for_lines(self, source: str, key: str, lines: list[InvoiceLine]) -> None:
+        if source in CUSTOMS_DISABLED_SOURCES:
+            QMessageBox.information(self, APP_NAME, "La douane La Poste est reservee aux factures hors eFashion et PFS.")
+            return
+        saved = self.db.get_customs_declaration(source, key)
+        current_signature = self._customs_signature_from_lines(lines)
+        if saved is not None and self._customs_signature_from_draft(saved) == current_signature:
+            draft = saved
+            draft.source = source
+            draft.order_key = key
+        else:
+            draft = build_customs_draft(source, key, lines, self._products_by_ref(lines), self.settings.customs_defaults)
+        if len(draft.parcels) == 1 and draft.parcels[0].total_weight_kg > MAX_PARCEL_WEIGHT_KG:
+            QMessageBox.warning(
+                self,
+                APP_NAME,
+                "Le colis estime depasse 30 kg. Ajoute un colis et repars les quantites avant de copier le script La Poste.",
+            )
+        dialog = CustomsDeclarationDialog(draft, self.db.save_customs_declaration, self)
+        dialog.exec()
 
     def _mark_selected_order_done(self) -> None:
         kind = self._selected_order_kind()

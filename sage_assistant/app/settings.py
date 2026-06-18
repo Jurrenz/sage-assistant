@@ -93,6 +93,7 @@ class AppSettings:
     injection_line_limit: int = 0
     cash_min_unit_price_ht: Decimal | None = None
     cash_suggestion_flex_eur: Decimal = Decimal("15.00")
+    customs_defaults: dict = field(default_factory=dict)
     sage_profile: SageProfile = field(default_factory=SageProfile)
 
 
