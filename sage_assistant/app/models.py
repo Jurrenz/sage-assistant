@@ -89,6 +89,13 @@ class InvoiceLine:
     validation_status: str = "pending"
     validation_message: str = ""
     source: str = "manual"
+    cash_reference_ht: Decimal | None = None
+    cash_amount: Decimal | None = None
+    cash_vat_rate: Decimal | None = None
+    cash_vat_enabled: bool | None = None
+    cash_target_quantity: int | None = None
+    cash_quantity_mode: str = ""
+    cash_original_refs: str = ""
 
     def validate(self) -> None:
         errors: list[str] = []

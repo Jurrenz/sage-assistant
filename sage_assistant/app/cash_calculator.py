@@ -7,6 +7,7 @@ from .models import InvoiceLine, normalize_spaces
 
 
 ARTDIVERS_CODE = "ARTDIVERS"
+ARTDIVERS_SAGE_CODE = "Article D"
 DEFAULT_VAT_RATE = Decimal("20")
 MONEY = Decimal("0.01")
 UNIT_PRICE_STEP = Decimal("0.10")
@@ -273,14 +274,20 @@ def build_artdivers_line(
     remaining_ht: Decimal,
     quantity: int,
     source: str = "manual",
+    cash_reference_ht: Decimal | None = None,
+    cash_amount: Decimal | None = None,
+    cash_vat_rate: Decimal | None = None,
+    cash_vat_enabled: bool | None = None,
+    cash_quantity_mode: str = "",
+    cash_original_refs: str = "",
 ) -> InvoiceLine:
     option = quantity_option(remaining_ht, quantity)
     if not option.exact:
         raise ValueError(f"Le total ARTDIVERS ne matche pas le HT restant ({option.difference:+.2f}).")
-    refs = normalize_spaces(" ".join(line.ref for line in original_lines if line.ref))
+    refs = normalize_spaces(cash_original_refs or " ".join(line.ref for line in original_lines if line.ref))
     line = InvoiceLine(
         ref=ARTDIVERS_CODE,
-        sage_code=ARTDIVERS_CODE,
+        sage_code=ARTDIVERS_SAGE_CODE,
         description=refs or ARTDIVERS_CODE,
         quantity_pieces=option.quantity,
         package_count=None,
@@ -292,9 +299,23 @@ def build_artdivers_line(
         product_id=0,
         type_label="",
         source=source,
+        cash_reference_ht=money(cash_reference_ht) if cash_reference_ht is not None else None,
+        cash_amount=money(cash_amount) if cash_amount is not None else None,
+        cash_vat_rate=cash_vat_rate,
+        cash_vat_enabled=cash_vat_enabled,
+        cash_target_quantity=quantity,
+        cash_quantity_mode=cash_quantity_mode,
+        cash_original_refs=refs,
     )
     line.validate()
     return line
+
+
+def adjusted_cash_for_artdivers_match(initial_ht: Decimal, current_cash: Decimal, remaining_ht: Decimal, quantity: int) -> Decimal:
+    option = quantity_option(remaining_ht, quantity)
+    if option.exact:
+        return money(current_cash)
+    return money(initial_ht - option.line_total_ht)
 
 
 def total_ht(lines: list[InvoiceLine]) -> Decimal:

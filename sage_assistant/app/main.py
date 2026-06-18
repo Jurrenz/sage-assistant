@@ -49,6 +49,7 @@ from PySide6.QtWidgets import (
 from .db import Database
 from .cash_calculator import (
     DEFAULT_VAT_RATE,
+    adjusted_cash_for_artdivers_match,
     build_artdivers_line,
     calculate_cash_vat,
     cash_calculator_allowed,
@@ -58,6 +59,7 @@ from .cash_calculator import (
     total_ht,
     total_pieces,
     unit_price_matches_target,
+    ARTDIVERS_CODE,
 )
 from .excel_import import import_order, import_products
 from .injection import launch_ahk_tool, launch_autohotkey, write_injection_queue
@@ -784,7 +786,7 @@ class CashVatWidget(QWidget):
         self,
         initial_ht: Decimal | None = None,
         pieces: int = 0,
-        min_unit_price_ht: Decimal = Decimal("4.00"),
+        min_unit_price_ht: Decimal | None = None,
         cash_flex_eur: Decimal = Decimal("15.00"),
         parent: QWidget | None = None,
     ) -> None:
@@ -795,9 +797,9 @@ class CashVatWidget(QWidget):
         layout = QVBoxLayout(self)
         form = QGridLayout()
         self.initial_ht_input = QLineEdit(str(initial_ht or ""))
-        self.cash_input = QLineEdit("0")
+        self.cash_input = QLineEdit("")
         self.vat_rate_input = QLineEdit(str(DEFAULT_VAT_RATE))
-        self.min_unit_price_input = QLineEdit(str(min_unit_price_ht))
+        self.min_unit_price_input = QLineEdit(str(min_unit_price_ht) if min_unit_price_ht is not None else "")
         self.cash_flex_input = QLineEdit(str(cash_flex_eur))
         self.vat_enabled = QCheckBox("TVA a payer")
         self.vat_enabled.setChecked(True)
@@ -873,8 +875,8 @@ class CashVatWidget(QWidget):
             self.vat_enabled.isChecked(),
         )
 
-    def min_unit_price(self) -> Decimal:
-        return self._decimal_input(self.min_unit_price_input)
+    def min_unit_price(self) -> Decimal | None:
+        return self._decimal_input(self.min_unit_price_input) if self.min_unit_price_input.text().strip() else None
 
     def cash_flex(self) -> Decimal:
         return self._decimal_input(self.cash_flex_input)
@@ -930,8 +932,9 @@ class CashVatWidget(QWidget):
             messages.append("La ligne ARTDIVERS matche exactement le HT facture.")
         else:
             messages.append(f"Attention: ecart ARTDIVERS {option.difference:+.2f} EUR. Choisir une suggestion exacte ou ajuster la quantite.")
-        if not unit_price_matches_target(option.unit_price_ht, self.min_unit_price()):
-            messages.append(f"PU HT hors zone conseillee autour de {self.min_unit_price():.2f} EUR. Application possible, suggestions filtrees.")
+        target_unit_price = self.min_unit_price()
+        if target_unit_price is not None and not unit_price_matches_target(option.unit_price_ht, target_unit_price):
+            messages.append(f"PU HT hors zone conseillee autour de {target_unit_price:.2f} EUR. Application possible, suggestions filtrees.")
         self.status_label.setText(" ".join(messages))
         self._refresh_suggestions(result.initial_ht, result.cash_amount)
 
@@ -979,23 +982,37 @@ class CashVatDialog(QDialog):
         self,
         lines: list[InvoiceLine],
         source: str,
-        min_unit_price_ht: Decimal = Decimal("4.00"),
+        min_unit_price_ht: Decimal | None = None,
         cash_flex_eur: Decimal = Decimal("15.00"),
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.original_lines = list(lines)
+        remembered_line = lines[0] if len(lines) == 1 and lines[0].ref == ARTDIVERS_CODE and lines[0].cash_reference_ht is not None else None
         self.source = source or "manual"
         self.artdivers_line: InvoiceLine | None = None
         self.setWindowTitle("Cash / TVA")
         self.resize(760, 520)
 
         layout = QVBoxLayout(self)
-        refs = normalize_spaces(" ".join(line.ref for line in self.original_lines if line.ref))
+        refs = normalize_spaces(remembered_line.cash_original_refs if remembered_line else " ".join(line.ref for line in self.original_lines if line.ref))
+        initial_ht = remembered_line.cash_reference_ht if remembered_line and remembered_line.cash_reference_ht is not None else total_ht(self.original_lines)
+        pieces = remembered_line.cash_target_quantity if remembered_line and remembered_line.cash_target_quantity else total_pieces(self.original_lines)
         intro = QLabel(f"Refs ARTDIVERS: {refs}" if refs else "Refs ARTDIVERS: ARTDIVERS")
         intro.setWordWrap(True)
         layout.addWidget(intro)
-        self.calculator = CashVatWidget(total_ht(self.original_lines), total_pieces(self.original_lines), min_unit_price_ht, cash_flex_eur, self)
+        self.cash_original_refs = refs
+        self.calculator = CashVatWidget(initial_ht, pieces, min_unit_price_ht, cash_flex_eur, self)
+        if remembered_line:
+            if remembered_line.cash_amount is not None:
+                self.calculator.cash_input.setText(f"{remembered_line.cash_amount:.2f}")
+            if remembered_line.cash_vat_rate is not None:
+                self.calculator.vat_rate_input.setText(str(remembered_line.cash_vat_rate))
+            if remembered_line.cash_vat_enabled is not None:
+                self.calculator.vat_enabled.setChecked(bool(remembered_line.cash_vat_enabled))
+            if remembered_line.cash_quantity_mode == "custom":
+                self.calculator.quantity_mode.setCurrentIndex(max(0, self.calculator.quantity_mode.findData("custom")))
+                self.calculator.custom_quantity_input.setText(str(remembered_line.cash_target_quantity or ""))
         layout.addWidget(self.calculator, 1)
 
         actions = QHBoxLayout()
@@ -1011,12 +1028,45 @@ class CashVatDialog(QDialog):
     def _apply(self) -> None:
         try:
             result = self.calculator.calculation()
-            self.artdivers_line = build_artdivers_line(
-                self.original_lines,
-                result.remaining_ht,
-                self.calculator.selected_quantity(),
-                source=self.source,
-            )
+            quantity = self.calculator.selected_quantity()
+            try:
+                self.artdivers_line = build_artdivers_line(
+                    self.original_lines,
+                    result.remaining_ht,
+                    quantity,
+                    source=self.source,
+                    cash_reference_ht=result.initial_ht,
+                    cash_amount=result.cash_amount,
+                    cash_vat_rate=result.vat_rate,
+                    cash_vat_enabled=result.vat_enabled,
+                    cash_quantity_mode=str(self.calculator.quantity_mode.currentData() or ""),
+                    cash_original_refs=self.cash_original_refs,
+                )
+            except ValueError as exc:
+                adjusted_cash = adjusted_cash_for_artdivers_match(result.initial_ht, result.cash_amount, result.remaining_ht, quantity)
+                if adjusted_cash < 0 or adjusted_cash > result.initial_ht:
+                    raise
+                answer = QMessageBox.question(
+                    self,
+                    APP_NAME,
+                    f"{exc}\n\nAjuster le cash de {result.cash_amount:.2f} EUR a {adjusted_cash:.2f} EUR pour que ca matche ?",
+                )
+                if answer != QMessageBox.Yes:
+                    return
+                self.calculator.cash_input.setText(f"{adjusted_cash:.2f}")
+                result = self.calculator.calculation()
+                self.artdivers_line = build_artdivers_line(
+                    self.original_lines,
+                    result.remaining_ht,
+                    quantity,
+                    source=self.source,
+                    cash_reference_ht=result.initial_ht,
+                    cash_amount=result.cash_amount,
+                    cash_vat_rate=result.vat_rate,
+                    cash_vat_enabled=result.vat_enabled,
+                    cash_quantity_mode=str(self.calculator.quantity_mode.currentData() or ""),
+                    cash_original_refs=self.cash_original_refs,
+                )
         except Exception as exc:
             QMessageBox.warning(self, APP_NAME, str(exc))
             return
@@ -1031,7 +1081,7 @@ class OrderDetailDialog(QDialog):
         db: Database,
         autosave_callback: Callable[[list[InvoiceLine]], None] | None = None,
         reset_callback: Callable[[], list[InvoiceLine]] | None = None,
-        cash_min_unit_price_ht: Decimal = Decimal("4.00"),
+        cash_min_unit_price_ht: Decimal | None = None,
         cash_suggestion_flex_eur: Decimal = Decimal("15.00"),
         parent: QWidget | None = None,
     ) -> None:
@@ -1413,7 +1463,7 @@ class QuickInvoiceDialog(QDialog):
         self,
         db: Database,
         resolver: Resolver,
-        min_unit_price_ht: Decimal = Decimal("4.00"),
+        min_unit_price_ht: Decimal | None = None,
         cash_flex_eur: Decimal = Decimal("15.00"),
         parent: QWidget | None = None,
     ) -> None:
@@ -2859,7 +2909,7 @@ class MainWindow(QMainWindow):
         self.delay_ms.setSuffix(" ms")
         self.delay_ms.setValue(self.settings.sage_profile.delay_ms)
         self.delay_ms.setToolTip("Délai unique utilisé entre les actions clavier Sage.")
-        self.cash_min_unit_price_setting = QLineEdit(str(self.settings.cash_min_unit_price_ht))
+        self.cash_min_unit_price_setting = QLineEdit(str(self.settings.cash_min_unit_price_ht) if self.settings.cash_min_unit_price_ht is not None else "")
         self.cash_min_unit_price_setting.setToolTip("PU HT cible utilise pour filtrer les suggestions Cash / TVA autour de cette valeur.")
         self.cash_suggestion_flex_setting = QLineEdit(str(self.settings.cash_suggestion_flex_eur))
         self.cash_suggestion_flex_setting.setToolTip("Variation maximale des suggestions autour du cash saisi, en EUR.")
@@ -4368,12 +4418,13 @@ class MainWindow(QMainWindow):
             self.settings.sage_profile.confirmation_mode = str(self.confirmation_mode.currentData() or "simple")
         if hasattr(self, "cash_min_unit_price_setting"):
             try:
-                cash_min = _decimal_from_text(self.cash_min_unit_price_setting.text()) or Decimal("4.00")
+                cash_min = _decimal_from_text(self.cash_min_unit_price_setting.text()) if self.cash_min_unit_price_setting.text().strip() else None
             except ValueError:
                 cash_min = self.settings.cash_min_unit_price_ht
             self.settings.cash_min_unit_price_ht = cash_min
-            if hasattr(self, "cash_calculator") and self.cash_calculator.min_unit_price_input.text().strip() != str(cash_min):
-                self.cash_calculator.min_unit_price_input.setText(str(cash_min))
+            cash_min_text = str(cash_min) if cash_min is not None else ""
+            if hasattr(self, "cash_calculator") and self.cash_calculator.min_unit_price_input.text().strip() != cash_min_text:
+                self.cash_calculator.min_unit_price_input.setText(cash_min_text)
         if hasattr(self, "cash_suggestion_flex_setting"):
             try:
                 cash_flex = _decimal_from_text(self.cash_suggestion_flex_setting.text()) or Decimal("15.00")

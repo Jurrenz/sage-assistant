@@ -91,7 +91,7 @@ class AppSettings:
     order_folder_path: str = ""
     portal_email: str = ""
     injection_line_limit: int = 0
-    cash_min_unit_price_ht: Decimal = Decimal("4.00")
+    cash_min_unit_price_ht: Decimal | None = None
     cash_suggestion_flex_eur: Decimal = Decimal("15.00")
     sage_profile: SageProfile = field(default_factory=SageProfile)
 
@@ -113,7 +113,8 @@ def load_settings(path: Path | None = None) -> AppSettings:
     normalize_sage_profile(profile)
     raw["sage_profile"] = profile
     raw["injection_line_limit"] = 0
-    raw["cash_min_unit_price_ht"] = Decimal(str(raw.get("cash_min_unit_price_ht", "4.00")))
+    raw_cash_min = raw.get("cash_min_unit_price_ht")
+    raw["cash_min_unit_price_ht"] = Decimal(str(raw_cash_min)) if raw_cash_min not in (None, "") else None
     raw["cash_suggestion_flex_eur"] = Decimal(str(raw.get("cash_suggestion_flex_eur", "15.00")))
     return AppSettings(**raw)
 

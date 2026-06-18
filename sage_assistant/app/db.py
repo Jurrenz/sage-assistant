@@ -1177,6 +1177,13 @@ class Database:
             "validation_status": line.validation_status,
             "validation_message": line.validation_message,
             "source": line.source,
+            "cash_reference_ht": str(line.cash_reference_ht) if line.cash_reference_ht is not None else None,
+            "cash_amount": str(line.cash_amount) if line.cash_amount is not None else None,
+            "cash_vat_rate": str(line.cash_vat_rate) if line.cash_vat_rate is not None else None,
+            "cash_vat_enabled": line.cash_vat_enabled,
+            "cash_target_quantity": line.cash_target_quantity,
+            "cash_quantity_mode": line.cash_quantity_mode,
+            "cash_original_refs": line.cash_original_refs,
         }
 
     def _invoice_line_from_payload(self, payload: dict) -> InvoiceLine:
@@ -1196,6 +1203,13 @@ class Database:
             validation_status=str(payload.get("validation_status") or "pending"),
             validation_message=str(payload.get("validation_message") or ""),
             source=str(payload.get("source") or "manual"),
+            cash_reference_ht=_decimal_or_none(payload.get("cash_reference_ht")),
+            cash_amount=_decimal_or_none(payload.get("cash_amount")),
+            cash_vat_rate=_decimal_or_none(payload.get("cash_vat_rate")),
+            cash_vat_enabled=payload.get("cash_vat_enabled") if payload.get("cash_vat_enabled") is not None else None,
+            cash_target_quantity=int(payload["cash_target_quantity"]) if payload.get("cash_target_quantity") not in (None, "") else None,
+            cash_quantity_mode=str(payload.get("cash_quantity_mode") or ""),
+            cash_original_refs=str(payload.get("cash_original_refs") or ""),
         )
         line.validate()
         return line

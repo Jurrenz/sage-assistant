@@ -215,7 +215,7 @@ def test_settings_default_cash_min_unit_price_is_loaded_for_legacy_file(tmp_path
 
     loaded = load_settings(path)
 
-    assert loaded.cash_min_unit_price_ht == Decimal("4.00")
+    assert loaded.cash_min_unit_price_ht is None
     assert loaded.cash_suggestion_flex_eur == Decimal("15.00")
 
 
