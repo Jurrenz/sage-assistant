@@ -209,6 +209,16 @@ def test_settings_persist_separate_portal_credentials(tmp_path):
     assert loaded.microstore_product_resync_hours == 12
 
 
+def test_settings_default_cash_min_unit_price_is_loaded_for_legacy_file(tmp_path):
+    path = tmp_path / "settings.json"
+    path.write_text(json.dumps({"sage_profile": {}}), encoding="utf-8")
+
+    loaded = load_settings(path)
+
+    assert loaded.cash_min_unit_price_ht == Decimal("4.00")
+    assert loaded.cash_suggestion_flex_eur == Decimal("15.00")
+
+
 def test_injection_confirmation_mode_and_unified_delay_are_persisted(tmp_path):
     settings = AppSettings()
     settings.sage_profile.confirmation_mode = "direct"

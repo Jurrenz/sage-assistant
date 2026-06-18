@@ -47,6 +47,18 @@ from PySide6.QtWidgets import (
 )
 
 from .db import Database
+from .cash_calculator import (
+    DEFAULT_VAT_RATE,
+    build_artdivers_line,
+    calculate_cash_vat,
+    cash_calculator_allowed,
+    quantity_option,
+    simple_quantity_options,
+    suggest_cash_amounts,
+    total_ht,
+    total_pieces,
+    unit_price_matches_target,
+)
 from .excel_import import import_order, import_products
 from .injection import launch_ahk_tool, launch_autohotkey, write_injection_queue
 from .models import InvoiceLine, Product, SageMapping, build_sage_description, normalize_spaces, utc_now_iso
@@ -767,6 +779,250 @@ def apply_line_table_item_change(
     _update_line_table_row(table, row, line)
 
 
+class CashVatWidget(QWidget):
+    def __init__(
+        self,
+        initial_ht: Decimal | None = None,
+        pieces: int = 0,
+        min_unit_price_ht: Decimal = Decimal("4.00"),
+        cash_flex_eur: Decimal = Decimal("15.00"),
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.total_pieces = pieces
+        self.last_error = ""
+
+        layout = QVBoxLayout(self)
+        form = QGridLayout()
+        self.initial_ht_input = QLineEdit(str(initial_ht or ""))
+        self.cash_input = QLineEdit("0")
+        self.vat_rate_input = QLineEdit(str(DEFAULT_VAT_RATE))
+        self.min_unit_price_input = QLineEdit(str(min_unit_price_ht))
+        self.cash_flex_input = QLineEdit(str(cash_flex_eur))
+        self.vat_enabled = QCheckBox("TVA a payer")
+        self.vat_enabled.setChecked(True)
+        self.quantity_mode = QComboBox()
+        self.quantity_mode.addItem(f"Total pieces ({pieces or 1})", "total_pieces")
+        self.quantity_mode.addItem("Quantite custom simple", "custom")
+        self.custom_quantity_label = QLabel("Quantite custom")
+        self.custom_quantity_input = QLineEdit("")
+        self.custom_quantity_input.setPlaceholderText("ex: 70")
+
+        form.addWidget(QLabel("HT de reference"), 0, 0)
+        form.addWidget(self.initial_ht_input, 0, 1)
+        form.addWidget(QLabel("Cash"), 0, 2)
+        form.addWidget(self.cash_input, 0, 3)
+        form.addWidget(QLabel("TVA %"), 1, 0)
+        form.addWidget(self.vat_rate_input, 1, 1)
+        form.addWidget(self.vat_enabled, 1, 2)
+        form.addWidget(QLabel("PU HT env."), 1, 3)
+        form.addWidget(self.min_unit_price_input, 1, 4)
+        form.addWidget(QLabel("Variation cash"), 2, 0)
+        form.addWidget(self.cash_flex_input, 2, 1)
+        form.addWidget(QLabel("Quantite"), 3, 0)
+        form.addWidget(self.quantity_mode, 3, 1)
+        form.addWidget(self.custom_quantity_label, 3, 2)
+        form.addWidget(self.custom_quantity_input, 3, 3, 1, 2)
+        form.setColumnStretch(1, 1)
+        form.setColumnStretch(3, 1)
+        layout.addLayout(form)
+
+        result_grid = QGridLayout()
+        self.remaining_label = QLabel("")
+        self.vat_label = QLabel("")
+        self.total_label = QLabel("")
+        self.quantity_label = QLabel("")
+        self.status_label = QLabel("")
+        self.status_label.setWordWrap(True)
+        result_grid.addWidget(QLabel("HT a facturer"), 0, 0)
+        result_grid.addWidget(self.remaining_label, 0, 1)
+        result_grid.addWidget(QLabel("TVA"), 0, 2)
+        result_grid.addWidget(self.vat_label, 0, 3)
+        result_grid.addWidget(QLabel("Total a payer"), 1, 0)
+        result_grid.addWidget(self.total_label, 1, 1)
+        result_grid.addWidget(QLabel("Ligne Sage"), 1, 2)
+        result_grid.addWidget(self.quantity_label, 1, 3)
+        result_grid.addWidget(self.status_label, 2, 0, 1, 4)
+        layout.addLayout(result_grid)
+
+        self.suggestions_table = QTableWidget(0, 6)
+        self.suggestions_table.setHorizontalHeaderLabels(["Cash", "HT a facturer", "Qte", "PU HT", "Ecart", "Pourquoi"])
+        configure_table_columns(self.suggestions_table, {0: 80, 1: 90, 2: 55, 3: 75, 4: 65}, {5})
+        self.suggestions_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.suggestions_table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.suggestions_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.suggestions_table.cellDoubleClicked.connect(lambda _row, _col: self._use_selected_suggestion())
+        layout.addWidget(self.suggestions_table, 1)
+
+        for widget in (self.initial_ht_input, self.cash_input, self.vat_rate_input, self.custom_quantity_input, self.min_unit_price_input, self.cash_flex_input):
+            widget.textChanged.connect(self.refresh)
+        self.vat_enabled.toggled.connect(self.refresh)
+        self.quantity_mode.currentIndexChanged.connect(self._on_quantity_mode_changed)
+        self._on_quantity_mode_changed()
+        self.refresh()
+
+    def _decimal_input(self, widget: QLineEdit) -> Decimal:
+        value = _decimal_from_text(widget.text())
+        return value if value is not None else Decimal("0")
+
+    def calculation(self):
+        return calculate_cash_vat(
+            self._decimal_input(self.initial_ht_input),
+            self._decimal_input(self.cash_input),
+            self._decimal_input(self.vat_rate_input),
+            self.vat_enabled.isChecked(),
+        )
+
+    def min_unit_price(self) -> Decimal:
+        return self._decimal_input(self.min_unit_price_input)
+
+    def cash_flex(self) -> Decimal:
+        return self._decimal_input(self.cash_flex_input)
+
+    def selected_quantity(self) -> int:
+        mode = self.quantity_mode.currentData()
+        if mode == "total_pieces":
+            return max(1, self.total_pieces)
+        custom_text = self.custom_quantity_input.text().strip()
+        if custom_text:
+            return int(custom_text)
+        options = simple_quantity_options(
+            self.calculation().remaining_ht,
+            total_pieces=self.total_pieces,
+            limit=8,
+            target_unit_price_ht=self.min_unit_price(),
+        )
+        for option in options:
+            if option.mode == "custom":
+                return option.quantity
+        return max(1, self.total_pieces)
+
+    def selected_quantity_flex(self) -> int:
+        return 5 if self.quantity_mode.currentData() == "custom" else 0
+
+    def _on_quantity_mode_changed(self) -> None:
+        is_custom = self.quantity_mode.currentData() == "custom"
+        self.custom_quantity_label.setVisible(is_custom)
+        self.custom_quantity_input.setVisible(is_custom)
+        self.refresh()
+
+    def refresh(self) -> None:
+        self.last_error = ""
+        try:
+            result = self.calculation()
+            option = quantity_option(result.remaining_ht, self.selected_quantity())
+        except Exception as exc:
+            self.last_error = str(exc)
+            self.remaining_label.setText("")
+            self.vat_label.setText("")
+            self.total_label.setText("")
+            self.quantity_label.setText("")
+            self.status_label.setText(str(exc))
+            self.suggestions_table.setRowCount(0)
+            return
+
+        self.remaining_label.setText(f"{result.remaining_ht:.2f} EUR")
+        self.vat_label.setText(f"{result.vat_amount:.2f} EUR")
+        self.total_label.setText(f"{result.invoice_total:.2f} EUR")
+        self.quantity_label.setText(f"{option.quantity} x {option.unit_price_ht:.2f} = {option.line_total_ht:.2f}")
+        messages = []
+        if option.exact:
+            messages.append("La ligne ARTDIVERS matche exactement le HT facture.")
+        else:
+            messages.append(f"Attention: ecart ARTDIVERS {option.difference:+.2f} EUR. Choisir une suggestion exacte ou ajuster la quantite.")
+        if not unit_price_matches_target(option.unit_price_ht, self.min_unit_price()):
+            messages.append(f"PU HT hors zone conseillee autour de {self.min_unit_price():.2f} EUR. Application possible, suggestions filtrees.")
+        self.status_label.setText(" ".join(messages))
+        self._refresh_suggestions(result.initial_ht, result.cash_amount)
+
+    def _refresh_suggestions(self, initial_ht: Decimal, desired_cash: Decimal) -> None:
+        suggestions = suggest_cash_amounts(
+            initial_ht,
+            desired_cash,
+            total_pieces=self.total_pieces,
+            limit=8,
+            target_unit_price_ht=self.min_unit_price(),
+            target_quantity=self.selected_quantity(),
+            target_quantity_flex=self.selected_quantity_flex(),
+            cash_flex_eur=self.cash_flex(),
+        )
+        self.suggestions_table.setRowCount(len(suggestions))
+        for row, suggestion in enumerate(suggestions):
+            values = [
+                f"{suggestion.cash_amount:.2f}",
+                f"{suggestion.remaining_ht:.2f}",
+                str(suggestion.quantity),
+                f"{suggestion.unit_price_ht:.2f}",
+                f"{suggestion.difference:+.2f}",
+                suggestion.reason,
+            ]
+            for col, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                item.setData(Qt.UserRole, suggestion)
+                self.suggestions_table.setItem(row, col, item)
+
+    def _use_selected_suggestion(self) -> None:
+        rows = sorted({item.row() for item in self.suggestions_table.selectedItems()})
+        if not rows:
+            return
+        item = self.suggestions_table.item(rows[0], 0)
+        suggestion = item.data(Qt.UserRole) if item else None
+        if suggestion is None:
+            return
+        self.cash_input.setText(f"{suggestion.cash_amount:.2f}")
+        self.quantity_mode.setCurrentIndex(max(0, self.quantity_mode.findData("custom")))
+        self.custom_quantity_input.setText(str(suggestion.quantity))
+
+
+class CashVatDialog(QDialog):
+    def __init__(
+        self,
+        lines: list[InvoiceLine],
+        source: str,
+        min_unit_price_ht: Decimal = Decimal("4.00"),
+        cash_flex_eur: Decimal = Decimal("15.00"),
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.original_lines = list(lines)
+        self.source = source or "manual"
+        self.artdivers_line: InvoiceLine | None = None
+        self.setWindowTitle("Cash / TVA")
+        self.resize(760, 520)
+
+        layout = QVBoxLayout(self)
+        refs = normalize_spaces(" ".join(line.ref for line in self.original_lines if line.ref))
+        intro = QLabel(f"Refs ARTDIVERS: {refs}" if refs else "Refs ARTDIVERS: ARTDIVERS")
+        intro.setWordWrap(True)
+        layout.addWidget(intro)
+        self.calculator = CashVatWidget(total_ht(self.original_lines), total_pieces(self.original_lines), min_unit_price_ht, cash_flex_eur, self)
+        layout.addWidget(self.calculator, 1)
+
+        actions = QHBoxLayout()
+        apply_button = make_button("Appliquer ARTDIVERS")
+        apply_button.clicked.connect(self._apply)
+        cancel_button = make_button("Annuler")
+        cancel_button.clicked.connect(self.reject)
+        actions.addStretch(1)
+        actions.addWidget(apply_button)
+        actions.addWidget(cancel_button)
+        layout.addLayout(actions)
+
+    def _apply(self) -> None:
+        try:
+            result = self.calculator.calculation()
+            self.artdivers_line = build_artdivers_line(
+                self.original_lines,
+                result.remaining_ht,
+                self.calculator.selected_quantity(),
+                source=self.source,
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, APP_NAME, str(exc))
+            return
+        self.accept()
+
+
 class OrderDetailDialog(QDialog):
     def __init__(
         self,
@@ -775,6 +1031,8 @@ class OrderDetailDialog(QDialog):
         db: Database,
         autosave_callback: Callable[[list[InvoiceLine]], None] | None = None,
         reset_callback: Callable[[], list[InvoiceLine]] | None = None,
+        cash_min_unit_price_ht: Decimal = Decimal("4.00"),
+        cash_suggestion_flex_eur: Decimal = Decimal("15.00"),
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -782,6 +1040,8 @@ class OrderDetailDialog(QDialog):
         self.db = db
         self.autosave_callback = autosave_callback
         self.reset_callback = reset_callback
+        self.cash_min_unit_price_ht = cash_min_unit_price_ht
+        self.cash_suggestion_flex_eur = cash_suggestion_flex_eur
         self._autosave_enabled = True
         self.inject_requested = False
         self.source = summary.get("source", "")
@@ -877,6 +1137,10 @@ class OrderDetailDialog(QDialog):
         reset_button.setToolTip("Annuler les corrections et revenir à la commande source")
         reset_button.clicked.connect(self._reset_to_original)
         reset_button.setEnabled(self.reset_callback is not None)
+        cash_button = make_button("Cash / TVA")
+        cash_button.setToolTip("Remplacer la facture par une ligne ARTDIVERS apres deduction du cash")
+        cash_button.clicked.connect(self._open_cash_vat_dialog)
+        cash_button.setVisible(cash_calculator_allowed(self.source))
         inject_button = make_button("Injecter")
         inject_button.setToolTip("Injecter dans Sage")
         inject_button.clicked.connect(self._accept_for_injection)
@@ -889,7 +1153,7 @@ class OrderDetailDialog(QDialog):
         copy_link_button.setEnabled(bool(self.web_url))
         close_button = make_button("Fermer")
         close_button.clicked.connect(self.accept)
-        for index, button in enumerate((remove_button, reset_button, open_web_button, copy_link_button, inject_button, close_button)):
+        for index, button in enumerate((remove_button, reset_button, cash_button, open_web_button, copy_link_button, inject_button, close_button)):
             actions.addWidget(button, index // 3, index % 3)
         for column in range(3):
             actions.setColumnStretch(column, 1)
@@ -1042,6 +1306,21 @@ class OrderDetailDialog(QDialog):
         self.message_label.setText(f"{line.ref} ajouté: {packages} paquet(s), {line.quantity_pieces} pièce(s).")
         return True
 
+    def _open_cash_vat_dialog(self) -> None:
+        if not cash_calculator_allowed(self.source):
+            return
+        if not self.lines:
+            self.message_label.setText("Aucune ligne a convertir.")
+            return
+        dialog = CashVatDialog(self.lines, self.source or "manual", self.cash_min_unit_price_ht, self.cash_suggestion_flex_eur, self)
+        if dialog.exec() != QDialog.Accepted or dialog.artdivers_line is None:
+            return
+        self.lines = [dialog.artdivers_line]
+        self._refresh_table()
+        self._refresh_status()
+        self._autosave("cash applique")
+        self.message_label.setText("Facture remplacee par une ligne ARTDIVERS. Retour origine restaure les lignes source.")
+
     def _accept_for_injection(self) -> None:
         self._save_corrections(show_message=False)
         self.inject_requested = True
@@ -1130,10 +1409,19 @@ class OrderDetailDialog(QDialog):
 
 
 class QuickInvoiceDialog(QDialog):
-    def __init__(self, db: Database, resolver: Resolver, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        db: Database,
+        resolver: Resolver,
+        min_unit_price_ht: Decimal = Decimal("4.00"),
+        cash_flex_eur: Decimal = Decimal("15.00"),
+        parent: QWidget | None = None,
+    ) -> None:
         super().__init__(parent)
         self.db = db
         self.resolver = resolver
+        self.cash_min_unit_price_ht = min_unit_price_ht
+        self.cash_suggestion_flex_eur = cash_flex_eur
         self.lines: list[InvoiceLine] = []
         self.inject_requested = False
         self.setWindowTitle("Facture rapide")
@@ -1189,13 +1477,15 @@ class QuickInvoiceDialog(QDialog):
         copy_button.clicked.connect(self._copy_lines)
         clear_button = make_button("Vider")
         clear_button.clicked.connect(self._clear)
+        cash_button = make_button("Cash / TVA")
+        cash_button.clicked.connect(self._open_cash_vat_dialog)
         inject_button = make_button("Injecter")
         inject_button.setToolTip("Injecter dans Sage")
         inject_button.clicked.connect(self._accept_for_injection)
         close_button = make_button("Fermer")
         close_button.clicked.connect(self.accept)
         actions.addWidget(self.status, 0, 0, 1, 3)
-        for index, button in enumerate((remove_button, copy_button, clear_button, inject_button, close_button)):
+        for index, button in enumerate((remove_button, copy_button, clear_button, cash_button, inject_button, close_button)):
             actions.addWidget(button, 1 + index // 3, index % 3)
         for column in range(3):
             actions.setColumnStretch(column, 1)
@@ -1347,6 +1637,17 @@ class QuickInvoiceDialog(QDialog):
         self.lines.clear()
         self._refresh_table()
         self.status.setText("Facture rapide vidée.")
+
+    def _open_cash_vat_dialog(self) -> None:
+        if not self.lines:
+            self.status.setText("Aucune ligne a convertir.")
+            return
+        dialog = CashVatDialog(self.lines, QUICK_INVOICE_SOURCE, self.cash_min_unit_price_ht, self.cash_suggestion_flex_eur, self)
+        if dialog.exec() != QDialog.Accepted or dialog.artdivers_line is None:
+            return
+        self.lines = [dialog.artdivers_line]
+        self._refresh_table()
+        self.status.setText("Facture rapide remplacee par une ligne ARTDIVERS.")
 
     def _copy_lines(self) -> None:
         if not self.lines:
@@ -2058,6 +2359,8 @@ class MainWindow(QMainWindow):
         self.commands_nav = QPushButton("Commandes")
         self.commands_nav.setCheckable(True)
         self.commands_nav.setChecked(True)
+        self.cash_nav = QPushButton("Ajustement")
+        self.cash_nav.setCheckable(True)
         self.products_nav = QPushButton("Produits")
         self.products_nav.setCheckable(True)
         self.clients_nav = QPushButton("Clients")
@@ -2066,6 +2369,7 @@ class MainWindow(QMainWindow):
         self.settings_nav.setCheckable(True)
         sidebar_layout.addWidget(title)
         sidebar_layout.addWidget(self.commands_nav)
+        sidebar_layout.addWidget(self.cash_nav)
         sidebar_layout.addWidget(self.products_nav)
         sidebar_layout.addWidget(self.clients_nav)
         sidebar_layout.addWidget(self.settings_nav)
@@ -2075,17 +2379,20 @@ class MainWindow(QMainWindow):
         self.stack.setMinimumWidth(0)
         self.stack.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
         self.commands_page = self._build_commands_page()
+        self.cash_page = self._build_cash_page()
         self.products_page = self._build_products_page()
         self.clients_page = self._build_clients_page()
         self.settings_page = self._build_settings_page()
         self.stack.addWidget(self.commands_page)
+        self.stack.addWidget(self.cash_page)
         self.stack.addWidget(self.products_page)
         self.stack.addWidget(self.clients_page)
         self.stack.addWidget(self.settings_page)
         self.commands_nav.clicked.connect(lambda: self._show_page(0))
-        self.products_nav.clicked.connect(lambda: self._show_page(1))
-        self.clients_nav.clicked.connect(lambda: self._show_page(2))
-        self.settings_nav.clicked.connect(lambda: self._show_page(3))
+        self.cash_nav.clicked.connect(lambda: self._show_page(1))
+        self.products_nav.clicked.connect(lambda: self._show_page(2))
+        self.clients_nav.clicked.connect(lambda: self._show_page(3))
+        self.settings_nav.clicked.connect(lambda: self._show_page(4))
 
         root_layout.addWidget(sidebar)
         root_layout.addWidget(self.stack, 1)
@@ -2094,9 +2401,10 @@ class MainWindow(QMainWindow):
     def _show_page(self, index: int) -> None:
         self.stack.setCurrentIndex(index)
         self.commands_nav.setChecked(index == 0)
-        self.products_nav.setChecked(index == 1)
-        self.clients_nav.setChecked(index == 2)
-        self.settings_nav.setChecked(index == 3)
+        self.cash_nav.setChecked(index == 1)
+        self.products_nav.setChecked(index == 2)
+        self.clients_nav.setChecked(index == 3)
+        self.settings_nav.setChecked(index == 4)
 
     def _build_commands_page(self) -> QWidget:
         page = QWidget()
@@ -2184,6 +2492,22 @@ class MainWindow(QMainWindow):
         for column in range(5):
             actions.setColumnStretch(column, 1)
         layout.addLayout(actions)
+        return page
+
+    def _build_cash_page(self) -> QWidget:
+        page = QWidget()
+        page.setMinimumWidth(0)
+        layout = QVBoxLayout(page)
+        title = QLabel("Calculateur TVA / Cash")
+        font = QFont(title.font())
+        font.setPointSize(font.pointSize() + 2)
+        font.setBold(True)
+        title.setFont(font)
+        layout.addWidget(title)
+        self.cash_calculator = CashVatWidget(Decimal("0.00"), 0, self.settings.cash_min_unit_price_ht, self.settings.cash_suggestion_flex_eur, page)
+        self.cash_calculator.min_unit_price_input.editingFinished.connect(self._save_cash_settings_from_calculator)
+        self.cash_calculator.cash_flex_input.editingFinished.connect(self._save_cash_settings_from_calculator)
+        layout.addWidget(self.cash_calculator, 1)
         return page
 
     def _build_products_page(self) -> QWidget:
@@ -2535,6 +2859,10 @@ class MainWindow(QMainWindow):
         self.delay_ms.setSuffix(" ms")
         self.delay_ms.setValue(self.settings.sage_profile.delay_ms)
         self.delay_ms.setToolTip("Délai unique utilisé entre les actions clavier Sage.")
+        self.cash_min_unit_price_setting = QLineEdit(str(self.settings.cash_min_unit_price_ht))
+        self.cash_min_unit_price_setting.setToolTip("PU HT cible utilise pour filtrer les suggestions Cash / TVA autour de cette valeur.")
+        self.cash_suggestion_flex_setting = QLineEdit(str(self.settings.cash_suggestion_flex_eur))
+        self.cash_suggestion_flex_setting.setToolTip("Variation maximale des suggestions autour du cash saisi, en EUR.")
         self.confirmation_mode = QComboBox()
         self.confirmation_mode.addItem("Direct", "direct")
         self.confirmation_mode.addItem("Simple", "simple")
@@ -2551,9 +2879,13 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.confirmation_mode, 0, 1)
         layout.addWidget(QLabel("Délai injection"), 1, 0)
         layout.addWidget(self.delay_ms, 1, 1)
-        layout.addWidget(self.auto_capture, 2, 0, 1, 2)
-        layout.addWidget(self.injection_logs, 2, 2)
-        layout.addWidget(diagnostic_button, 2, 3)
+        layout.addWidget(QLabel("PU HT env. cash"), 2, 0)
+        layout.addWidget(self.cash_min_unit_price_setting, 2, 1)
+        layout.addWidget(QLabel("Variation cash"), 2, 2)
+        layout.addWidget(self.cash_suggestion_flex_setting, 2, 3)
+        layout.addWidget(self.auto_capture, 3, 0, 1, 2)
+        layout.addWidget(self.injection_logs, 3, 2)
+        layout.addWidget(diagnostic_button, 3, 3)
         return box
 
     def _build_database_section(self) -> QGroupBox:
@@ -2748,7 +3080,7 @@ class MainWindow(QMainWindow):
         return self.db.get_product_by_ref(str(ref or ""))
 
     def _open_quick_invoice_dialog(self) -> None:
-        dialog = QuickInvoiceDialog(self.db, self.resolver, self)
+        dialog = QuickInvoiceDialog(self.db, self.resolver, self.settings.cash_min_unit_price_ht, self.settings.cash_suggestion_flex_eur, self)
         dialog.exec()
         if not dialog.lines:
             return
@@ -3569,6 +3901,8 @@ class MainWindow(QMainWindow):
             self.db,
             autosave_callback=lambda updated_lines, s=order.source, k=key: self._save_order_line_edits(s, k, updated_lines),
             reset_callback=lambda s=order.source, k=key, original=order: self._reset_order_line_edits(s, k, original),
+            cash_min_unit_price_ht=self.settings.cash_min_unit_price_ht,
+            cash_suggestion_flex_eur=self.settings.cash_suggestion_flex_eur,
             parent=self,
         )
         dialog.exec()
@@ -3599,6 +3933,8 @@ class MainWindow(QMainWindow):
             self.db,
             autosave_callback=lambda updated_lines, s=source, k=key: self._save_order_line_edits(s, k, updated_lines),
             reset_callback=lambda s=source, k=key, p=path: self._reset_file_order_line_edits(s, k, p),
+            cash_min_unit_price_ht=self.settings.cash_min_unit_price_ht,
+            cash_suggestion_flex_eur=self.settings.cash_suggestion_flex_eur,
             parent=self,
         )
         dialog.exec()
@@ -4001,6 +4337,13 @@ class MainWindow(QMainWindow):
         self._save_app_settings_silent()
         QMessageBox.information(self, APP_NAME, "Reglages sauvegardes.")
 
+    def _save_cash_settings_from_calculator(self) -> None:
+        if hasattr(self, "cash_min_unit_price_setting"):
+            self.cash_min_unit_price_setting.setText(self.cash_calculator.min_unit_price_input.text().strip())
+        if hasattr(self, "cash_suggestion_flex_setting"):
+            self.cash_suggestion_flex_setting.setText(self.cash_calculator.cash_flex_input.text().strip())
+        self._save_app_settings_silent()
+
     def _save_app_settings_silent(self) -> None:
         self.settings.autohotkey_path = self.ahk_path.text().strip() or "AutoHotkey64.exe"
         self.settings.sage_executable_path = self.sage_path.text().strip()
@@ -4023,6 +4366,22 @@ class MainWindow(QMainWindow):
         self.settings.sage_profile.stable_pause_ms = self.settings.sage_profile.delay_ms
         if hasattr(self, "confirmation_mode"):
             self.settings.sage_profile.confirmation_mode = str(self.confirmation_mode.currentData() or "simple")
+        if hasattr(self, "cash_min_unit_price_setting"):
+            try:
+                cash_min = _decimal_from_text(self.cash_min_unit_price_setting.text()) or Decimal("4.00")
+            except ValueError:
+                cash_min = self.settings.cash_min_unit_price_ht
+            self.settings.cash_min_unit_price_ht = cash_min
+            if hasattr(self, "cash_calculator") and self.cash_calculator.min_unit_price_input.text().strip() != str(cash_min):
+                self.cash_calculator.min_unit_price_input.setText(str(cash_min))
+        if hasattr(self, "cash_suggestion_flex_setting"):
+            try:
+                cash_flex = _decimal_from_text(self.cash_suggestion_flex_setting.text()) or Decimal("15.00")
+            except ValueError:
+                cash_flex = self.settings.cash_suggestion_flex_eur
+            self.settings.cash_suggestion_flex_eur = cash_flex
+            if hasattr(self, "cash_calculator") and self.cash_calculator.cash_flex_input.text().strip() != str(cash_flex):
+                self.cash_calculator.cash_flex_input.setText(str(cash_flex))
         self.settings.sage_profile.capture_before_after = self.auto_capture.isChecked()
         self.settings.sage_profile.log_enabled = self.injection_logs.isChecked()
         self.settings.injection_line_limit = 0
