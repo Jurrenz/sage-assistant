@@ -8,6 +8,7 @@ import pytest
 
 from app.db import Database
 from app.excel_import import OrderRow, import_order, import_products
+from app.sage_pdf_import import import_sage_pdf_invoice, parse_sage_pdf_text
 from app.main import (
     QUICK_INVOICE_SOURCE,
     line_headers_for_source,
@@ -136,6 +137,44 @@ def test_parse_quick_ref_text_defaults_to_one_package():
     assert parse_quick_ref_text("LA15-9 ×3") == ("LA15-9", 3)
     assert parse_quick_ref_text("CM55-9\t4") == ("CM55-9", 4)
     assert parse_quick_ref_text("CM55-9\tROBE\t4") == ("CM55-9", 4)
+
+
+def test_parse_sage_pdf_text_extracts_invoice_lines_and_ignores_tax_line():
+    text = """
+IndiceArticle Description Qté P.U. HTMt Tot HT TVA Mt Tot TTC
+1 PA Pantalon G05-3 24,00 3,20 76,80 0 76,80
+2 RO ROBE / TUNIC FL313-25 24,00 6,00 144,00 0 144,00
+3 EN Ensemble 2pcs FL779 12,00 9,00 108,00 0 108,00
+4 EXP Exonération TVA ART262-1 TER2 CGI 1,00 0
+Facture N°
+FA2551
+Date
+25/03/2026
+"""
+
+    invoice = parse_sage_pdf_text(text)
+
+    assert invoice.invoice_number == "FA2551"
+    assert invoice.invoice_date == "25/03/2026"
+    assert len(invoice.lines) == 3
+    assert invoice.lines[0].sage_code == "PA"
+    assert invoice.lines[0].ref == "G05-3"
+    assert invoice.lines[0].quantity_pieces == 24
+    assert invoice.lines[0].unit_price_ht == Decimal("3.20")
+    assert invoice.lines[2].ref == "FL779"
+
+
+def test_import_real_sage_pdf_invoice_when_available():
+    pdf_path = Path(r"C:\Documents\Format A4~1.pdf")
+    if not pdf_path.exists():
+        pytest.skip("PDF Sage exemple absent")
+
+    invoice = import_sage_pdf_invoice(pdf_path)
+
+    assert invoice.invoice_number == "FA2551"
+    assert len(invoice.lines) == 13
+    assert sum(line.quantity_pieces for line in invoice.lines) == 312
+    assert sum(line.quantity_pieces * line.unit_price_ht for line in invoice.lines) == Decimal("1840.80")
 
 
 def test_quick_invoice_line_uses_one_package_by_default(tmp_path):

@@ -3,13 +3,16 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import threading
+from copy import deepcopy
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Callable
 
 from PySide6.QtCore import QAbstractTableModel, QEvent, QModelIndex, QObject, QSortFilterProxyModel, QThread, QTimer, Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices, QFont
+from PySide6.QtGui import QBrush, QColor, QDesktopServices, QFont
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -53,10 +56,22 @@ from .customs import (
     CustomsDeclarationDraft,
     CustomsLine,
     CustomsParcel,
+    add_quantity_to_parcel,
+    adapt_parcel_weights,
     build_customs_draft,
-    build_laposte_script,
+    clone_customs_line,
+    customs_line_key,
     decimal_from,
+    export_packing_list_xlsx,
+    expected_quantities_by_ref,
     money,
+    packing_list_text,
+    parcel_to_laposte_payload,
+    remaining_quantities_by_ref,
+    remove_quantity_from_parcel,
+    set_parcel_line_quantity,
+    set_draft_parcel_count,
+    sync_parcel_templates,
     weight,
 )
 from .cash_calculator import (
@@ -91,6 +106,7 @@ from .settings import (
     load_settings,
     save_settings,
 )
+from .sage_pdf_import import SagePdfInvoice, import_sage_pdf_invoice
 
 
 STATUS_READY = "Prêt"
@@ -136,6 +152,65 @@ LINE_HEADERS = [
 ]
 MAPPING_HEADERS = ["Categorie fournisseur", "Code Sage", "Libelle Sage", "Actif"]
 CUSTOMS_HEADERS = ["Ref", "Description", "Code", "Qte", "Poids kg/u", "Valeur HT/u", "Pays", "SH"]
+CUSTOMS_BRIDGE_PORT = 8765
+CUSTOMS_BRIDGE_URL = f"http://127.0.0.1:{CUSTOMS_BRIDGE_PORT}/latest"
+BUTTON_STYLES = {
+    "inject": {
+        "bg": "#168A48",
+        "hover": "#10743B",
+        "border": "#0C5F30",
+        "fg": "#FFFFFF",
+    },
+    "laposte": {
+        "bg": "#FFCB05",
+        "hover": "#F2BE00",
+        "border": "#D7A900",
+        "fg": "#232323",
+    },
+}
+SOURCE_COLORS = {
+    "Microstore": {"row": "#E9F8FB", "chip": "#00A6C8", "fg": "#FFFFFF"},
+    "PFS": {"row": "#FFF1E5", "chip": "#F57A1F", "fg": "#FFFFFF"},
+    "eFashion": {"row": "#EEF0F2", "chip": "#3D4248", "fg": "#FFFFFF"},
+    QUICK_INVOICE_SOURCE: {"row": "#F4F6F8", "chip": "#7B8794", "fg": "#FFFFFF"},
+    "Fichier manuel": {"row": "#F7F4EC", "chip": "#9C7A2F", "fg": "#FFFFFF"},
+}
+
+
+class CustomsBridgeState:
+    payload: dict | None = None
+    lock = threading.Lock()
+
+
+class CustomsBridgeHandler(BaseHTTPRequestHandler):
+    def log_message(self, _format: str, *args) -> None:
+        return
+
+    def _send_json(self, status: int, payload: dict) -> None:
+        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(data)
+
+    def do_OPTIONS(self) -> None:
+        self._send_json(200, {"ok": True})
+
+    def do_GET(self) -> None:
+        if self.path.split("?", 1)[0] != "/latest":
+            self._send_json(404, {"ok": False, "error": "not_found"})
+            return
+        with CustomsBridgeState.lock:
+            payload = deepcopy(CustomsBridgeState.payload)
+        if payload is None:
+            self._send_json(404, {"ok": False, "error": "no_parcel"})
+            return
+        self._send_json(200, {"ok": True, "payload": payload})
 LINE_COL_REF = 0
 LINE_COL_CATEGORY = 1
 LINE_COL_CODE = 2
@@ -279,7 +354,51 @@ def make_button(text: str) -> QPushButton:
     button = QPushButton(text)
     button.setMinimumWidth(72)
     button.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+    lower = text.strip().lower()
+    if "injecter" in lower:
+        apply_button_style(button, "inject")
+    elif "la poste" in lower:
+        apply_button_style(button, "laposte")
     return button
+
+
+def apply_button_style(button: QPushButton, role: str) -> None:
+    style = BUTTON_STYLES.get(role)
+    if not style:
+        return
+    button.setStyleSheet(
+        f"""
+        QPushButton {{
+            background-color: {style["bg"]};
+            color: {style["fg"]};
+            border: 1px solid {style["border"]};
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-weight: 600;
+        }}
+        QPushButton:hover {{
+            background-color: {style["hover"]};
+        }}
+        QPushButton:disabled {{
+            background-color: #D8DCE0;
+            color: #7A8088;
+            border-color: #C4C9CF;
+        }}
+        """
+    )
+
+
+def apply_order_source_style(item: QTableWidgetItem, source: str, column: int) -> None:
+    colors = SOURCE_COLORS.get(source)
+    if not colors:
+        return
+    item.setBackground(QBrush(QColor(colors["row"])))
+    if column == 0:
+        item.setBackground(QBrush(QColor(colors["chip"])))
+        item.setForeground(QBrush(QColor(colors["fg"])))
+        font = item.font()
+        font.setBold(True)
+        item.setFont(font)
 
 
 def parse_quick_ref_text(text: str) -> tuple[str, int]:
@@ -1087,16 +1206,479 @@ class CashVatDialog(QDialog):
         self.accept()
 
 
+class PackingAssistantDialog(QDialog):
+    def __init__(
+        self,
+        draft: CustomsDeclarationDraft,
+        source_draft: CustomsDeclarationDraft,
+        save_callback: Callable[[CustomsDeclarationDraft], None],
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.draft = deepcopy(draft)
+        self.source_draft = deepcopy(source_draft)
+        self.save_callback = save_callback
+        sync_parcel_templates(self.draft, self.source_draft)
+        if self._looks_like_initial_unpacked_draft():
+            self.draft = self._empty_draft_from_source(1)
+        self.result_draft: CustomsDeclarationDraft | None = None
+        self.current_parcel_index = 0
+        self.current_key = ""
+        self._loading = False
+        self._dirty = False
+        self._ref_keys: dict[str, str] = {}
+        self.setWindowTitle("Assistant colisage")
+        self.resize(1060, 720)
+
+        layout = QVBoxLayout(self)
+        top = QHBoxLayout()
+        self.parcel_count = QSpinBox()
+        self.parcel_count.setRange(1, 999)
+        self.parcel_count.setValue(max(1, len(self.draft.parcels)))
+        self.parcel_count.valueChanged.connect(self._change_parcel_count)
+        self.parcel_combo = QComboBox()
+        self.parcel_combo.currentIndexChanged.connect(self._switch_parcel)
+        previous_button = make_button("Colis précédent")
+        previous_button.clicked.connect(self._previous_parcel)
+        next_button = make_button("Colis suivant")
+        next_button.clicked.connect(self._next_parcel)
+        finish_button = make_button("Finir ce colis")
+        finish_button.clicked.connect(self._finish_current_parcel)
+        top.addWidget(QLabel("Nombre de colis"))
+        top.addWidget(self.parcel_count)
+        top.addWidget(QLabel("Colis courant"))
+        top.addWidget(self.parcel_combo, 1)
+        top.addWidget(previous_button)
+        top.addWidget(next_button)
+        top.addWidget(finish_button)
+        layout.addLayout(top)
+
+        proposal_box = QGroupBox("Proposition")
+        proposal_layout = QGridLayout(proposal_box)
+        self.proposal_label = QLabel("")
+        self.proposal_label.setWordWrap(True)
+        self.quantity_input = QSpinBox()
+        self.quantity_input.setRange(1, 100000)
+        self.quantity_input.setValue(1)
+        self.quantity_input.lineEdit().returnPressed.connect(self._validate_current)
+        validate_button = make_button("Valider")
+        validate_button.clicked.connect(self._validate_current)
+        skip_button = make_button("Passer cette ref")
+        skip_button.clicked.connect(self._skip_current)
+        clear_current_button = make_button("Vider cette ref du colis")
+        clear_current_button.clicked.connect(self._clear_current_from_parcel)
+        proposal_layout.addWidget(self.proposal_label, 0, 0, 1, 5)
+        proposal_layout.addWidget(QLabel("Quantite"), 1, 0)
+        proposal_layout.addWidget(self.quantity_input, 1, 1)
+        proposal_layout.addWidget(validate_button, 1, 2)
+        proposal_layout.addWidget(skip_button, 1, 3)
+        proposal_layout.addWidget(clear_current_button, 1, 4)
+        layout.addWidget(proposal_box)
+
+        search_layout = QHBoxLayout()
+        self.ref_search = QLineEdit()
+        self.ref_search.setPlaceholderText("Rechercher ref ou description")
+        self.ref_search.returnPressed.connect(self._select_from_search)
+        select_button = make_button("Sélectionner")
+        select_button.clicked.connect(self._select_from_search)
+        search_layout.addWidget(self.ref_search, 1)
+        search_layout.addWidget(select_button)
+        layout.addLayout(search_layout)
+
+        self.status_label = QLabel("")
+        self.status_label.setWordWrap(True)
+        layout.addWidget(self.status_label)
+
+        self.remaining_table = QTableWidget(0, 4)
+        self.remaining_table.setHorizontalHeaderLabels(["Ref", "Description", "Reste", "Dans ce colis"])
+        configure_table_columns(self.remaining_table, {0: 120, 2: 80, 3: 95}, {1})
+        self.remaining_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.remaining_table.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.remaining_table.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed | QAbstractItemView.AnyKeyPressed)
+        self.remaining_table.itemSelectionChanged.connect(self._select_from_table)
+        self.remaining_table.itemChanged.connect(self._on_remaining_item_changed)
+        layout.addWidget(self.remaining_table, 1)
+
+        self.carton_table = QTableWidget(0, 6)
+        self.carton_table.setHorizontalHeaderLabels(["Ref", "Description", "Quantite", "Poids", "Valeur", "Retirer"])
+        configure_table_columns(self.carton_table, {0: 120, 2: 80, 3: 80, 4: 90, 5: 155}, {1})
+        self.carton_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.carton_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        layout.addWidget(self.carton_table, 1)
+
+        actions = QHBoxLayout()
+        reset_button = make_button("Reset colisage")
+        reset_button.clicked.connect(self._reset_colisage)
+        export_button = make_button("Exporter liste de colisage")
+        export_button.clicked.connect(self._export_packing_list)
+        apply_button = make_button("Appliquer")
+        apply_button.clicked.connect(self._apply)
+        close_button = make_button("Fermer")
+        close_button.clicked.connect(self.accept)
+        actions.addWidget(reset_button)
+        actions.addWidget(export_button)
+        actions.addStretch(1)
+        actions.addWidget(apply_button)
+        actions.addWidget(close_button)
+        layout.addLayout(actions)
+
+        self._refresh_parcel_combo()
+        self._select_next_remaining()
+        self._refresh_all()
+
+    def _empty_draft_from_source(self, count: int) -> CustomsDeclarationDraft:
+        draft = CustomsDeclarationDraft(source=self.source_draft.source, order_key=self.source_draft.order_key, parcel_content=self.source_draft.parcel_content)
+        templates = [clone_customs_line(line, 0) for line in (self.source_draft.parcels[0].lines if self.source_draft.parcels else [])]
+        draft.parcels = [
+            CustomsParcel(name=f"Colis {index}", lines=[clone_customs_line(line, 0) for line in templates])
+            for index in range(1, max(1, count) + 1)
+        ]
+        return draft
+
+    def _looks_like_initial_unpacked_draft(self) -> bool:
+        if len(self.draft.parcels) != 1 or not self.source_draft.parcels:
+            return False
+        return expected_quantities_by_ref(self.draft) == expected_quantities_by_ref(self.source_draft)
+
+    def _line_options(self) -> list[tuple[str, str, CustomsLine]]:
+        lines = self.source_draft.parcels[0].lines if self.source_draft.parcels else []
+        options: list[tuple[str, str, CustomsLine]] = []
+        seen: set[str] = set()
+        for line in lines:
+            key = customs_line_key(line)
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            options.append((f"{line.ref} | {line.description}", key, line))
+        return options
+
+    def _source_line(self, key: str) -> CustomsLine | None:
+        for _label, item_key, line in self._line_options():
+            if item_key == key:
+                return line
+        return None
+
+    def _refresh_completer(self) -> None:
+        self._ref_keys = {label: key for label, key, _line in self._line_options()}
+        completer = QCompleter(list(self._ref_keys), self)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.setFilterMode(Qt.MatchContains)
+        self.ref_search.setCompleter(completer)
+
+    def _refresh_parcel_combo(self) -> None:
+        self._loading = True
+        self.parcel_combo.clear()
+        for parcel in self.draft.parcels:
+            self.parcel_combo.addItem(parcel.name)
+        self.current_parcel_index = min(self.current_parcel_index, max(0, len(self.draft.parcels) - 1))
+        self.parcel_combo.setCurrentIndex(self.current_parcel_index)
+        self._loading = False
+
+    def _current_parcel(self) -> CustomsParcel:
+        if not self.draft.parcels:
+            set_draft_parcel_count(self.draft, self.source_draft, 1)
+        self.current_parcel_index = max(0, min(self.current_parcel_index, len(self.draft.parcels) - 1))
+        return self.draft.parcels[self.current_parcel_index]
+
+    def _mark_dirty(self) -> None:
+        self._dirty = True
+
+    def _autosave(self, force: bool = False) -> None:
+        if not self._dirty and not force:
+            return
+        sync_parcel_templates(self.draft, self.source_draft)
+        self.draft.renumber_parcels()
+        self.result_draft = self.draft
+        self.save_callback(self.draft)
+
+    def _switch_parcel(self, index: int) -> None:
+        if self._loading or index < 0:
+            return
+        self.current_parcel_index = index
+        self._autosave()
+        self._refresh_all()
+
+    def _change_parcel_count(self, count: int) -> None:
+        if self._loading:
+            return
+        if count < len(self.draft.parcels):
+            removed_quantities = sum(line.quantity for parcel in self.draft.parcels[count:] for line in parcel.lines)
+            if removed_quantities and QMessageBox.question(
+                self,
+                APP_NAME,
+                f"Supprimer les derniers colis remettra {removed_quantities} piece(s) en reste. Continuer ?",
+            ) != QMessageBox.Yes:
+                self._loading = True
+                self.parcel_count.setValue(len(self.draft.parcels))
+                self._loading = False
+                return
+        set_draft_parcel_count(self.draft, self.source_draft, count)
+        self.current_parcel_index = min(self.current_parcel_index, len(self.draft.parcels) - 1)
+        self._refresh_parcel_combo()
+        self._mark_dirty()
+        self._autosave()
+        self._refresh_all()
+
+    def _previous_parcel(self) -> None:
+        if self.current_parcel_index <= 0:
+            return
+        self.parcel_combo.setCurrentIndex(self.current_parcel_index - 1)
+
+    def _next_parcel(self) -> None:
+        if self.current_parcel_index < len(self.draft.parcels) - 1:
+            self.parcel_combo.setCurrentIndex(self.current_parcel_index + 1)
+            return
+        if sum(remaining_quantities_by_ref(self.draft, self.source_draft).values()) > 0:
+            self.parcel_count.setValue(len(self.draft.parcels) + 1)
+            self.parcel_combo.setCurrentIndex(len(self.draft.parcels) - 1)
+
+    def _finish_current_parcel(self) -> None:
+        self._next_parcel()
+
+    def _key_from_search(self) -> str:
+        text = normalize_spaces(self.ref_search.text())
+        if text in self._ref_keys:
+            return self._ref_keys[text]
+        lowered = text.lower()
+        for label, key in self._ref_keys.items():
+            if lowered and lowered in label.lower():
+                return key
+        return text.strip().upper()
+
+    def _select_from_search(self) -> None:
+        self._set_current_key(self._key_from_search())
+
+    def _select_from_table(self) -> None:
+        if self._loading:
+            return
+        selected = self.remaining_table.selectedItems()
+        if not selected:
+            return
+        key = selected[0].data(Qt.UserRole)
+        if key:
+            self._set_current_key(str(key))
+
+    def _set_current_key(self, key: str) -> None:
+        if not key:
+            return
+        self.current_key = key.strip().upper()
+        self._refresh_proposal()
+
+    def _select_next_remaining(self, after_key: str = "") -> None:
+        options = self._line_options()
+        remaining = remaining_quantities_by_ref(self.draft, self.source_draft)
+        keys = [key for _label, key, _line in options]
+        start = 0
+        if after_key in keys:
+            start = keys.index(after_key) + 1
+        ordered = keys[start:] + keys[:start]
+        self.current_key = next((key for key in ordered if remaining.get(key, 0) > 0), "")
+
+    def _validate_current(self) -> None:
+        if not self.current_key:
+            return
+        added = add_quantity_to_parcel(self.draft, self.source_draft, self.current_parcel_index, self.current_key, self.quantity_input.value())
+        if added <= 0:
+            QMessageBox.information(self, APP_NAME, "Aucune quantite restante pour cette reference.")
+            return
+        previous_key = self.current_key
+        self._select_next_remaining(previous_key)
+        self._mark_dirty()
+        self._autosave()
+        self._refresh_all()
+
+    def _skip_current(self) -> None:
+        self._select_next_remaining(self.current_key)
+        self._refresh_all()
+
+    def _clear_current_from_parcel(self) -> None:
+        if not self.current_key:
+            return
+        remove_quantity_from_parcel(self.draft, self.current_parcel_index, self.current_key, None)
+        self._mark_dirty()
+        self._autosave()
+        self._refresh_all()
+
+    def _remove_from_current(self, key: str, quantity: int | None = None) -> None:
+        remove_quantity_from_parcel(self.draft, self.current_parcel_index, key, quantity)
+        if not self.current_key:
+            self.current_key = key
+        self._mark_dirty()
+        self._autosave()
+        self._refresh_all()
+
+    def _set_current_parcel_quantity(self, key: str, target_quantity: int) -> None:
+        set_parcel_line_quantity(self.draft, self.source_draft, self.current_parcel_index, key, target_quantity)
+        self.current_key = key
+        self._mark_dirty()
+        self._autosave()
+        self._refresh_all()
+
+    def _on_remaining_item_changed(self, item: QTableWidgetItem) -> None:
+        if self._loading or item.column() != 3:
+            return
+        key = item.data(Qt.UserRole)
+        if not key:
+            return
+        try:
+            target = int(decimal_from(item.text()))
+        except Exception:
+            target = 0
+        self._set_current_parcel_quantity(str(key), target)
+
+    def _reset_colisage(self) -> None:
+        if QMessageBox.question(self, APP_NAME, "Reinitialiser le colisage depuis la facture courante ?") != QMessageBox.Yes:
+            return
+        self.draft = self._empty_draft_from_source(1)
+        self.current_parcel_index = 0
+        self._loading = True
+        self.parcel_count.setValue(max(1, len(self.draft.parcels)))
+        self._loading = False
+        self._refresh_parcel_combo()
+        self._select_next_remaining()
+        self._mark_dirty()
+        self._autosave()
+        self._refresh_all()
+
+    def _refresh_all(self) -> None:
+        sync_parcel_templates(self.draft, self.source_draft)
+        self._refresh_completer()
+        if not self.current_key:
+            self._select_next_remaining()
+        self._refresh_remaining_table()
+        self._refresh_carton_table(self._current_parcel())
+        self._refresh_proposal()
+        self._refresh_status()
+
+    def _refresh_proposal(self) -> None:
+        remaining = remaining_quantities_by_ref(self.draft, self.source_draft)
+        parcel = self._current_parcel()
+        current_by_key = {customs_line_key(line): line for line in parcel.lines}
+        line = self._source_line(self.current_key)
+        rest = remaining.get(self.current_key, 0) if self.current_key else 0
+        if not line or rest <= 0:
+            self.proposal_label.setText("Plus rien a repartir. Tu peux passer au colis suivant ou appliquer le colisage.")
+            self.quantity_input.setValue(1)
+            return
+        in_parcel = current_by_key.get(self.current_key).quantity if self.current_key in current_by_key else 0
+        estimated_weight = weight(line.unit_weight_kg * Decimal(rest))
+        self.quantity_input.setMaximum(max(1, rest))
+        self.quantity_input.setValue(max(1, rest))
+        self.proposal_label.setText(
+            f"{line.ref} | {line.description}\n"
+            f"Reste: {rest} piece(s) | Dans {parcel.name}: {in_parcel} | "
+            f"Poids estime si valide: {estimated_weight} kg"
+        )
+
+    def _refresh_status(self) -> None:
+        parcel = self._current_parcel()
+        remaining_total = sum(remaining_quantities_by_ref(self.draft, self.source_draft).values())
+        errors = parcel.weight_errors()
+        message = (
+            f"{parcel.name}: {parcel.total_weight_kg} kg / {parcel.max_weight_kg} kg | "
+            f"{parcel.total_value_ht} EUR HT | Reste global: {remaining_total} piece(s)"
+        )
+        self.status_label.setText(message if not errors else f"{message} | {' | '.join(errors)}")
+        self.status_label.setStyleSheet("color: #b42318; font-weight: 600;" if errors else "")
+
+    def _refresh_remaining_table(self) -> None:
+        remaining = remaining_quantities_by_ref(self.draft, self.source_draft)
+        parcel = self._current_parcel()
+        current_by_key = {customs_line_key(line): line.quantity for line in parcel.lines}
+        rows = [(key, line) for _label, key, line in self._line_options() if remaining.get(key, 0) > 0 or current_by_key.get(key, 0) > 0]
+        self._loading = True
+        self.remaining_table.blockSignals(True)
+        self.remaining_table.setRowCount(len(rows))
+        for row, (key, line) in enumerate(rows):
+            values = [line.ref, line.description, str(remaining.get(key, 0)), str(current_by_key.get(key, 0))]
+            for column, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                item.setData(Qt.UserRole, key)
+                if column != 3:
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.remaining_table.setItem(row, column, item)
+            if key == self.current_key:
+                self.remaining_table.selectRow(row)
+        self.remaining_table.blockSignals(False)
+        self._loading = False
+        self.remaining_table.resizeRowsToContents()
+
+    def _refresh_carton_table(self, parcel: CustomsParcel) -> None:
+        lines = [line for line in parcel.lines if line.quantity > 0]
+        self.carton_table.setRowCount(len(lines))
+        for row, line in enumerate(lines):
+            key = customs_line_key(line)
+            values = [line.ref, line.description, str(line.quantity), f"{line.total_weight_kg}", f"{line.total_value_ht}"]
+            for column, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                item.setData(Qt.UserRole, key)
+                self.carton_table.setItem(row, column, item)
+            actions = QWidget()
+            row_actions = QHBoxLayout(actions)
+            row_actions.setContentsMargins(0, 0, 0, 0)
+            minus_one = make_button("-1")
+            minus_one.clicked.connect(lambda _checked=False, item_key=key: self._remove_from_current(item_key, 1))
+            clear_line = make_button("Vider ligne")
+            clear_line.clicked.connect(lambda _checked=False, item_key=key: self._remove_from_current(item_key, None))
+            row_actions.addWidget(minus_one)
+            row_actions.addWidget(clear_line)
+            self.carton_table.setCellWidget(row, 5, actions)
+        self.carton_table.resizeRowsToContents()
+
+    def _export_packing_list(self) -> None:
+        self._autosave(force=True)
+        default_name = f"liste_colisage_{self.draft.source}_{self.draft.order_key}.xlsx".replace("/", "-").replace("\\", "-")
+        filename, _ = QFileDialog.getSaveFileName(self, "Exporter liste de colisage", default_name, "Excel (*.xlsx)")
+        if not filename:
+            return
+        if not filename.lower().endswith(".xlsx"):
+            filename = f"{filename}.xlsx"
+        try:
+            export_packing_list_xlsx(self.draft, filename)
+        except Exception as exc:
+            QMessageBox.warning(self, APP_NAME, str(exc))
+            return
+        QApplication.clipboard().setText(packing_list_text(self.draft))
+        QMessageBox.information(self, APP_NAME, "Liste de colisage exportee.\n\nLa version texte est aussi copiee dans le presse-papiers.")
+
+    def _apply(self) -> None:
+        remaining_total = sum(remaining_quantities_by_ref(self.draft, self.source_draft).values())
+        errors = self.draft.validation_errors()
+        if remaining_total or errors:
+            parts = []
+            if remaining_total:
+                parts.append(f"Il reste {remaining_total} piece(s) non repartie(s).")
+            if errors:
+                parts.append("\n".join(errors))
+            parts.append("Appliquer quand meme ?")
+            if QMessageBox.question(self, APP_NAME, "\n\n".join(parts)) != QMessageBox.Yes:
+                return
+        self._autosave(force=True)
+        self.accept()
+
+    def reject(self) -> None:
+        self._autosave()
+        super().reject()
+
+    def accept(self) -> None:
+        self._autosave()
+        super().accept()
+
+
 class CustomsDeclarationDialog(QDialog):
     def __init__(
         self,
         draft: CustomsDeclarationDraft,
         save_callback: Callable[[CustomsDeclarationDraft], None],
+        reset_draft: CustomsDeclarationDraft | None = None,
+        initial_warning: str = "",
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.draft = draft
         self.save_callback = save_callback
+        self.reset_draft = reset_draft
+        self.initial_warning = initial_warning
         self.current_parcel_index = 0
         self._loading = False
         self.setWindowTitle(f"Douane La Poste {draft.order_key}".strip())
@@ -1112,6 +1694,12 @@ class CustomsDeclarationDialog(QDialog):
         self.parcel_combo.currentIndexChanged.connect(self._switch_parcel)
         add_parcel = make_button("Ajouter colis")
         add_parcel.clicked.connect(self._add_parcel)
+        remove_parcel = make_button("Supprimer colis")
+        remove_parcel.clicked.connect(self._remove_current_parcel)
+        packing_assistant = make_button("Assistant colisage")
+        packing_assistant.clicked.connect(self._open_packing_assistant)
+        adapt_weight = make_button("Adapter poids")
+        adapt_weight.clicked.connect(self._adapt_current_parcel_weight)
         self.max_weight = QDoubleSpinBox()
         self.max_weight.setRange(0.01, float(MAX_PARCEL_WEIGHT_KG))
         self.max_weight.setDecimals(2)
@@ -1121,6 +1709,9 @@ class CustomsDeclarationDialog(QDialog):
         top.addWidget(QLabel("Colis"))
         top.addWidget(self.parcel_combo, 1)
         top.addWidget(add_parcel)
+        top.addWidget(remove_parcel)
+        top.addWidget(packing_assistant)
+        top.addWidget(adapt_weight)
         top.addWidget(QLabel("Poids max"))
         top.addWidget(self.max_weight)
         layout.addLayout(top)
@@ -1144,15 +1735,17 @@ class CustomsDeclarationDialog(QDialog):
         actions = QGridLayout()
         save_button = make_button("Sauvegarder")
         save_button.clicked.connect(self._save)
-        copy_script = make_button("Copier script colis")
-        copy_script.clicked.connect(self._copy_script)
+        reset_button = make_button("Reset colisage")
+        reset_button.clicked.connect(self._reset_colisage)
+        send_laposte = make_button("Envoyer vers La Poste")
+        send_laposte.clicked.connect(self._send_to_laposte_bridge)
         open_laposte = make_button("Ouvrir La Poste")
         open_laposte.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("https://www.laposte.fr/colissimo-en-ligne/parcours/douanes")))
         close_button = make_button("Fermer")
         close_button.clicked.connect(self.accept)
-        for index, button in enumerate((save_button, copy_script, open_laposte, close_button)):
+        for index, button in enumerate((save_button, reset_button, send_laposte, open_laposte, close_button)):
             actions.addWidget(button, 0, index)
-        for column in range(4):
+        for column in range(5):
             actions.setColumnStretch(column, 1)
         layout.addLayout(actions)
 
@@ -1200,12 +1793,15 @@ class CustomsDeclarationDialog(QDialog):
     def _save_table_to_current_parcel(self) -> None:
         parcel = self._current_parcel()
         parcel.max_weight_kg = min(decimal_from(self.max_weight.value(), MAX_PARCEL_WEIGHT_KG), MAX_PARCEL_WEIGHT_KG)
+        previous_by_key = {customs_line_key(line): line for line in parcel.lines}
         lines: list[CustomsLine] = []
         for row in range(self.table.rowCount()):
             def cell(column: int) -> str:
                 item = self.table.item(row, column)
                 return item.text().strip() if item else ""
 
+            key = (cell(0) or cell(1)).strip().upper()
+            previous = previous_by_key.get(key)
             lines.append(
                 CustomsLine(
                     ref=cell(0),
@@ -1217,15 +1813,23 @@ class CustomsDeclarationDialog(QDialog):
                     origin_country=cell(6) or "Chine",
                     origin_iso="CN",
                     hs_number=cell(7) or "62044300",
+                    package_size=previous.package_size if previous else None,
                 )
             )
         parcel.lines = lines
+
+    def _autosave(self) -> None:
+        if self._loading:
+            return
+        self._save_table_to_current_parcel()
+        self.save_callback(self.draft)
 
     def _refresh_totals(self, save: bool) -> None:
         if self._loading:
             return
         if save:
             self._save_table_to_current_parcel()
+            self.save_callback(self.draft)
         parcel = self._current_parcel()
         invoice_total = self.draft.total_value_ht
         errors = self.draft.validation_errors()
@@ -1235,6 +1839,8 @@ class CustomsDeclarationDialog(QDialog):
         )
         if errors:
             self.warning_label.setText(" | ".join(errors))
+        elif self.initial_warning:
+            self.warning_label.setText(self.initial_warning)
         elif len(self.draft.parcels) == 1 and parcel.total_weight_kg > MAX_PARCEL_WEIGHT_KG:
             self.warning_label.setText("Ce colis depasse 30 kg. Ajoute un colis et repartis les quantites.")
         else:
@@ -1244,6 +1850,7 @@ class CustomsDeclarationDialog(QDialog):
         if self._loading or index < 0:
             return
         self._save_table_to_current_parcel()
+        self.save_callback(self.draft)
         self.current_parcel_index = index
         self._load_current_parcel()
 
@@ -1261,6 +1868,7 @@ class CustomsDeclarationDialog(QDialog):
                 origin_country=line.origin_country,
                 origin_iso=line.origin_iso,
                 hs_number=line.hs_number,
+                package_size=line.package_size,
             )
             for line in template
         ]
@@ -1268,6 +1876,56 @@ class CustomsDeclarationDialog(QDialog):
         self.current_parcel_index = len(self.draft.parcels) - 1
         self._refresh_parcel_combo()
         self._load_current_parcel()
+        self._autosave()
+
+    def _remove_current_parcel(self) -> None:
+        if len(self.draft.parcels) <= 1:
+            QMessageBox.information(self, APP_NAME, "Impossible de supprimer le dernier colis.")
+            return
+        self._save_table_to_current_parcel()
+        parcel_name = self._current_parcel().name
+        if QMessageBox.question(self, APP_NAME, f"Supprimer {parcel_name} ?") != QMessageBox.Yes:
+            return
+        self.draft.remove_parcel(self.current_parcel_index)
+        self.current_parcel_index = min(self.current_parcel_index, len(self.draft.parcels) - 1)
+        self._refresh_parcel_combo()
+        self._load_current_parcel()
+        self._autosave()
+
+    def _open_packing_assistant(self) -> None:
+        self._save_table_to_current_parcel()
+        source_draft = deepcopy(self.reset_draft) if self.reset_draft is not None else deepcopy(self.draft)
+        dialog = PackingAssistantDialog(self.draft, source_draft, self.save_callback, self)
+        dialog.exec()
+        if dialog.result_draft is None:
+            return
+        self.draft = dialog.result_draft
+        self.current_parcel_index = min(self.current_parcel_index, len(self.draft.parcels) - 1)
+        self._refresh_parcel_combo()
+        self._load_current_parcel()
+        self._autosave()
+
+    def _adapt_current_parcel_weight(self) -> None:
+        self._save_table_to_current_parcel()
+        parcel = self._current_parcel()
+        if not [line for line in parcel.lines if line.quantity > 0 and line.unit_weight_kg > 0]:
+            QMessageBox.warning(self, APP_NAME, "Aucune ligne avec quantite et poids a adapter dans ce colis.")
+            return
+        adapt_parcel_weights(parcel, parcel.max_weight_kg)
+        self._load_current_parcel()
+        self._autosave()
+
+    def _reset_colisage(self) -> None:
+        if self.reset_draft is None:
+            return
+        if QMessageBox.question(self, APP_NAME, "Reinitialiser le colisage depuis les lignes facture actuelles ?") != QMessageBox.Yes:
+            return
+        self.draft = deepcopy(self.reset_draft)
+        self.initial_warning = ""
+        self.current_parcel_index = 0
+        self._refresh_parcel_combo()
+        self._load_current_parcel()
+        self._autosave()
 
     def _save(self) -> None:
         self._save_table_to_current_parcel()
@@ -1275,7 +1933,7 @@ class CustomsDeclarationDialog(QDialog):
         self._refresh_totals(save=False)
         QMessageBox.information(self, APP_NAME, "Colisage douane sauvegarde.")
 
-    def _copy_script(self) -> None:
+    def _send_to_laposte_bridge(self) -> None:
         self._save_table_to_current_parcel()
         parcel = self._current_parcel()
         if not [line for line in parcel.lines if line.quantity > 0]:
@@ -1285,14 +1943,26 @@ class CustomsDeclarationDialog(QDialog):
         if errors:
             QMessageBox.warning(self, APP_NAME, "\n".join(errors))
             return
+        parent = self.parent()
+        starter = getattr(parent, "_publish_customs_parcel", None)
+        if not callable(starter):
+            QMessageBox.warning(self, APP_NAME, "Bridge La Poste indisponible.")
+            return
         self.save_callback(self.draft)
-        QApplication.clipboard().setText(build_laposte_script(parcel, self.draft.parcel_content))
-        QDesktopServices.openUrl(QUrl("https://www.laposte.fr/colissimo-en-ligne/parcours/douanes"))
+        starter(parcel_to_laposte_payload(parcel, self.draft.parcel_content))
         QMessageBox.information(
             self,
             APP_NAME,
-            "Script copie dans le presse-papiers.\n\nSur la page La Poste, ouvre la console ou colle-le dans ton lanceur habituel, puis verifie les totaux avant Ajouter au panier.",
+            "Colis pret pour La Poste.\n\nRetourne dans l'onglet Chrome La Poste deja ouvert. Le userscript peut proposer le remplissage automatiquement, ou tu peux cliquer sur 'Remplir depuis Sage Assistant'.",
         )
+
+    def closeEvent(self, event) -> None:
+        self._autosave()
+        super().closeEvent(event)
+
+    def accept(self) -> None:
+        self._autosave()
+        super().accept()
 
 
 class OrderDetailDialog(QDialog):
@@ -1304,6 +1974,7 @@ class OrderDetailDialog(QDialog):
         autosave_callback: Callable[[list[InvoiceLine]], None] | None = None,
         reset_callback: Callable[[], list[InvoiceLine]] | None = None,
         customs_callback: Callable[[list[InvoiceLine]], None] | None = None,
+        packing_callback: Callable[[list[InvoiceLine]], None] | None = None,
         cash_min_unit_price_ht: Decimal | None = None,
         cash_suggestion_flex_eur: Decimal = Decimal("15.00"),
         parent: QWidget | None = None,
@@ -1314,6 +1985,7 @@ class OrderDetailDialog(QDialog):
         self.autosave_callback = autosave_callback
         self.reset_callback = reset_callback
         self.customs_callback = customs_callback
+        self.packing_callback = packing_callback
         self.cash_min_unit_price_ht = cash_min_unit_price_ht
         self.cash_suggestion_flex_eur = cash_suggestion_flex_eur
         self._autosave_enabled = True
@@ -1422,6 +2094,10 @@ class OrderDetailDialog(QDialog):
         customs_button.setToolTip("Preparer le colisage douane et copier le script La Poste")
         customs_button.clicked.connect(self._open_customs)
         customs_button.setVisible(self.customs_callback is not None and self.source not in CUSTOMS_DISABLED_SOURCES)
+        packing_button = make_button("Assistant colisage")
+        packing_button.setToolTip("Ouvrir directement l'assistant de repartition des colis")
+        packing_button.clicked.connect(self._open_packing_assistant)
+        packing_button.setVisible(self.packing_callback is not None and self.source not in CUSTOMS_DISABLED_SOURCES)
         open_web_button = make_button("Site")
         open_web_button.setToolTip("Ouvrir sur le site")
         open_web_button.clicked.connect(self._open_web_page)
@@ -1431,7 +2107,7 @@ class OrderDetailDialog(QDialog):
         copy_link_button.setEnabled(bool(self.web_url))
         close_button = make_button("Fermer")
         close_button.clicked.connect(self.accept)
-        for index, button in enumerate((remove_button, reset_button, cash_button, customs_button, open_web_button, copy_link_button, inject_button, close_button)):
+        for index, button in enumerate((remove_button, reset_button, cash_button, customs_button, packing_button, open_web_button, copy_link_button, inject_button, close_button)):
             actions.addWidget(button, index // 3, index % 3)
         for column in range(3):
             actions.setColumnStretch(column, 1)
@@ -1603,6 +2279,11 @@ class OrderDetailDialog(QDialog):
         self._save_corrections(show_message=False)
         if self.customs_callback is not None:
             self.customs_callback(self.lines)
+
+    def _open_packing_assistant(self) -> None:
+        self._save_corrections(show_message=False)
+        if self.packing_callback is not None:
+            self.packing_callback(self.lines)
 
     def _accept_for_injection(self) -> None:
         self._save_corrections(show_message=False)
@@ -2594,6 +3275,8 @@ class MainWindow(QMainWindow):
         self.sync_thread_sources: dict[QThread, set[str]] = {}
         self.sync_thread_workers: dict[QThread, SyncWorker] = {}
         self.sync_all_active = False
+        self.customs_bridge: ThreadingHTTPServer | None = None
+        self.customs_bridge_thread: threading.Thread | None = None
         self.injection_control_dialog: InjectionControlDialog | None = None
         self.sync_completion_relay = SyncCompletionRelay(self)
         self.sync_completion_relay.finished.connect(self._on_sync_all_finished)
@@ -2623,6 +3306,10 @@ class MainWindow(QMainWindow):
             if thread.isRunning():
                 thread.quit()
                 thread.wait(1500)
+        if self.customs_bridge is not None:
+            self.customs_bridge.shutdown()
+            self.customs_bridge.server_close()
+            self.customs_bridge = None
         save_settings(self.settings)
         self.db.close()
         super().closeEvent(event)
@@ -2737,6 +3424,9 @@ class MainWindow(QMainWindow):
         import_order_button = make_button("Importer")
         import_order_button.setToolTip("Importer un fichier commande")
         import_order_button.clicked.connect(self._import_order)
+        import_pdf_button = make_button("Importer PDF Sage")
+        import_pdf_button.setToolTip("Importer une facture Sage PDF en facture rapide")
+        import_pdf_button.clicked.connect(self._import_sage_pdf_invoice)
         sync_orders = make_button("Synchroniser")
         sync_orders.clicked.connect(lambda: self._start_sync(["Microstore", "eFashion", "PFS"]))
         detail_button = make_button("Détails")
@@ -2763,6 +3453,7 @@ class MainWindow(QMainWindow):
         clear_orders.clicked.connect(self._clear_all_orders)
         command_buttons = [
             import_order_button,
+            import_pdf_button,
             quick_invoice,
             sync_orders,
             inject_selected,
@@ -3382,10 +4073,10 @@ class MainWindow(QMainWindow):
             if self._prepare_injection():
                 self._load_cached_orders()
 
-    def _save_quick_invoice(self, lines: list[InvoiceLine]) -> str:
+    def _save_quick_invoice(self, lines: list[InvoiceLine], order_number: str = "") -> str:
         for line in lines:
             line.validate()
-        summary, detail = quick_invoice_to_portal_order(lines)
+        summary, detail = quick_invoice_to_portal_order(lines, order_number=order_number or None)
         key = summary.order_number or summary.order_id
         status = _status_from_lines(lines)
         self.db.upsert_cached_order(summary, detail, status)
@@ -4041,6 +4732,61 @@ class MainWindow(QMainWindow):
             return
         self._import_order_path(path)
 
+    def _pick_pdf_file(self, title: str) -> Path | None:
+        filename, _ = QFileDialog.getOpenFileName(self, title, "", "PDF (*.pdf)")
+        return Path(filename) if filename else None
+
+    def _invoice_lines_from_sage_pdf(self, invoice: SagePdfInvoice) -> list[InvoiceLine]:
+        lines: list[InvoiceLine] = []
+        for row in invoice.lines:
+            product = self.db.get_product_by_ref(row.ref)
+            if product is not None:
+                line = self.resolver.line_from_product(
+                    product,
+                    quantity_pieces=row.quantity_pieces,
+                    unit_price_ht=row.unit_price_ht,
+                    package_count=None,
+                    source=QUICK_INVOICE_SOURCE,
+                )
+                line.description = normalize_spaces(row.description)
+                line.sage_code = row.sage_code
+                line.order_unit_price_ht = row.unit_price_ht
+                line.price_confirmed = product.unit_price_ht is None or row.unit_price_ht == product.unit_price_ht
+            else:
+                line = InvoiceLine(
+                    ref=row.ref,
+                    sage_code=row.sage_code,
+                    description=normalize_spaces(row.description),
+                    quantity_pieces=row.quantity_pieces,
+                    unit_price_ht=row.unit_price_ht,
+                    order_unit_price_ht=row.unit_price_ht,
+                    source=QUICK_INVOICE_SOURCE,
+                )
+            line.validate()
+            lines.append(line)
+        return lines
+
+    def _import_sage_pdf_invoice(self) -> None:
+        path = self._pick_pdf_file("Choisir facture Sage PDF")
+        if not path:
+            return
+        try:
+            invoice = import_sage_pdf_invoice(path)
+            lines = self._invoice_lines_from_sage_pdf(invoice)
+            key = self._save_quick_invoice(lines, order_number=invoice.invoice_number or path.stem)
+        except Exception as exc:
+            QMessageBox.critical(self, APP_NAME, str(exc))
+            return
+        self.lines = lines
+        self.current_order_source = QUICK_INVOICE_SOURCE
+        self.current_order_key = key
+        self.current_order_path = None
+        self._load_cached_orders()
+        self._refresh_status()
+        if invoice.warnings:
+            QMessageBox.warning(self, APP_NAME, "\n".join(invoice.warnings[:10]))
+        self._open_quick_invoice_order_detail(key, lines)
+
     def _load_order_lines(self, path: Path, log: bool = True) -> list[InvoiceLine]:
         result = import_order(path)
         lines = [self.resolver.line_from_order_row(row) for row in result.rows]  # type: ignore[arg-type]
@@ -4189,6 +4935,7 @@ class MainWindow(QMainWindow):
             autosave_callback=lambda updated_lines, s=order.source, k=key: self._save_order_line_edits(s, k, updated_lines),
             reset_callback=lambda s=order.source, k=key, original=order: self._reset_order_line_edits(s, k, original),
             customs_callback=lambda updated_lines, s=order.source, k=key: self._open_customs_for_lines(s, k, updated_lines),
+            packing_callback=lambda updated_lines, s=order.source, k=key: self._open_packing_assistant_for_lines(s, k, updated_lines),
             cash_min_unit_price_ht=self.settings.cash_min_unit_price_ht,
             cash_suggestion_flex_eur=self.settings.cash_suggestion_flex_eur,
             parent=self,
@@ -4222,6 +4969,7 @@ class MainWindow(QMainWindow):
             autosave_callback=lambda updated_lines, s=source, k=key: self._save_order_line_edits(s, k, updated_lines),
             reset_callback=lambda s=source, k=key, p=path: self._reset_file_order_line_edits(s, k, p),
             customs_callback=lambda updated_lines, s=source, k=key: self._open_customs_for_lines(s, k, updated_lines),
+            packing_callback=lambda updated_lines, s=source, k=key: self._open_packing_assistant_for_lines(s, k, updated_lines),
             cash_min_unit_price_ht=self.settings.cash_min_unit_price_ht,
             cash_suggestion_flex_eur=self.settings.cash_suggestion_flex_eur,
             parent=self,
@@ -4232,6 +4980,36 @@ class MainWindow(QMainWindow):
         self.current_order_source = source
         self.current_order_key = key
         self._refresh_order_folder()
+        if dialog.inject_requested:
+            self._prepare_injection()
+
+    def _open_quick_invoice_order_detail(self, key: str, lines: list[InvoiceLine]) -> None:
+        summary = {
+            "source": QUICK_INVOICE_SOURCE,
+            "number": key,
+            "customer": "Facture rapide",
+            "total": _money_label(sum((line.unit_price_ht or Decimal("0")) * Decimal(line.quantity_pieces or 0) for line in lines)),
+            "status": _status_from_lines(lines),
+            "web_url": "",
+        }
+        dialog = OrderDetailDialog(
+            lines,
+            summary,
+            self.db,
+            autosave_callback=lambda updated_lines, k=key: self._save_order_line_edits(QUICK_INVOICE_SOURCE, k, updated_lines),
+            reset_callback=None,
+            customs_callback=lambda updated_lines, k=key: self._open_customs_for_lines(QUICK_INVOICE_SOURCE, k, updated_lines),
+            packing_callback=lambda updated_lines, k=key: self._open_packing_assistant_for_lines(QUICK_INVOICE_SOURCE, k, updated_lines),
+            cash_min_unit_price_ht=self.settings.cash_min_unit_price_ht,
+            cash_suggestion_flex_eur=self.settings.cash_suggestion_flex_eur,
+            parent=self,
+        )
+        dialog.exec()
+        self.lines = dialog.lines
+        self.current_order_path = None
+        self.current_order_source = QUICK_INVOICE_SOURCE
+        self.current_order_key = key
+        self._load_cached_orders()
         if dialog.inject_requested:
             self._prepare_injection()
 
@@ -4314,26 +5092,61 @@ class MainWindow(QMainWindow):
                     signature[ref] = signature.get(ref, 0) + int(line.quantity or 0)
         return signature
 
-    def _open_customs_for_lines(self, source: str, key: str, lines: list[InvoiceLine]) -> None:
+    def _customs_drafts_for_lines(self, source: str, key: str, lines: list[InvoiceLine]) -> tuple[CustomsDeclarationDraft, CustomsDeclarationDraft, str] | None:
         if source in CUSTOMS_DISABLED_SOURCES:
             QMessageBox.information(self, APP_NAME, "La douane La Poste est reservee aux factures hors eFashion et PFS.")
-            return
+            return None
         saved = self.db.get_customs_declaration(source, key)
         current_signature = self._customs_signature_from_lines(lines)
-        if saved is not None and self._customs_signature_from_draft(saved) == current_signature:
+        reset_draft = build_customs_draft(source, key, lines, self._products_by_ref(lines), self.settings.customs_defaults)
+        initial_warning = ""
+        if saved is not None:
             draft = saved
             draft.source = source
             draft.order_key = key
+            if self._customs_signature_from_draft(saved) != current_signature:
+                initial_warning = "La facture a change depuis le dernier colisage. Utilise Reset colisage si tu veux repartir des lignes actuelles."
         else:
-            draft = build_customs_draft(source, key, lines, self._products_by_ref(lines), self.settings.customs_defaults)
-        if len(draft.parcels) == 1 and draft.parcels[0].total_weight_kg > MAX_PARCEL_WEIGHT_KG:
-            QMessageBox.warning(
-                self,
-                APP_NAME,
-                "Le colis estime depasse 30 kg. Ajoute un colis et repars les quantites avant de copier le script La Poste.",
-            )
-        dialog = CustomsDeclarationDialog(draft, self.db.save_customs_declaration, self)
+            draft = reset_draft
+        if not initial_warning and len(draft.parcels) == 1 and draft.parcels[0].total_weight_kg > MAX_PARCEL_WEIGHT_KG:
+            initial_warning = "Ce colis depasse 30 kg. Ajoute un colis, adapte le poids, ou repars les quantites."
+        return draft, reset_draft, initial_warning
+
+    def _open_customs_for_lines(self, source: str, key: str, lines: list[InvoiceLine]) -> None:
+        drafts = self._customs_drafts_for_lines(source, key, lines)
+        if drafts is None:
+            return
+        draft, reset_draft, initial_warning = drafts
+        dialog = CustomsDeclarationDialog(draft, self.db.save_customs_declaration, reset_draft, initial_warning, self)
         dialog.exec()
+
+    def _open_packing_assistant_for_lines(self, source: str, key: str, lines: list[InvoiceLine]) -> None:
+        drafts = self._customs_drafts_for_lines(source, key, lines)
+        if drafts is None:
+            return
+        draft, reset_draft, _initial_warning = drafts
+        dialog = PackingAssistantDialog(draft, reset_draft, self.db.save_customs_declaration, self)
+        dialog.exec()
+
+    def _ensure_customs_bridge(self) -> None:
+        if self.customs_bridge is not None:
+            return
+        try:
+            server = ThreadingHTTPServer(("127.0.0.1", CUSTOMS_BRIDGE_PORT), CustomsBridgeHandler)
+        except OSError as exc:
+            raise RuntimeError(f"Port {CUSTOMS_BRIDGE_PORT} indisponible pour le bridge La Poste: {exc}") from exc
+        thread = threading.Thread(target=server.serve_forever, name="customs-laposte-bridge", daemon=True)
+        thread.start()
+        self.customs_bridge = server
+        self.customs_bridge_thread = thread
+
+    def _publish_customs_parcel(self, payload: dict) -> None:
+        self._ensure_customs_bridge()
+        payload = dict(payload)
+        payload["publishedAt"] = utc_now_iso()
+        with CustomsBridgeState.lock:
+            CustomsBridgeState.payload = payload
+        self.statusBar().showMessage(f"Colis pret pour l'onglet La Poste deja ouvert via {CUSTOMS_BRIDGE_URL}", 7000)
 
     def _mark_selected_order_done(self) -> None:
         kind = self._selected_order_kind()
@@ -4532,6 +5345,7 @@ class MainWindow(QMainWindow):
                     item.setData(ROLE_SOURCE, source)
                     item.setData(ROLE_KEY, key)
                     item.setData(ROLE_PAYLOAD, str(order_file.path))
+                    apply_order_source_style(item, source, col)
                     self.order_table.setItem(row, col, item)
                 row += 1
             for summary in portal_rows:
@@ -4555,6 +5369,7 @@ class MainWindow(QMainWindow):
                     item.setData(ROLE_SOURCE, summary.source)
                     item.setData(ROLE_KEY, key)
                     item.setData(ROLE_PAYLOAD, summary.order_id)
+                    apply_order_source_style(item, summary.source, col)
                     self.order_table.setItem(row, col, item)
                 row += 1
         finally:
