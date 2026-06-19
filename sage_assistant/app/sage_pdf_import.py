@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-from pypdf import PdfReader
-
 from .excel_import import normalize_ref
 
 
@@ -103,6 +101,12 @@ def parse_sage_pdf_text(text: str) -> SagePdfInvoice:
 
 
 def extract_sage_pdf_text(path: Path) -> str:
+    try:
+        from pypdf import PdfReader
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "Le module pypdf est manquant. Installe les dependances avec: pip install -e ."
+        ) from exc
     reader = PdfReader(str(path))
     return "\n".join(page.extract_text() or "" for page in reader.pages)
 
