@@ -814,7 +814,9 @@ def test_cached_clients_are_persistent_and_searchable(tmp_path):
                 email="client@example.com",
                 city="Sete",
                 country="France",
-                raw={"id": "client-1"},
+                vat_number="FR123",
+                address="1 rue test",
+                raw={"id": "client-1", "remark": "adresse livraison extra"},
             )
         ]
     )
@@ -825,5 +827,7 @@ def test_cached_clients_are_persistent_and_searchable(tmp_path):
     assert reopened.count_clients("Microstore") == 1
     assert clients[0].company == "ROMIE"
     assert clients[0].email == "client@example.com"
+    assert reopened.list_clients("Microstore", search="FR123")[0].company == "ROMIE"
+    assert reopened.list_clients("Microstore", search="livraison extra")[0].company == "ROMIE"
     assert reopened.find_client("Microstore", "Caelle") is not None
     reopened.close()

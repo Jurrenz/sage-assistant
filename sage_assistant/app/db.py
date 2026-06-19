@@ -1003,9 +1003,9 @@ class Database:
         query = search.strip().lower()
         if query:
             clauses.append(
-                "(LOWER(name) LIKE ? OR LOWER(company) LIKE ? OR LOWER(email) LIKE ? OR LOWER(phone) LIKE ? OR LOWER(city) LIKE ?)"
+                "(LOWER(name) LIKE ? OR LOWER(company) LIKE ? OR LOWER(email) LIKE ? OR LOWER(phone) LIKE ? OR LOWER(city) LIKE ? OR LOWER(address) LIKE ? OR LOWER(vat_number) LIKE ? OR LOWER(raw_json) LIKE ?)"
             )
-            params.extend([f"%{query}%"] * 5)
+            params.extend([f"%{query}%"] * 8)
         rows = self.conn.execute(
             f"""
             SELECT * FROM clients

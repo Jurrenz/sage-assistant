@@ -78,6 +78,7 @@ class AppSettings:
     autohotkey_path: str = "AutoHotkey64.exe"
     sage_executable_path: str = ""
     microstore_api_token: str = ""
+    microstore_mask_token: str = ""
     microstore_sync_days: int = 45
     microstore_product_resync_hours: int = 6
     portal_order_limit: int = 100
@@ -86,6 +87,7 @@ class AppSettings:
     pfs_email: str = ""
     pfs_password: str = ""
     portal_sessions: dict[str, dict] = field(default_factory=dict)
+    client_visible_columns: list[str] = field(default_factory=list)
     product_folder_path: str = ""
     last_product_file_path: str = ""
     order_folder_path: str = ""

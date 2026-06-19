@@ -88,6 +88,15 @@ from .cash_calculator import (
     unit_price_matches_target,
     ARTDIVERS_CODE,
 )
+from .client_fields import (
+    CLIENT_COLUMN_BY_KEY,
+    CLIENT_COLUMN_DEFINITIONS,
+    DEFAULT_CLIENT_COLUMNS,
+    client_raw_field_examples,
+    microstore_client_field,
+    microstore_client_search_text,
+    valid_client_column_keys,
+)
 from .excel_import import import_order, import_products
 from .injection import launch_ahk_tool, launch_autohotkey, write_injection_queue
 from .models import InvoiceLine, Product, SageMapping, build_sage_description, normalize_spaces, utc_now_iso
@@ -3262,6 +3271,7 @@ class MainWindow(QMainWindow):
         self.portal_details: dict[tuple[str, str], PortalOrder] = {}
         self.portal_status_cache: dict[tuple[str, str], str] = {}
         self.clients: list[PortalClient] = []
+        self.client_visible_columns = valid_client_column_keys(self.settings.client_visible_columns)
         self.product_rows: list[Product] = []
         self.product_model = ProductTableModel()
         self.product_proxy = ProductFilterProxyModel()
@@ -3577,9 +3587,10 @@ class MainWindow(QMainWindow):
         filters.addWidget(self.client_source_filter)
         layout.addLayout(filters)
 
-        self.clients_table = QTableWidget(0, len(CLIENT_HEADERS))
-        self.clients_table.setHorizontalHeaderLabels(CLIENT_HEADERS)
-        configure_table_columns(self.clients_table, {0: 90, 1: 170, 3: 120, 4: 210, 5: 120, 6: 100}, {2})
+        headers = [CLIENT_COLUMN_BY_KEY[key].label for key in self.client_visible_columns]
+        self.clients_table = QTableWidget(0, len(headers))
+        self.clients_table.setHorizontalHeaderLabels(headers)
+        self._configure_clients_table_columns()
         self.clients_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.clients_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.clients_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -3591,11 +3602,15 @@ class MainWindow(QMainWindow):
         refresh_button.clicked.connect(self._refresh_clients_page)
         sync_button = make_button("Sync Microstore")
         sync_button.clicked.connect(lambda: self._start_sync(["Microstore"]))
+        columns_button = make_button("Colonnes")
+        columns_button.clicked.connect(self._open_client_columns_dialog)
         detail_button = make_button("Fiche client")
         detail_button.clicked.connect(self._open_selected_client_detail)
-        for index, button in enumerate((refresh_button, sync_button, detail_button)):
+        fields_button = make_button("Champs disponibles")
+        fields_button.clicked.connect(self._show_client_raw_fields)
+        for index, button in enumerate((refresh_button, sync_button, columns_button, detail_button, fields_button)):
             actions.addWidget(button, 0, index)
-        for column in range(3):
+        for column in range(5):
             actions.setColumnStretch(column, 1)
         layout.addLayout(actions)
         return page
@@ -3633,10 +3648,15 @@ class MainWindow(QMainWindow):
 
         microstore_grid = QGridLayout()
         self.microstore_token = QLineEdit(self.settings.microstore_api_token)
-        self.microstore_token.setPlaceholderText("Token admin_token Microstore")
-        self.microstore_token.setEchoMode(QLineEdit.Password)
+        self.microstore_token.setPlaceholderText("localStorage admin_token")
         self.microstore_token.setMinimumWidth(0)
         self.microstore_token.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.microstore_mask_token = QLineEdit(self.settings.microstore_mask_token)
+        self.microstore_mask_token.setPlaceholderText("localStorage admin_mask_token")
+        self.microstore_mask_token.setMinimumWidth(0)
+        self.microstore_mask_token.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        copy_microstore_session = make_button("Copier session navigateur")
+        copy_microstore_session.clicked.connect(self._copy_microstore_browser_session_script)
         self.microstore_days = QSpinBox()
         self.microstore_days.setRange(1, 365)
         self.microstore_days.setSuffix(" jours")
@@ -3650,21 +3670,23 @@ class MainWindow(QMainWindow):
         self.portal_order_limit.setRange(1, 1000)
         self.portal_order_limit.setValue(self.settings.portal_order_limit)
         self.portal_order_limit.setSuffix(" commandes")
-        microstore_grid.addWidget(QLabel("Token"), 0, 0)
+        microstore_grid.addWidget(QLabel("admin_token"), 0, 0)
         microstore_grid.addWidget(self.microstore_token, 0, 1, 1, 3)
-        microstore_grid.addWidget(QLabel("Historique"), 1, 0)
-        microstore_grid.addWidget(self.microstore_days, 1, 1)
-        microstore_grid.addWidget(QLabel("Resync produits"), 1, 2)
-        microstore_grid.addWidget(self.microstore_product_resync_hours, 1, 3)
-        microstore_grid.addWidget(QLabel("Limite PFS/eFashion"), 2, 0)
-        microstore_grid.addWidget(self.portal_order_limit, 2, 1)
+        microstore_grid.addWidget(QLabel("admin_mask_token"), 1, 0)
+        microstore_grid.addWidget(self.microstore_mask_token, 1, 1, 1, 2)
+        microstore_grid.addWidget(copy_microstore_session, 1, 3)
+        microstore_grid.addWidget(QLabel("Historique"), 2, 0)
+        microstore_grid.addWidget(self.microstore_days, 2, 1)
+        microstore_grid.addWidget(QLabel("Resync produits"), 2, 2)
+        microstore_grid.addWidget(self.microstore_product_resync_hours, 2, 3)
+        microstore_grid.addWidget(QLabel("Limite PFS/eFashion"), 3, 0)
+        microstore_grid.addWidget(self.portal_order_limit, 3, 1)
         microstore_grid.setColumnStretch(1, 1)
         layout.addLayout(microstore_grid)
 
         efashion_row = QGridLayout()
         self.efashion_email = QLineEdit(self.settings.efashion_email or self.settings.portal_email)
         self.efashion_password = QLineEdit(self.settings.efashion_password)
-        self.efashion_password.setEchoMode(QLineEdit.Password)
         self.efashion_email.setMinimumWidth(0)
         self.efashion_password.setMinimumWidth(0)
         efashion_row.addWidget(QLabel("Email eFashion"), 0, 0)
@@ -3677,7 +3699,6 @@ class MainWindow(QMainWindow):
         pfs_row = QGridLayout()
         self.pfs_email = QLineEdit(self.settings.pfs_email or self.settings.portal_email)
         self.pfs_password = QLineEdit(self.settings.pfs_password)
-        self.pfs_password.setEchoMode(QLineEdit.Password)
         self.pfs_email.setMinimumWidth(0)
         self.pfs_password.setMinimumWidth(0)
         pfs_row.addWidget(QLabel("Email PFS"), 0, 0)
@@ -3979,26 +4000,27 @@ class MainWindow(QMainWindow):
             return
         source = self.client_source_filter.currentText() if hasattr(self, "client_source_filter") else "Microstore"
         search = self.client_search.text().strip() if hasattr(self, "client_search") else ""
-        clients = self.db.list_clients(source=source, search=search, limit=10_000)
+        clients = self.db.list_clients(source=source, search="", limit=10_000)
+        if search:
+            needle = search.lower()
+            clients = [client for client in clients if needle in microstore_client_search_text(client)]
         self.clients = clients
         self.clients_table.setUpdatesEnabled(False)
         self.clients_table.blockSignals(True)
         try:
+            headers = [CLIENT_COLUMN_BY_KEY[key].label for key in self.client_visible_columns]
+            if self.clients_table.columnCount() != len(headers):
+                self.clients_table.setColumnCount(len(headers))
+            self.clients_table.setHorizontalHeaderLabels(headers)
             self.clients_table.setRowCount(len(clients))
             for row, client in enumerate(clients):
-                values = [
-                    client.source,
-                    client.name,
-                    client.company,
-                    client.phone,
-                    client.email,
-                    client.city,
-                    client.country,
-                ]
-                for col, value in enumerate(values):
+                for col, key in enumerate(self.client_visible_columns):
+                    value = microstore_client_field(client, key)
                     item = QTableWidgetItem(value)
                     item.setData(ROLE_KEY, client.client_key)
+                    item.setData(ROLE_SOURCE, client.source)
                     self.clients_table.setItem(row, col, item)
+            self._configure_clients_table_columns()
         finally:
             self.clients_table.blockSignals(False)
             self.clients_table.setUpdatesEnabled(True)
@@ -4015,10 +4037,10 @@ class MainWindow(QMainWindow):
         if not rows:
             return None
         row = rows[0].row()
-        key_item = self.clients_table.item(row, 0)
+        key_item = next((self.clients_table.item(row, col) for col in range(self.clients_table.columnCount()) if self.clients_table.item(row, col)), None)
         if not key_item:
             return None
-        source = self.clients_table.item(row, 0).text()
+        source = str(key_item.data(ROLE_SOURCE) or "Microstore")
         client_key = str(key_item.data(ROLE_KEY) or "")
         return self.db.get_client(source, client_key) if client_key else None
 
@@ -4030,22 +4052,121 @@ class MainWindow(QMainWindow):
         self._open_client_detail(client)
 
     def _open_client_detail(self, client: PortalClient) -> None:
-        lines = [
-            ("Source", client.source),
-            ("Société", client.company),
-            ("Nom", client.name),
-            ("Téléphone", client.phone),
-            ("Email", client.email),
-            ("Adresse", client.address),
-            ("Code postal", client.zip_code),
-            ("Ville", client.city),
-            ("Pays", client.country),
-            ("TVA", client.vat_number),
-        ]
-        text = "\n".join(f"{label}: {value}" for label, value in lines if value)
-        if not text:
-            text = "Aucune information détaillée disponible."
-        QMessageBox.information(self, f"Client {client.company or client.name or client.client_key}", text)
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Client {client.company or client.name or client.client_key}")
+        dialog.resize(760, 560)
+        layout = QVBoxLayout(dialog)
+        sections = ("Identité", "Contact", "Facturation", "Livraison", "Divers")
+        for section in sections:
+            definitions = [definition for definition in CLIENT_COLUMN_DEFINITIONS if definition.section == section]
+            box = QGroupBox(section)
+            form = QFormLayout(box)
+            added = False
+            for definition in definitions:
+                value = microstore_client_field(client, definition.key)
+                if not value and section != "Livraison":
+                    continue
+                label = QLabel(value)
+                label.setWordWrap(True)
+                label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+                form.addRow(definition.label, label)
+                added = True
+            if added:
+                layout.addWidget(box)
+        raw_box = QGroupBox("Données brutes utiles")
+        raw_layout = QVBoxLayout(raw_box)
+        raw_text = QTextEdit()
+        raw_text.setReadOnly(True)
+        raw_text.setPlainText("\n".join(f"{path}: {example}" for path, example in client_raw_field_examples([client], max_examples=1)) or "Aucun champ brut.")
+        raw_text.setMinimumHeight(120)
+        raw_layout.addWidget(raw_text)
+        layout.addWidget(raw_box)
+        close_button = make_button("Fermer")
+        close_button.clicked.connect(dialog.accept)
+        button_row = QHBoxLayout()
+        button_row.addStretch(1)
+        button_row.addWidget(close_button)
+        layout.addLayout(button_row)
+        dialog.exec()
+
+    def _configure_clients_table_columns(self) -> None:
+        if not hasattr(self, "clients_table"):
+            return
+        header = self.clients_table.horizontalHeader()
+        header.setStretchLastSection(False)
+        self.clients_table.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        for column, key in enumerate(self.client_visible_columns):
+            definition = CLIENT_COLUMN_BY_KEY[key]
+            self.clients_table.setColumnWidth(column, definition.width)
+            header.setSectionResizeMode(column, QHeaderView.Interactive)
+
+    def _open_client_columns_dialog(self) -> None:
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Colonnes clients")
+        dialog.resize(420, 560)
+        layout = QVBoxLayout(dialog)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        checks: dict[str, QCheckBox] = {}
+        current = set(self.client_visible_columns)
+        for definition in CLIENT_COLUMN_DEFINITIONS:
+            check = QCheckBox(definition.label)
+            check.setChecked(definition.key in current)
+            checks[definition.key] = check
+            content_layout.addWidget(check)
+        content_layout.addStretch(1)
+        scroll.setWidget(content)
+        layout.addWidget(scroll)
+        actions = QHBoxLayout()
+        defaults_button = make_button("Défauts")
+        cancel_button = make_button("Annuler")
+        save_button = make_button("Appliquer")
+        actions.addWidget(defaults_button)
+        actions.addStretch(1)
+        actions.addWidget(cancel_button)
+        actions.addWidget(save_button)
+        layout.addLayout(actions)
+
+        def restore_defaults() -> None:
+            defaults = set(DEFAULT_CLIENT_COLUMNS)
+            for key, check in checks.items():
+                check.setChecked(key in defaults)
+
+        def apply_columns() -> None:
+            selected = [definition.key for definition in CLIENT_COLUMN_DEFINITIONS if checks[definition.key].isChecked()]
+            self.client_visible_columns = valid_client_column_keys(selected)
+            self.settings.client_visible_columns = self.client_visible_columns
+            save_settings(self.settings)
+            self._apply_client_filters()
+            dialog.accept()
+
+        defaults_button.clicked.connect(restore_defaults)
+        cancel_button.clicked.connect(dialog.reject)
+        save_button.clicked.connect(apply_columns)
+        dialog.exec()
+
+    def _show_client_raw_fields(self) -> None:
+        clients = self.db.list_clients(source="Microstore", limit=10_000)
+        if not clients:
+            QMessageBox.information(self, APP_NAME, "Aucun client synchronisé pour l'instant.")
+            return
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Champs clients Microstore disponibles")
+        dialog.resize(720, 560)
+        layout = QVBoxLayout(dialog)
+        text = QTextEdit()
+        text.setReadOnly(True)
+        text.setPlainText("\n".join(f"{path}: {example}" for path, example in client_raw_field_examples(clients, max_examples=1)))
+        layout.addWidget(text)
+        close_button = make_button("Fermer")
+        close_button.clicked.connect(dialog.accept)
+        row = QHBoxLayout()
+        row.addStretch(1)
+        row.addWidget(close_button)
+        layout.addLayout(row)
+        dialog.exec()
 
     def _selected_product(self) -> Product | None:
         if not hasattr(self, "product_table"):
@@ -4289,6 +4410,35 @@ class MainWindow(QMainWindow):
             + payload_preview
         )
         return QMessageBox.question(self, APP_NAME, text) == QMessageBox.Yes
+
+    def _copy_microstore_browser_session_script(self) -> None:
+        self._save_app_settings_silent()
+        token = self.settings.microstore_api_token.strip()
+        mask_token = self.settings.microstore_mask_token.strip()
+        if not token:
+            QMessageBox.warning(self, APP_NAME, "admin_token Microstore absent.")
+            return
+        lines = [
+            f"localStorage.setItem('admin_token', {json.dumps(token)});",
+        ]
+        if mask_token:
+            lines.append(f"localStorage.setItem('admin_mask_token', {json.dumps(mask_token)});")
+        lines.extend(
+            [
+                "localStorage.setItem('system_keep_login', 'true');",
+                "localStorage.removeItem('persist:root');",
+                "sessionStorage.clear();",
+                "location.replace('https://web.mc.app/?session=' + Date.now() + '#/mc/');",
+            ]
+        )
+        QApplication.clipboard().setText("\n".join(lines))
+        self.microstore_status.setText("Microstore: script session copié")
+        QMessageBox.information(
+            self,
+            APP_NAME,
+            "Script session MC copié.\n\n"
+            "Dans un autre navigateur déjà ouvert sur https://web.mc.app, colle-le dans la console DevTools pour réutiliser la même session sans rescanner le QR.",
+        )
 
     def _portal_credentials(self, source: str) -> tuple[str, str] | None:
         if source == "eFashion":
@@ -5526,6 +5676,7 @@ class MainWindow(QMainWindow):
         self.settings.autohotkey_path = self.ahk_path.text().strip() or "AutoHotkey64.exe"
         self.settings.sage_executable_path = self.sage_path.text().strip()
         self.settings.microstore_api_token = self.microstore_token.text().strip()
+        self.settings.microstore_mask_token = self.microstore_mask_token.text().strip()
         self.settings.microstore_sync_days = self.microstore_days.value()
         self.settings.microstore_product_resync_hours = self.microstore_product_resync_hours.value()
         self.settings.portal_order_limit = self.portal_order_limit.value()
@@ -5533,6 +5684,7 @@ class MainWindow(QMainWindow):
         self.settings.efashion_password = self.efashion_password.text()
         self.settings.pfs_email = self.pfs_email.text().strip()
         self.settings.pfs_password = self.pfs_password.text()
+        self.settings.client_visible_columns = valid_client_column_keys(self.client_visible_columns)
         if hasattr(self, "product_folder_input"):
             self.settings.product_folder_path = self.product_folder_input.text().strip()
         if hasattr(self, "order_folder_input"):

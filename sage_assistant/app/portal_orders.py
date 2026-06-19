@@ -401,12 +401,32 @@ def normalize_microstore_order_detail(raw: dict[str, Any]) -> PortalOrder:
 
 def normalize_microstore_client(raw: dict[str, Any]) -> PortalClient | None:
     client_id = str(raw.get("id") or raw.get("client_id") or raw.get("uid") or "").strip()
-    company = _first_text(raw, "company_name", "company", "societe", "shop_name", "name_company")
+    address_entries = []
+    address_payload = raw.get("address")
+    if isinstance(address_payload, dict):
+        address_entries = [entry for entry in address_payload.values() if isinstance(entry, dict)]
+    elif isinstance(address_payload, list):
+        address_entries = [entry for entry in address_payload if isinstance(entry, dict)]
+    primary_address = address_entries[0] if address_entries else {}
+    company = _first_text(raw, "company_name", "company", "societe", "shop_name", "name_company") or _first_text(
+        primary_address, "company_name", "company", "company_name2"
+    )
     first_name = _first_text(raw, "first_name", "firstname", "prenom")
     last_name = _first_text(raw, "last_name", "lastname", "nom")
+    if not first_name and not last_name:
+        first_name = _first_text(primary_address, "first_name")
+        last_name = _first_text(primary_address, "last_name")
     name = _first_text(raw, "name", "customer_name", "contact_name") or " ".join(part for part in (first_name, last_name) if part)
-    email = _first_text(raw, "email", "mail", "customer_mail")
-    phone = _first_text(raw, "phone", "telephone", "tel", "mobile", "customer_phone")
+    email = _first_text(raw, "email", "mail", "customer_mail") or _first_text(primary_address, "email", "mail")
+    phone = _first_text(raw, "phone", "telephone", "tel", "mobile", "customer_phone") or _first_text(
+        primary_address, "phone", "mobile", "tel"
+    )
+    raw_address = raw.get("address") if isinstance(raw.get("address"), str) else ""
+    address = (
+        _first_text(raw, "adresse", "street", "remark")
+        or raw_address
+        or _first_text(primary_address, "address", "address2")
+    )
     key = client_id or email or company or name
     if not key:
         return None
@@ -418,11 +438,11 @@ def normalize_microstore_client(raw: dict[str, Any]) -> PortalClient | None:
         company=company.strip(),
         phone=phone.strip(),
         email=email.strip(),
-        address=_first_text(raw, "address", "adresse", "street"),
-        zip_code=_first_text(raw, "zip", "zipcode", "postal_code", "codePostal"),
-        city=_first_text(raw, "city", "ville"),
-        country=_first_text(raw, "country", "pays", "country_name"),
-        vat_number=_first_text(raw, "vat", "tva", "vat_number", "company_id"),
+        address=address,
+        zip_code=_first_text(raw, "zip", "zipcode", "postal_code", "codePostal") or _first_text(primary_address, "zip", "postal_code"),
+        city=_first_text(raw, "city", "ville") or _first_text(primary_address, "city"),
+        country=_first_text(raw, "country", "pays", "country_name") or _first_text(primary_address, "country"),
+        vat_number=_first_text(raw, "vat", "tva", "vat_number", "company_id") or _first_text(primary_address, "vat_num", "vat_number"),
         raw=raw,
     )
 
@@ -684,12 +704,17 @@ class MicrostoreConnector:
         page = 1
         while True:
             body = self.http.get_json(
-                f"{self.api_base_url}/client/get_by_order",
+                f"{self.api_base_url}/customer/get_by_order",
                 self._params(
                     {
                         "bi_key": "clientList",
+                        "days": -1,
+                        "order": "utime",
+                        "isasc": 0,
                         "page": page,
                         "page_num": page_size,
+                        "client_status": json.dumps({"options": ["disable=0"], "allSelected": 0}, separators=(",", ":")),
+                        "type": 1,
                     }
                 ),
             )

@@ -194,8 +194,11 @@ def test_settings_persist_separate_portal_credentials(tmp_path):
     settings.efashion_password = "efashion-secret"
     settings.pfs_email = "pfs@example.com"
     settings.pfs_password = "pfs-secret"
+    settings.microstore_api_token = "mc-token"
+    settings.microstore_mask_token = "mc-mask-token"
     settings.portal_order_limit = 250
     settings.microstore_product_resync_hours = 12
+    settings.client_visible_columns = ["name", "company", "email"]
     path = tmp_path / "settings.json"
 
     save_settings(settings, path)
@@ -205,8 +208,11 @@ def test_settings_persist_separate_portal_credentials(tmp_path):
     assert loaded.efashion_password == "efashion-secret"
     assert loaded.pfs_email == "pfs@example.com"
     assert loaded.pfs_password == "pfs-secret"
+    assert loaded.microstore_api_token == "mc-token"
+    assert loaded.microstore_mask_token == "mc-mask-token"
     assert loaded.portal_order_limit == 250
     assert loaded.microstore_product_resync_hours == 12
+    assert loaded.client_visible_columns == ["name", "company", "email"]
 
 
 def test_settings_default_cash_min_unit_price_is_loaded_for_legacy_file(tmp_path):

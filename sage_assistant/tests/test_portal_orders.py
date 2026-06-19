@@ -19,6 +19,7 @@ from app.portal_orders import (
     normalize_pfs_order_detail,
     normalize_pfs_order_summary,
 )
+from app.client_fields import DEFAULT_CLIENT_COLUMNS, microstore_client_field
 from app.db import Database
 from app.models import Product, SageMapping
 from app.resolver import Resolver
@@ -294,6 +295,80 @@ def test_normalize_microstore_client():
     assert client.city == "Sete"
 
 
+def test_microstore_client_projection_uses_raw_aliases_and_nested_address():
+    client = normalize_microstore_client(
+        {
+            "id": "10781",
+            "name": "Top fashion",
+            "vip": "1",
+            "debt": "1737.60",
+            "discount": "0.9000",
+            "address": {
+                "10781": {
+                    "company_name": "Top fashion",
+                    "phone": "15734366309",
+                    "tel": "030000000",
+                    "email": "top@example.com",
+                    "first_name": "S",
+                    "last_name": "Chauhan",
+                    "city": "Berlin",
+                    "zip": "10365",
+                    "country": "DE",
+                    "vat_num": "DE362750763",
+                    "business_number": "HRB123",
+                    "address": "Herzberg Straße 128-139",
+                    "address2": "Halle 8 Raum 832",
+                    "default": "1",
+                }
+            },
+        }
+    )
+
+    assert client is not None
+    assert client.company == "Top fashion"
+    assert client.email == "top@example.com"
+    assert client.address == "Herzberg Straße 128-139"
+    assert microstore_client_field(client, "classification") == "1"
+    assert microstore_client_field(client, "debt") == "1737.60"
+    assert microstore_client_field(client, "landline") == "030000000"
+    assert microstore_client_field(client, "vat_number") == "DE362750763"
+    assert microstore_client_field(client, "delivery_name") == "S Chauhan"
+    assert microstore_client_field(client, "delivery_address") == "Herzberg Straße 128-139"
+    assert microstore_client_field(client, "delivery_city") == "Berlin"
+    assert microstore_client_field(client, "missing") == ""
+
+
+def test_default_client_columns_match_microstore_excel_export_order():
+    assert list(DEFAULT_CLIENT_COLUMNS) == [
+        "name",
+        "classification",
+        "discount",
+        "debt",
+        "zone",
+        "custom_1",
+        "custom_2",
+        "custom_3",
+        "country_code",
+        "mobile",
+        "landline",
+        "email",
+        "address",
+        "zip_code",
+        "city",
+        "country",
+        "remark",
+        "business_number",
+        "company",
+        "vat_number",
+        "delivery_name",
+        "delivery_phone",
+        "delivery_address",
+        "delivery_zip",
+        "delivery_city",
+        "delivery_country",
+    ]
+
+
 class FakeHttp:
     def __init__(self) -> None:
         self.calls = []
@@ -363,11 +438,11 @@ class FakeHttp:
                 "is_last": 1,
                 "list": [{"id": "1001627", "doc_sn": "1001627", "customer_name": "ROMIE", "calc_price": "492.00"}],
             }
-        if url.endswith("/client/get_by_order"):
+        if url.endswith("/customer/get_by_order"):
             return {
                 "err": 0,
                 "is_last": 1,
-                "list": [{"id": "client-1", "company_name": "ROMIE", "email": "client@example.com"}],
+                "list": [{"id": "client-1", "company_name": "ROMIE", "email": "client@example.com", "vip": "1"}],
             }
         if "/pluginsWeb/orderInfo/" in url:
             return {
@@ -410,7 +485,14 @@ def test_connectors_call_expected_endpoints():
     methods_urls = [(method, url) for method, url, _payload in fake.calls]
     assert ("GET", f"{MICROSTORE_API_BASE_URL}/goods/get_by_order") in methods_urls
     assert ("GET", f"{MICROSTORE_API_BASE_URL}/order/new_view_all") in methods_urls
-    assert ("GET", f"{MICROSTORE_API_BASE_URL}/client/get_by_order") in methods_urls
+    assert ("GET", f"{MICROSTORE_API_BASE_URL}/customer/get_by_order") in methods_urls
+    client_call = next(payload for method, url, payload in fake.calls if method == "GET" and url.endswith("/customer/get_by_order"))
+    assert client_call["bi_key"] == "clientList"
+    assert client_call["days"] == -1
+    assert client_call["order"] == "utime"
+    assert client_call["isasc"] == 0
+    assert client_call["client_status"] == '{"options":["disable=0"],"allSelected":0}'
+    assert client_call["type"] == 1
     assert ("GET", f"{MICROSTORE_API_BASE_URL}/pluginsWeb/orderInfo/1001627") in methods_urls
     assert ("POST_FORM", f"{MICROSTORE_API_BASE_URL}/goods/get") in methods_urls
     assert ("POST_FORM", f"{MICROSTORE_API_BASE_URL}/goods/add") in methods_urls
