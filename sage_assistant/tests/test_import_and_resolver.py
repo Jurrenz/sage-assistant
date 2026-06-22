@@ -703,6 +703,7 @@ def test_microstore_product_writer_creates_updates_and_sets_status():
 
     assert payload.endpoint == "/goods/add"
     assert payload.payload["item_ref"] == "NEW123"
+    assert "desc" not in payload.payload
     created = writer.apply(product)
     assert created.raw["id"] == "9001"
     assert connector.add_payloads[0]["sku"][0]["price_1"] == "8.00"
@@ -722,6 +723,22 @@ def test_microstore_product_writer_creates_updates_and_sets_status():
     assert updated.package_size == 6
     assert connector.update_payloads[0][0] == "42"
     assert connector.update_payloads[0][1]["sku"][0]["id"] == "55"
+
+    direct_updated = writer.apply(
+        Product(
+            id=None,
+            ref="OLD123",
+            type_label="ROBES COURTES",
+            name="Produit direct",
+            unit_price_ht=Decimal("10.00"),
+            package_size=8,
+            workflow_status="synced",
+            raw={"id": "42", "sku": [{"id": "56", "color_id": "9", "size_id": "0", "num_per_pack": "12"}]},
+        )
+    )
+    assert direct_updated.package_size == 6
+    assert connector.update_payloads[1][0] == "42"
+    assert connector.update_payloads[1][1]["item_ref"] == "OLD123"
 
     disabled = writer.set_active(updated, False)
     assert disabled.microstore_status == "disabled"

@@ -68,7 +68,6 @@ def _base_payload(product: Product) -> dict[str, object]:
         "cat_id": _category_id(product),
         "num_per_pack": str(product.package_size or 1),
         "name": product.name.strip(),
-        "desc": product.remark.strip(),
         "remark_material": product.composition.strip(),
         "remark_package": product.content_label.strip(),
         "weight": str(product.weight_grams or 0),

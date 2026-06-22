@@ -7,6 +7,7 @@ dependencies = [
     "openpyxl>=3.1.2",
     "pypdf>=6.0.0",
     "pyside6>=6.7.0",
+    "python-telegram-bot>=22.8",
     "xlrd>=2.0.1",
 ]
 
@@ -17,9 +18,16 @@ dev = [
 
 [project.scripts]
 sage-assistant = "app.main:main"
+sage-assistant-bot = "telegram_bot.bot:main"
 
 [tool.setuptools]
-packages = ["app"]
+packages = [
+    "app",
+    "telegram_bot",
+    "telegram_bot.commands",
+    "telegram_bot.database",
+    "telegram_bot.services",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

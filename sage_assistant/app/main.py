@@ -143,9 +143,6 @@ PRODUCT_STATUSES = (
     "Tous",
     "Actif Microstore",
     "Désactivé Microstore",
-    "Brouillon",
-    "À créer",
-    "Modifié localement",
     "Historique local",
 )
 LINE_HEADERS = [
@@ -2882,6 +2879,8 @@ class ProductDraftDialog(QDialog):
         self.discount_input = QLineEdit(str(product.discount_percent or "") if product else "")
         self.remark_input = QTextEdit(product.remark if product else "")
         self.remark_input.setFixedHeight(80)
+        self.remark_input.setReadOnly(True)
+        self.remark_input.setPlaceholderText("Champ non modifiable via l'API Microstore actuelle")
         self.colors_input = QLineEdit(product.colors if product else "")
         self.color_distribution_inputs: list[QLineEdit] = []
         self.color_value_inputs: list[QLineEdit] = []
@@ -2915,7 +2914,7 @@ class ProductDraftDialog(QDialog):
         general_form.addRow("Stock connu", self.stock_input)
         general_form.addRow("Promo", self.promo_input)
         general_form.addRow("Remise (%)", self.discount_input)
-        general_form.addRow("Remarque", self.remark_input)
+        general_form.addRow("Remarque (lecture seule)", self.remark_input)
 
         microstore = QWidget()
         microstore_form = QFormLayout(microstore)
@@ -2967,7 +2966,6 @@ class ProductDraftDialog(QDialog):
             stock_value = self.stock_input.value()
             pieces_outside_package = self.pieces_outside_package_input.value() or None
             weight = self.weight_input.value() or None
-            workflow_status = "modified" if self.product and self.product.workflow_status not in {"draft", "to_create"} else "draft"
             self.saved_product = Product(
                 id=self.product.id if self.product else None,
                 ref=ref,
@@ -3006,7 +3004,7 @@ class ProductDraftDialog(QDialog):
                 color_6=self.color_value_inputs[5].text().strip(),
                 platform_price_ht=platform_price,
                 platform_promo=self.platform_promo_input.text().strip(),
-                workflow_status=workflow_status,
+                workflow_status=self.product.workflow_status if self.product else "to_create",
                 last_seen_at=self.product.last_seen_at if self.product else None,
                 last_microstore_modified_at=self.product.last_microstore_modified_at if self.product else None,
                 last_local_modified_at=self.product.last_local_modified_at if self.product else None,
@@ -3541,27 +3539,20 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.product_table, 1)
 
         actions = QGridLayout()
-        refresh_button = make_button("Recharger")
-        refresh_button.setToolTip("Recharger l'affichage depuis le cache local")
-        refresh_button.clicked.connect(self._refresh_products_page)
-        sync_button = make_button("Sync Microstore")
+        sync_button = make_button("Synchroniser produits Microstore")
+        sync_button.setToolTip("Récupère les produits actifs et désactivés depuis Microstore.")
         sync_button.clicked.connect(lambda: self._start_sync(["MicrostoreProducts"]))
         new_button = make_button("Nouveau")
         new_button.clicked.connect(self._new_product_draft)
         edit_button = make_button("Modifier")
         edit_button.clicked.connect(self._edit_selected_product)
-        simulate_button = make_button("Simulation")
-        simulate_button.clicked.connect(self._simulate_selected_product)
-        apply_button = make_button("Appliquer MS")
-        apply_button.setToolTip("Appliquer à Microstore")
-        apply_button.clicked.connect(self._apply_selected_product_to_microstore)
         disable_button = make_button("Désactiver")
         disable_button.clicked.connect(lambda: self._set_selected_product_active(False))
         reactivate_button = make_button("Réactiver")
         reactivate_button.clicked.connect(lambda: self._set_selected_product_active(True))
-        for index, button in enumerate((refresh_button, sync_button, new_button, edit_button, simulate_button, apply_button, disable_button, reactivate_button)):
-            actions.addWidget(button, index // 4, index % 4)
-        for column in range(4):
+        for index, button in enumerate((sync_button, new_button, edit_button, disable_button, reactivate_button)):
+            actions.addWidget(button, index // 3, index % 3)
+        for column in range(3):
             actions.setColumnStretch(column, 1)
         layout.addLayout(actions)
         return page
@@ -4297,9 +4288,7 @@ class MainWindow(QMainWindow):
         dialog = ProductDraftDialog(parent=self)
         if dialog.exec() != QDialog.Accepted or dialog.saved_product is None:
             return
-        saved = self.db.upsert_product_draft(dialog.saved_product)
-        self._refresh_products_page()
-        QMessageBox.information(self, APP_NAME, f"Produit sauvegardé en local: {saved.ref}")
+        self._save_product_to_microstore(dialog.saved_product)
 
     def _edit_selected_product(self) -> None:
         product = self._selected_product()
@@ -4309,38 +4298,14 @@ class MainWindow(QMainWindow):
         dialog = ProductDraftDialog(product, self)
         if dialog.exec() != QDialog.Accepted or dialog.saved_product is None:
             return
-        saved = self.db.upsert_product_draft(dialog.saved_product)
-        self._refresh_products_page()
-        QMessageBox.information(self, APP_NAME, f"Produit sauvegardé en local: {saved.ref}")
+        self._save_product_to_microstore(dialog.saved_product)
 
-    def _simulate_selected_product(self) -> None:
-        product = self._selected_product()
-        if product is None:
-            QMessageBox.information(self, APP_NAME, "Aucun produit sélectionné.")
-            return
-        changes = self.db.product_change_preview(product)
-        QMessageBox.information(
-            self,
-            APP_NAME,
-            "Simulation locale uniquement.\n\n"
-            + "\n".join(changes)
-            + "\n\nAucune écriture Microstore ne sera lancée sans validation explicite.",
-        )
-
-    def _apply_selected_product_to_microstore(self) -> None:
-        product = self._selected_product()
-        if product is None:
-            QMessageBox.information(self, APP_NAME, "Aucun produit sélectionné.")
-            return
-        if product.workflow_status not in {"to_create", "modified"}:
-            QMessageBox.information(self, APP_NAME, "Ce produit n'a pas de modification locale à appliquer.")
-            return
-        changes = self.db.product_change_preview(product)
+    def _save_product_to_microstore(self, product: Product) -> None:
         writer = self._microstore_writer()
         if writer is None:
             return
         payload = writer.build_payload(product)
-        if not self._confirm_microstore_write(payload, changes):
+        if not self._confirm_microstore_write(payload, product):
             return
         try:
             saved_product = writer.apply(product)
@@ -4351,7 +4316,8 @@ class MainWindow(QMainWindow):
             return
         self._refresh_products_page()
         self.db.log("microstore_write", f"{payload.action}: {product.ref}")
-        QMessageBox.information(self, APP_NAME, f"Produit appliqué à Microstore: {saved_product.ref}")
+        action_label = "créé" if payload.action == "create" else "modifié"
+        QMessageBox.information(self, APP_NAME, f"Produit {action_label} dans Microstore: {saved_product.ref}")
 
     def _set_selected_product_active(self, active: bool) -> None:
         product = self._selected_product()
@@ -4398,17 +4364,21 @@ class MainWindow(QMainWindow):
             return None
         return MicrostoreProductWriter(MicrostoreConnector(token))
 
-    def _confirm_microstore_write(self, payload: MicrostoreProductPayload, changes: list[str]) -> bool:
-        payload_preview = json.dumps(payload.payload, ensure_ascii=False, indent=2)
-        if len(payload_preview) > 2200:
-            payload_preview = payload_preview[:2200] + "\n..."
+    def _confirm_microstore_write(self, payload: MicrostoreProductPayload, product: Product) -> bool:
         action = "Créer" if payload.action == "create" else "Modifier"
-        text = (
-            f"{action} le produit dans Microstore ?\n\n"
-            + "\n".join(changes)
-            + f"\n\nEndpoint: {payload.endpoint}\n\n"
-            + payload_preview
-        )
+        fields = [
+            ("Référence", product.ref),
+            ("Nom", product.name),
+            ("Catégorie", product.type_label),
+            ("Prix HT", str(product.unit_price_ht or "")),
+            ("Colisage", str(product.package_size or "")),
+            ("Contenu colis", product.content_label),
+            ("Composition", product.composition),
+            ("Couleur", product.color),
+            ("Poids (g)", str(product.weight_grams or "")),
+        ]
+        body = "\n".join(f"{label}: {value or 'vide'}" for label, value in fields)
+        text = f"{action} ce produit dans Microstore ?\n\n{body}"
         return QMessageBox.question(self, APP_NAME, text) == QMessageBox.Yes
 
     def _copy_microstore_browser_session_script(self) -> None:

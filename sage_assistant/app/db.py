@@ -146,6 +146,42 @@ CREATE TABLE IF NOT EXISTS clients (
 
 CREATE INDEX IF NOT EXISTS idx_clients_source ON clients(source);
 CREATE INDEX IF NOT EXISTS idx_clients_name ON clients(name, company);
+
+CREATE TABLE IF NOT EXISTS warehouse_stock (
+    ref TEXT PRIMARY KEY,
+    tail_pieces INTEGER,
+    pieces_per_box INTEGER,
+    box_count INTEGER,
+    display_text TEXT NOT NULL DEFAULT '',
+    total_pieces INTEGER NOT NULL DEFAULT 0,
+    total_packages INTEGER,
+    source_row INTEGER,
+    last_synced_at TEXT NOT NULL,
+    notes TEXT NOT NULL DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS idx_warehouse_stock_total_pieces ON warehouse_stock(total_pieces);
+
+CREATE TABLE IF NOT EXISTS warehouse_stock_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ref TEXT NOT NULL,
+    old_tail_pieces INTEGER,
+    old_pieces_per_box INTEGER,
+    old_box_count INTEGER,
+    old_total_pieces INTEGER,
+    new_tail_pieces INTEGER,
+    new_pieces_per_box INTEGER,
+    new_box_count INTEGER,
+    new_total_pieces INTEGER NOT NULL,
+    changed_at TEXT NOT NULL,
+    telegram_user_id TEXT NOT NULL DEFAULT '',
+    telegram_user_label TEXT NOT NULL DEFAULT '',
+    source TEXT NOT NULL DEFAULT 'xlsx',
+    note TEXT NOT NULL DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS idx_warehouse_stock_history_ref ON warehouse_stock_history(ref);
+CREATE INDEX IF NOT EXISTS idx_warehouse_stock_history_changed_at ON warehouse_stock_history(changed_at);
 """
 
 
@@ -251,6 +287,40 @@ class Database:
             );
             CREATE INDEX IF NOT EXISTS idx_clients_source ON clients(source);
             CREATE INDEX IF NOT EXISTS idx_clients_name ON clients(name, company);
+
+            CREATE TABLE IF NOT EXISTS warehouse_stock (
+                ref TEXT PRIMARY KEY,
+                tail_pieces INTEGER,
+                pieces_per_box INTEGER,
+                box_count INTEGER,
+                display_text TEXT NOT NULL DEFAULT '',
+                total_pieces INTEGER NOT NULL DEFAULT 0,
+                total_packages INTEGER,
+                source_row INTEGER,
+                last_synced_at TEXT NOT NULL,
+                notes TEXT NOT NULL DEFAULT ''
+            );
+            CREATE INDEX IF NOT EXISTS idx_warehouse_stock_total_pieces ON warehouse_stock(total_pieces);
+
+            CREATE TABLE IF NOT EXISTS warehouse_stock_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ref TEXT NOT NULL,
+                old_tail_pieces INTEGER,
+                old_pieces_per_box INTEGER,
+                old_box_count INTEGER,
+                old_total_pieces INTEGER,
+                new_tail_pieces INTEGER,
+                new_pieces_per_box INTEGER,
+                new_box_count INTEGER,
+                new_total_pieces INTEGER NOT NULL,
+                changed_at TEXT NOT NULL,
+                telegram_user_id TEXT NOT NULL DEFAULT '',
+                telegram_user_label TEXT NOT NULL DEFAULT '',
+                source TEXT NOT NULL DEFAULT 'xlsx',
+                note TEXT NOT NULL DEFAULT ''
+            );
+            CREATE INDEX IF NOT EXISTS idx_warehouse_stock_history_ref ON warehouse_stock_history(ref);
+            CREATE INDEX IF NOT EXISTS idx_warehouse_stock_history_changed_at ON warehouse_stock_history(changed_at);
             """
         )
 
